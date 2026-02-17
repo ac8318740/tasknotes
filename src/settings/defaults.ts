@@ -320,6 +320,8 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 	customPriorities: DEFAULT_PRIORITIES,
 	// Migration defaults
 	recurrenceMigrated: false,
+	scheduledToTimeEntryMigrated: false,
+	recurrenceWindowMonths: 3,
 	// Release notes defaults
 	lastSeenVersion: undefined,
 	showReleaseNotesOnUpdate: true,
@@ -328,6 +330,8 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 	// Time tracking defaults
 	autoStopTimeTrackingOnComplete: true,
 	autoStopTimeTrackingNotification: false,
+	timeEntriesStorage: "task",
+	nlpDateTimeInput: false,
 	// Relationships widget defaults (unified subtasks, projects, and dependencies)
 	showRelationships: true,
 	relationshipsPosition: "bottom",

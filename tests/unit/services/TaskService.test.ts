@@ -40,7 +40,9 @@ jest.mock('../../../src/utils/helpers', () => ({
   addDTSTARTToRecurrenceRule: jest.fn((task: { recurrence?: string }) => task.recurrence ? `DTSTART:20250110T120000Z;${task.recurrence}` : null),
   updateDTSTARTInRecurrenceRule: jest.fn((rule: string) => rule),
   updateToNextScheduledOccurrence: jest.fn(),
-  splitFrontmatterAndBody: jest.fn(() => ({ frontmatter: {}, body: '' }))
+  splitFrontmatterAndBody: jest.fn(() => ({ frontmatter: {}, body: '' })),
+  resetMarkdownCheckboxes: jest.fn((content: string) => ({ content, changed: false })),
+  generateTimeEntryId: jest.fn(() => `te-${Date.now()}-mock123`),
 }));
 
 jest.mock('../../../src/utils/templateProcessor', () => ({

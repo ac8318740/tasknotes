@@ -1,6 +1,6 @@
 import { Menu, Notice, TFile } from "obsidian";
 import TaskNotesPlugin from "../main";
-import { TaskDependency, TaskInfo } from "../types";
+import { TaskDependency, TaskInfo, UnifiedTimeEntry } from "../types";
 import { formatDateForStorage } from "../utils/dateUtils";
 import { ReminderModal } from "../modals/ReminderModal";
 import { CalendarExportService } from "../services/CalendarExportService";
@@ -18,6 +18,8 @@ import {
 } from "../utils/dependencyUtils";
 import { generateLink } from "../utils/linkUtils";
 import { ContextMenu } from "./ContextMenu";
+import { showUnifiedTimeInfoModal } from "../modals/UnifiedTimeInfoModal";
+import { generateTimeEntryId } from "../utils/helpers";
 
 export interface TaskContextMenuOptions {
 	task: TaskInfo;
@@ -163,36 +165,39 @@ export class TaskContextMenu {
 			);
 		});
 
-		// Scheduled Date submenu
+		// Scheduled Date submenu — opens UnifiedTimeInfoModal
 		this.menu.addItem((item) => {
 			item.setTitle(this.t("contextMenus.task.scheduledDate"));
 			item.setIcon("calendar-clock");
 
-			const submenu = (item as any).setSubmenu();
-			this.addDateOptions(
-				submenu,
-				task.scheduled,
-				async (value: string | null) => {
-					try {
-						await plugin.updateTaskProperty(task, "scheduled", value || undefined);
+			item.onClick(() => {
+				const plannedEntries = (task.timeEntries || [])
+					.filter((e: UnifiedTimeEntry) => e.type === "planned")
+					.sort((a: UnifiedTimeEntry, b: UnifiedTimeEntry) =>
+						new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+					);
+				const now = new Date();
+				const futureEntry = plannedEntries.find(
+					(e: UnifiedTimeEntry) => new Date(e.startTime) >= now
+				);
+				const targetEntry = futureEntry || plannedEntries[0];
+
+				if (targetEntry) {
+					showUnifiedTimeInfoModal(targetEntry, task, plugin, () => {
 						this.options.onUpdate?.();
-					} catch (error) {
-						const errorMessage = error instanceof Error ? error.message : String(error);
-						console.error("Error updating task scheduled date:", {
-							error: errorMessage,
-							taskPath: task.path,
-						});
-						new Notice(
-							this.t("contextMenus.task.notices.updateScheduledFailure", {
-								message: errorMessage,
-							})
-						);
-					}
-				},
-				() => {
-					plugin.openScheduledDateModal(task);
+					});
+				} else {
+					// No planned entry — create one
+					const newEntry: UnifiedTimeEntry = {
+						id: generateTimeEntryId(),
+						type: "planned",
+						startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+					};
+					showUnifiedTimeInfoModal(newEntry, task, plugin, () => {
+						this.options.onUpdate?.();
+					}, { isNew: true });
 				}
-			);
+			});
 		});
 
 		// Reminders submenu

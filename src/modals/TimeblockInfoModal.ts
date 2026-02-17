@@ -31,6 +31,8 @@ export interface TimeBlock {
 
 /**
  * Modal for displaying timeblock information
+ * @deprecated Use UnifiedTimeInfoModal instead for new code. This modal is kept
+ * for backward compatibility with legacy timeblock format on daily notes.
  */
 export class TimeblockInfoModal extends Modal {
 	private timeblock: TimeBlock;

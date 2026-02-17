@@ -8,6 +8,7 @@ import {
 	configureNumberSetting,
 } from "../components/settingHelpers";
 import { showStorageLocationConfirmationModal } from "../../modals/StorageLocationConfirmationModal";
+import { TimeMigrationConfirmationModal } from "../../modals/TimeMigrationConfirmationModal";
 import { getAvailableLanguages } from "../../locales";
 import type { TranslationKey } from "../../i18n";
 import { PropertySelectorModal } from "../../modals/PropertySelectorModal";
@@ -540,6 +541,56 @@ export function renderFeaturesTab(
 					setValue: async (value: boolean) => {
 						plugin.settings.autoStopTimeTrackingNotification = value;
 						save();
+					},
+				})
+			);
+
+			group.addSetting((setting) =>
+				configureToggleSetting(setting, {
+					name: translate("settings.features.nlpDateTimeInput.name"),
+					desc: translate("settings.features.nlpDateTimeInput.description"),
+					getValue: () => plugin.settings.nlpDateTimeInput,
+					setValue: async (value: boolean) => {
+						plugin.settings.nlpDateTimeInput = value;
+						save();
+					},
+				})
+			);
+
+			group.addSetting((setting) =>
+				configureDropdownSetting(setting, {
+					name: translate("settings.features.timeEntriesStorage.name"),
+					desc: translate("settings.features.timeEntriesStorage.description"),
+					getValue: () => plugin.settings.timeEntriesStorage,
+					options: [
+						{ value: "task", label: translate("settings.features.timeEntriesStorage.taskFile") },
+						{ value: "dailyNote", label: translate("settings.features.timeEntriesStorage.dailyNote") },
+					],
+					setValue: async (value: string) => {
+						const newValue = value as "task" | "dailyNote";
+						const oldValue = plugin.settings.timeEntriesStorage;
+						if (newValue === oldValue) return;
+
+						// Find the dropdown element so we can revert on cancel
+						const dropdownEl = setting.controlEl.querySelector("select") as HTMLSelectElement | null;
+
+						// Show migration confirmation modal
+						const modal = new TimeMigrationConfirmationModal(
+							plugin,
+							newValue === "task" ? "toTask" : "toDailyNote",
+							() => {
+								// On confirm
+								plugin.settings.timeEntriesStorage = newValue;
+								save();
+							},
+							() => {
+								// On cancel - revert dropdown visually
+								if (dropdownEl) {
+									dropdownEl.value = oldValue;
+								}
+							}
+						);
+						modal.open();
 					},
 				})
 			);

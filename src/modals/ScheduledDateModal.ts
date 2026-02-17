@@ -10,6 +10,10 @@ import {
 } from "../utils/dateUtils";
 import { TranslationKey } from "../i18n";
 
+/**
+ * @deprecated Use UnifiedTimeInfoModal instead. This modal is kept for backward compatibility
+ * but all new code should use showUnifiedTimeInfoModal() from UnifiedTimeInfoModal.ts.
+ */
 export class ScheduledDateModal extends Modal {
 	private task: TaskInfo;
 	private plugin: TaskNotesPlugin;

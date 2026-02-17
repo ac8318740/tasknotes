@@ -1,6 +1,8 @@
 import { App, FuzzySuggestModal, FuzzyMatch, setIcon, Notice } from "obsidian";
-import { TaskInfo } from "../types";
+import { TaskInfo, UnifiedTimeEntry } from "../types";
 import TaskNotesPlugin from "../main";
+import { showUnifiedTimeInfoModal } from "./UnifiedTimeInfoModal";
+import { generateTimeEntryId } from "../utils/helpers";
 
 export interface TaskAction {
 	id: string;
@@ -110,7 +112,27 @@ export class TaskActionPaletteModal extends FuzzySuggestModal<TaskAction> {
 				keywords: ["scheduled", "date", "schedule", "set", "change"],
 				isApplicable: () => true,
 				execute: async (task) => {
-					this.plugin.openScheduledDateModal(task);
+					const plannedEntries = (task.timeEntries || [])
+						.filter((e: UnifiedTimeEntry) => e.type === "planned")
+						.sort((a: UnifiedTimeEntry, b: UnifiedTimeEntry) =>
+							new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+						);
+					const now = new Date();
+					const futureEntry = plannedEntries.find(
+						(e: UnifiedTimeEntry) => new Date(e.startTime) >= now
+					);
+					const targetEntry = futureEntry || plannedEntries[0];
+
+					if (targetEntry) {
+						showUnifiedTimeInfoModal(targetEntry, task, this.plugin);
+					} else {
+						const newEntry: UnifiedTimeEntry = {
+							id: generateTimeEntryId(),
+							type: "planned",
+							startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+						};
+						showUnifiedTimeInfoModal(newEntry, task, this.plugin, undefined, { isNew: true });
+					}
 				},
 			},
 			{

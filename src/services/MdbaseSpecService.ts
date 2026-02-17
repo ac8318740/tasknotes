@@ -167,8 +167,11 @@ export class MdbaseSpecService {
 			items: {
 				type: "object",
 				fields: {
+					id: { type: "string" },
 					startTime: { type: "datetime" },
 					endTime: { type: "datetime" },
+					title: { type: "string" },
+					color: { type: "string" },
 					description: { type: "string" },
 					duration: { type: "integer" },
 				},

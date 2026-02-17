@@ -155,6 +155,8 @@ export interface TaskNotesSettings {
 	customPriorities: PriorityConfig[];
 	// Migration tracking
 	recurrenceMigrated?: boolean;
+	scheduledToTimeEntryMigrated?: boolean;
+	recurrenceWindowMonths?: number; // How far ahead to generate recurring entries (default: 3)
 	// Release notes tracking
 	lastSeenVersion?: string;
 	showReleaseNotesOnUpdate?: boolean;
@@ -163,6 +165,10 @@ export interface TaskNotesSettings {
 	// Time tracking settings
 	autoStopTimeTrackingOnComplete: boolean;
 	autoStopTimeTrackingNotification: boolean;
+	/** Where time data physically lives: "task" = task file frontmatter, "dailyNote" = daily note frontmatter */
+	timeEntriesStorage: "task" | "dailyNote";
+	/** Use natural language input for date/time fields in time entry modals */
+	nlpDateTimeInput: boolean;
 	// Relationships widget settings (unified subtasks, projects, and dependencies)
 	showRelationships: boolean;
 	relationshipsPosition: "top" | "bottom";

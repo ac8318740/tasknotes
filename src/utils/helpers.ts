@@ -1,7 +1,7 @@
 import { normalizePath, TFile, Vault, App, parseYaml, stringifyYaml } from "obsidian";
 import { format } from "date-fns";
 import { RRule } from "rrule";
-import { TimeInfo, TaskInfo, TimeEntry, TimeBlock, DailyNoteFrontmatter } from "../types";
+import { TimeInfo, TaskInfo, TimeEntry, TimeBlock, DailyNoteFrontmatter, UnifiedTimeEntry } from "../types";
 import { FieldMapper } from "../services/FieldMapper";
 import { DEFAULT_FIELD_MAPPING } from "../settings/defaults";
 import {
@@ -1085,6 +1085,66 @@ export function timeblockToCalendarEvent(timeblock: TimeBlock, date: string, def
  */
 export function generateTimeblockId(): string {
 	return `tb-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
+ * Generates a unique ID for a unified time entry
+ */
+export function generateTimeEntryId(): string {
+	return `te-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
+ * Type guard to validate a UnifiedTimeEntry object
+ */
+export function validateUnifiedTimeEntry(entry: any): entry is UnifiedTimeEntry {
+	if (!entry || typeof entry !== "object") {
+		return false;
+	}
+
+	// Required: id must be a non-empty string
+	if (!entry.id || typeof entry.id !== "string") {
+		return false;
+	}
+
+	// Required: startTime must be a non-empty string
+	if (!entry.startTime || typeof entry.startTime !== "string") {
+		return false;
+	}
+
+	// Validate startTime is a parseable date
+	const startDate = new Date(entry.startTime);
+	if (isNaN(startDate.getTime())) {
+		return false;
+	}
+
+	// Optional: endTime must be a valid date string if present
+	if (entry.endTime !== undefined) {
+		if (typeof entry.endTime !== "string") {
+			return false;
+		}
+		const endDate = new Date(entry.endTime);
+		if (isNaN(endDate.getTime())) {
+			return false;
+		}
+	}
+
+	// Optional: title must be a string if present
+	if (entry.title !== undefined && typeof entry.title !== "string") {
+		return false;
+	}
+
+	// Optional: color must be a string if present
+	if (entry.color !== undefined && typeof entry.color !== "string") {
+		return false;
+	}
+
+	// Optional: description must be a string if present
+	if (entry.description !== undefined && typeof entry.description !== "string") {
+		return false;
+	}
+
+	return true;
 }
 
 /**

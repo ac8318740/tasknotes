@@ -4,7 +4,7 @@ import {
 	TaskCreationData,
 	TaskDependency,
 	TaskInfo,
-	TimeEntry,
+	UnifiedTimeEntry,
 	IWebhookNotifier,
 } from "../types";
 import { AutoArchiveService } from "./AutoArchiveService";
@@ -27,6 +27,7 @@ import {
 	updateToNextScheduledOccurrence,
 	splitFrontmatterAndBody,
 	resetMarkdownCheckboxes,
+	generateTimeEntryId,
 } from "../utils/helpers";
 import {
 	DEFAULT_DEPENDENCY_RELTYPE,
@@ -47,12 +48,16 @@ import { processFolderTemplate, TaskTemplateData } from "../utils/folderTemplate
 
 import TaskNotesPlugin from "../main";
 import { TranslationKey } from "../i18n";
+import { RecurrenceEntryService } from "./RecurrenceEntryService";
 
 export class TaskService {
 	private webhookNotifier?: IWebhookNotifier;
 	private autoArchiveService?: AutoArchiveService;
+	private recurrenceEntryService: RecurrenceEntryService;
 
-	constructor(private plugin: TaskNotesPlugin) {}
+	constructor(private plugin: TaskNotesPlugin) {
+		this.recurrenceEntryService = new RecurrenceEntryService();
+	}
 
 	private translate(key: TranslationKey, variables?: Record<string, any>): string {
 		return this.plugin.i18n.translate(key, variables);
@@ -344,6 +349,43 @@ export class TaskService {
 						: undefined,
 				icsEventId: taskData.icsEventId || undefined,
 			};
+
+			// Convert scheduled date to a planned time entry
+			if (completeTaskData.scheduled) {
+				const entries: UnifiedTimeEntry[] = completeTaskData.timeEntries
+					? [...completeTaskData.timeEntries]
+					: [];
+				entries.push({
+					id: generateTimeEntryId(),
+					type: "planned",
+					startTime: completeTaskData.scheduled,
+				});
+				completeTaskData.timeEntries = entries;
+				// Don't delete scheduled here — FieldMapper won't write it anyway, and
+				// it's still needed for filenameContext and other pre-persist logic
+			}
+
+			// Generate planned entries for recurring tasks
+			if (completeTaskData.recurrence && typeof completeTaskData.recurrence === "string") {
+				const windowMonths = this.plugin.settings.recurrenceWindowMonths || 3;
+				const tempTask = {
+					...completeTaskData,
+					title: title,
+					status: status,
+					priority: priority,
+					path: "",
+					archived: false,
+				} as TaskInfo;
+				const recurringEntries = this.recurrenceEntryService.generatePlannedEntries(
+					tempTask,
+					windowMonths
+				);
+				const entries: UnifiedTimeEntry[] = completeTaskData.timeEntries
+					? [...completeTaskData.timeEntries]
+					: [];
+				entries.push(...recurringEntries);
+				completeTaskData.timeEntries = entries;
+			}
 
 			// Add DTSTART to recurrence rule if it doesn't have one
 			// This ensures Google Calendar sync works correctly from the start
@@ -731,8 +773,41 @@ export class TaskService {
 					// Update completed date when marking as complete (non-recurring tasks only)
 					// FIX: Use freshTask instead of stale task to check recurrence
 					this.updateCompletedDateInFrontmatter(frontmatter, value, !!freshTask.recurrence);
-				} else if ((property === "due" || property === "scheduled") && !value) {
-					// Remove empty due/scheduled dates
+				} else if (property === "scheduled") {
+					// scheduled is now managed through time entries, not frontmatter directly
+					// Update or create a planned time entry instead
+					const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
+					const entries: UnifiedTimeEntry[] = Array.isArray(frontmatter[timeEntriesField])
+						? [...frontmatter[timeEntriesField]]
+						: [];
+
+					if (value) {
+						// Find existing planned entry to update, or create new one
+						const existingIdx = entries.findIndex(
+							(e: UnifiedTimeEntry) => e.type === "planned" && !e.fromRecurrence
+						);
+						const dateStr = typeof value === "string" ? value : String(value);
+						if (existingIdx >= 0) {
+							entries[existingIdx] = { ...entries[existingIdx], startTime: dateStr };
+						} else {
+							entries.push({
+								id: generateTimeEntryId(),
+								type: "planned",
+								startTime: dateStr,
+							});
+						}
+					} else {
+						// Remove non-recurrence planned entries when clearing scheduled
+						const filtered = entries.filter(
+							(e: UnifiedTimeEntry) => !(e.type === "planned" && !e.fromRecurrence)
+						);
+						entries.length = 0;
+						entries.push(...filtered);
+					}
+					frontmatter[timeEntriesField] = entries;
+					// Do NOT write scheduled field to frontmatter
+				} else if (property === "due" && !value) {
+					// Remove empty due dates
 					delete frontmatter[fieldName];
 				} else {
 					frontmatter[fieldName] = value;
@@ -1140,8 +1215,10 @@ export class TaskService {
 			return sanitizedEntry;
 		});
 
-		const newEntry: TimeEntry = {
-			startTime: new Date().toISOString(),
+		const newEntry: UnifiedTimeEntry = {
+			id: generateTimeEntryId(),
+			type: "logged",
+			startTime: getCurrentTimestamp(),
 			description: "Work session",
 		};
 		updatedTask.timeEntries = [...updatedTask.timeEntries, newEntry];
@@ -1166,6 +1243,32 @@ export class TaskService {
 			frontmatter[timeEntriesField].push(newEntry);
 			frontmatter[dateModifiedField] = updatedTask.dateModified;
 		});
+
+		// If storing in daily notes, also create entry in today's daily note
+		if (this.plugin.settings.timeEntriesStorage === "dailyNote") {
+			try {
+				const { getDailyNote, getAllDailyNotes, createDailyNote, appHasDailyNotesPluginLoaded } = await import("obsidian-daily-notes-interface");
+				if (appHasDailyNotesPluginLoaded()) {
+					const today = (window as any).moment();
+					const allDailyNotes = getAllDailyNotes();
+					let dailyNote = getDailyNote(today, allDailyNotes);
+					if (!dailyNote) {
+						dailyNote = await createDailyNote(today);
+					}
+					if (dailyNote) {
+						await this.plugin.app.fileManager.processFrontMatter(dailyNote, (fm) => {
+							if (!fm.timeEntries) fm.timeEntries = [];
+							fm.timeEntries.push({
+								...newEntry,
+								taskLink: `[[${task.path.replace(/\.md$/, "")}]]`,
+							});
+						});
+					}
+				}
+			} catch (error) {
+				console.warn("[TaskNotes] Failed to write time entry to daily note:", error);
+			}
+		}
 
 		// Step 3: Wait for fresh data and update cache
 		try {
@@ -1227,7 +1330,7 @@ export class TaskService {
 				return sanitizedEntry;
 			});
 			const entryIndex = updatedTask.timeEntries.findIndex(
-				(entry: TimeEntry) => entry.startTime === activeSession.startTime && !entry.endTime
+				(entry: UnifiedTimeEntry) => entry.startTime === activeSession.startTime && !entry.endTime
 			);
 			if (entryIndex !== -1) {
 				updatedTask.timeEntries = [...updatedTask.timeEntries];
@@ -1251,7 +1354,7 @@ export class TaskService {
 				});
 				// Find and update the active session
 				const entryIndex = frontmatter[timeEntriesField].findIndex(
-					(entry: TimeEntry) =>
+					(entry: UnifiedTimeEntry) =>
 						entry.startTime === activeSession.startTime && !entry.endTime
 				);
 
@@ -1261,6 +1364,32 @@ export class TaskService {
 			}
 			frontmatter[dateModifiedField] = updatedTask.dateModified;
 		});
+
+		// If storing in daily notes, update the entry in today's daily note too
+		if (this.plugin.settings.timeEntriesStorage === "dailyNote") {
+			try {
+				const { getDailyNote, getAllDailyNotes, appHasDailyNotesPluginLoaded } = await import("obsidian-daily-notes-interface");
+				if (appHasDailyNotesPluginLoaded()) {
+					const today = (window as any).moment();
+					const allDailyNotes = getAllDailyNotes();
+					const dailyNote = getDailyNote(today, allDailyNotes);
+					if (dailyNote) {
+						await this.plugin.app.fileManager.processFrontMatter(dailyNote, (fm) => {
+							if (fm.timeEntries && Array.isArray(fm.timeEntries)) {
+								const idx = fm.timeEntries.findIndex(
+									(e: any) => e.startTime === activeSession.startTime && !e.endTime
+								);
+								if (idx !== -1) {
+									fm.timeEntries[idx].endTime = getCurrentTimestamp();
+								}
+							}
+						});
+					}
+				}
+			} catch (error) {
+				console.warn("[TaskNotes] Failed to update time entry in daily note:", error);
+			}
+		}
 
 		// Step 3: Wait for fresh data and update cache
 		try {
@@ -1385,6 +1514,14 @@ export class TaskService {
 						recurrenceUpdates.recurrence = updatedRecurrence;
 					}
 				}
+			}
+
+			// Regenerate planned time entries when recurrence rule changes
+			if (updates.recurrence && typeof updates.recurrence === "string") {
+				const windowMonths = this.plugin.settings.recurrenceWindowMonths || 3;
+				const tempTask: TaskInfo = { ...originalTask, ...updates, ...recurrenceUpdates };
+				const newEntries = this.recurrenceEntryService.regenerateEntries(tempTask, windowMonths);
+				recurrenceUpdates.timeEntries = newEntries;
 			}
 
 			// Scenario 3: Scheduled date update for recurring tasks
@@ -1888,6 +2025,15 @@ export class TaskService {
 		const updatedTask = { ...freshTask };
 		updatedTask.dateModified = getCurrentTimestamp();
 
+		// Also update time entries: convert planned → logged for the target date
+		if (newComplete) {
+			const updatedEntries = this.recurrenceEntryService.convertCompletionToLogged(
+				freshTask,
+				targetDate
+			);
+			updatedTask.timeEntries = updatedEntries;
+		}
+
 		if (newComplete) {
 			// Add date to completed instances if not already present
 			if (!completeInstances.includes(dateStr)) {
@@ -1990,6 +2136,12 @@ export class TaskService {
 			// Update due date if it changed
 			if (updatedTask.due) {
 				frontmatter[dueField] = updatedTask.due;
+			}
+
+			// Persist updated time entries
+			if (updatedTask.timeEntries) {
+				const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
+				frontmatter[timeEntriesField] = updatedTask.timeEntries;
 			}
 
 			frontmatter[dateModifiedField] = updatedTask.dateModified;
@@ -2163,6 +2315,18 @@ export class TaskService {
 				frontmatter[completeField] = [];
 			}
 			frontmatter[completeField] = updatedTask.complete_instances || [];
+
+			// Remove the planned time entry for the skipped date
+			const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
+			const entries: UnifiedTimeEntry[] = Array.isArray(frontmatter[timeEntriesField])
+				? [...frontmatter[timeEntriesField]]
+				: [];
+			const dateStr_te = formatDateForStorage(targetDate);
+			const filtered = entries.filter(
+				(e: UnifiedTimeEntry) => !(e.type === "planned" && e.fromRecurrence && e.startTime.substring(0, 10) === dateStr_te)
+			);
+			frontmatter[timeEntriesField] = filtered;
+			updatedTask.timeEntries = filtered;
 
 			// Update scheduled/due dates
 			if (updatedTask.scheduled) {

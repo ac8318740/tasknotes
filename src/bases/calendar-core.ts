@@ -9,7 +9,7 @@
 
 import { format } from "date-fns";
 import TaskNotesPlugin from "../main";
-import { TaskInfo, ICSEvent, TimeBlock, EVENT_DATA_CHANGED } from "../types";
+import { TaskInfo, ICSEvent, TimeBlock, EVENT_DATA_CHANGED, UnifiedTimeEntry, DailyNoteTimeEntry } from "../types";
 import {
 	hasTimeComponent,
 	getDatePart,
@@ -19,12 +19,13 @@ import {
 	parseDateToUTC,
 	getTodayLocal,
 } from "../utils/dateUtils";
-import { generateRecurringInstances, updateTimeblockInDailyNote, addDTSTARTToRecurrenceRuleWithDraggedTime } from "../utils/helpers";
+import { generateRecurringInstances, updateTimeblockInDailyNote, addDTSTARTToRecurrenceRuleWithDraggedTime, generateTimeEntryId } from "../utils/helpers";
 import { Notice } from "obsidian";
 import { getAllDailyNotes, getDailyNote, appHasDailyNotesPluginLoaded, createDailyNote } from "obsidian-daily-notes-interface";
 import { TimeblockCreationModal } from "../modals/TimeblockCreationModal";
 import { openTaskSelector } from "../modals/TaskSelectorWithCreateModal";
 import { TimeblockInfoModal } from "../modals/TimeblockInfoModal";
+import { showUnifiedTimeInfoModal } from "../modals/UnifiedTimeInfoModal";
 
 export interface CalendarEvent {
 	id: string;
@@ -385,6 +386,7 @@ export function calculateAllDayEndDate(startDate: string, timeEstimate?: number)
 
 /**
  * Create scheduled event from task
+ * @deprecated Used only for backward compatibility with pre-migration tasks without time entries
  */
 export function createScheduledEvent(task: TaskInfo, plugin: TaskNotesPlugin): CalendarEvent | null {
 	if (!task.scheduled) return null;
@@ -469,6 +471,7 @@ export function createDueEvent(task: TaskInfo, plugin: TaskNotesPlugin): Calenda
 /**
  * Create a spanning event from scheduled date to due date.
  * Shows the task as a multi-day bar from when work starts to when it's due.
+ * @deprecated Used only for backward compatibility with pre-migration tasks without time entries
  */
 export function createScheduledToDueSpanEvent(task: TaskInfo, plugin: TaskNotesPlugin): CalendarEvent | null {
 	if (!task.scheduled || !task.due) return null;
@@ -534,6 +537,41 @@ export function createTimeEntryEvents(task: TaskInfo, plugin: TaskNotesPlugin): 
 				timeEntryIndex: index,
 			},
 		}));
+}
+
+/**
+ * Create calendar events from unified time entries on a task.
+ * Handles both past entries (time entries) and future entries (time blocks).
+ */
+export function createUnifiedTimeEvents(task: TaskInfo, plugin: TaskNotesPlugin): CalendarEvent[] {
+	if (!task.timeEntries) return [];
+
+	const isCompleted = plugin.statusManager.isCompletedStatus(task.status);
+	const now = new Date();
+
+	return task.timeEntries
+		.filter((entry) => entry.endTime || new Date(entry.startTime) > now)
+		.map((entry) => {
+			const isFuture = new Date(entry.startTime) > now;
+			const eventType = isFuture ? "timeblock" : "timeEntry";
+
+			return {
+				id: `unified-${entry.id}`,
+				title: entry.title || task.title,
+				start: entry.startTime,
+				end: entry.endTime || undefined,
+				allDay: !entry.startTime.includes("T"),
+				backgroundColor: entry.color || (isFuture ? plugin.settings.calendarViewSettings.defaultTimeblockColor : undefined),
+				borderColor: entry.color || (isFuture ? plugin.settings.calendarViewSettings.defaultTimeblockColor : undefined),
+				editable: true,
+				extendedProps: {
+					taskInfo: task,
+					eventType: eventType as CalendarEvent["extendedProps"]["eventType"],
+					isCompleted: isCompleted,
+					timeEntryIndex: task.timeEntries!.findIndex(e => e.id === entry.id),
+				},
+			};
+		});
 }
 
 /**
@@ -628,6 +666,7 @@ export function getRecurringTime(task: TaskInfo): string {
 
 /**
  * Create next scheduled occurrence event for recurring task
+ * @deprecated Used only for backward compatibility with pre-migration recurring tasks without time entries
  */
 export function createNextScheduledEvent(
 	task: TaskInfo,
@@ -746,6 +785,7 @@ export function createRecurringEvent(
 
 /**
  * Generate recurring task instances for calendar display
+ * @deprecated Used only for backward compatibility with pre-migration recurring tasks without time entries
  */
 export function generateRecurringTaskInstances(
 	task: TaskInfo,
@@ -917,6 +957,90 @@ export async function generateTimeblockEvents(
 }
 
 /**
+ * Generate calendar events from daily note time entries (when timeEntriesStorage = "dailyNote").
+ * Reads time entries from daily note frontmatter instead of task files.
+ */
+export async function generateDailyNoteTimeEvents(
+	plugin: TaskNotesPlugin,
+	visibleStart: Date,
+	visibleEnd: Date
+): Promise<CalendarEvent[]> {
+	const events: CalendarEvent[] = [];
+
+	try {
+		if (!appHasDailyNotesPluginLoaded()) return events;
+
+		const allDailyNotes = getAllDailyNotes();
+		const now = new Date();
+
+		for (const [dateStr, file] of Object.entries(allDailyNotes)) {
+			if (!file) continue;
+
+			const dailyDate = (window as any).moment(dateStr);
+			if (!dailyDate.isValid()) continue;
+
+			const dateString = dailyDate.format("YYYY-MM-DD");
+
+			// Quick range check
+			const entryDate = new Date(dateString + "T00:00:00");
+			if (entryDate < new Date(visibleStart.getTime() - 86400000) ||
+				entryDate > new Date(visibleEnd.getTime() + 86400000)) {
+				continue;
+			}
+
+			try {
+				const content = await plugin.app.vault.cachedRead(file);
+				if (!content.startsWith("---")) continue;
+
+				const metadata = plugin.app.metadataCache.getFileCache(file);
+				const frontmatter = metadata?.frontmatter;
+				if (!frontmatter?.timeEntries || !Array.isArray(frontmatter.timeEntries)) continue;
+
+				for (const entry of frontmatter.timeEntries as DailyNoteTimeEntry[]) {
+					if (!entry.id || !entry.startTime) continue;
+
+					const isFuture = new Date(entry.startTime) > now;
+					const eventType = isFuture ? "timeblock" : "timeEntry";
+
+					// Resolve task info from taskLink if available
+					let taskInfo: TaskInfo | undefined;
+					if (entry.taskLink) {
+						const linkPath = entry.taskLink.replace(/^\[\[|\]\]$/g, "");
+						const linkedFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, "");
+						if (linkedFile) {
+							const tasks = await plugin.cacheManager.getAllTasks();
+							taskInfo = tasks.find(t => t.path === linkedFile.path);
+						}
+					}
+
+					events.push({
+						id: `daily-te-${entry.id}`,
+						title: entry.title || (taskInfo?.title ?? "Time entry"),
+						start: entry.startTime,
+						end: entry.endTime || undefined,
+						allDay: !entry.startTime.includes("T"),
+						backgroundColor: entry.color || (isFuture ? plugin.settings.calendarViewSettings.defaultTimeblockColor : undefined),
+						borderColor: entry.color || (isFuture ? plugin.settings.calendarViewSettings.defaultTimeblockColor : undefined),
+						editable: true,
+						extendedProps: {
+							taskInfo: taskInfo,
+							eventType: eventType as CalendarEvent["extendedProps"]["eventType"],
+							timeEntryIndex: -1,
+						},
+					});
+				}
+			} catch {
+				// Skip files with errors
+			}
+		}
+	} catch (error) {
+		console.error("[TaskNotes][Calendar] Error generating daily note time events:", error);
+	}
+
+	return events;
+}
+
+/**
  * Check if a date string falls within the visible range
  * Returns true if no range is specified (show all) or if date is within range
  * Returns true for invalid dates (let FullCalendar handle them)
@@ -975,49 +1099,65 @@ export async function generateCalendarEvents(
 
 	for (const task of tasks) {
 		try {
+			// Determine if this task has time entries that cover scheduling
+			const hasTimeEntries = task.timeEntries && task.timeEntries.length > 0;
+			const hasPlannedEntries = hasTimeEntries && task.timeEntries!.some(
+				(e) => e.type === "planned"
+			);
+
 			// Handle recurring tasks
 			if (task.recurrence) {
-				if (!task.scheduled) continue;
+				// If the task has materialized planned time entries (from recurrence),
+				// skip the legacy recurring event generation — time entries handle display
+				if (!hasPlannedEntries) {
+					// Fallback for pre-migration recurring tasks without time entries
+					if (!task.scheduled) continue;
 
-				if (showRecurring && visibleStart && visibleEnd) {
-					const recurringEvents = generateRecurringTaskInstances(
-						task,
-						visibleStart,
-						visibleEnd,
-						plugin
-					);
-					events.push(...recurringEvents);
+					if (showRecurring && visibleStart && visibleEnd) {
+						const recurringEvents = generateRecurringTaskInstances(
+							task,
+							visibleStart,
+							visibleEnd,
+							plugin
+						);
+						events.push(...recurringEvents);
+					}
 				}
 			} else {
 				// Handle non-recurring tasks with date range filtering
-				// Check if we should show a span event (replaces individual scheduled/due for this task)
-				let showedSpan = false;
-				if (showScheduledToDueSpan && task.scheduled && task.due) {
-					const spanEvent = createScheduledToDueSpanEvent(task, plugin);
-					if (spanEvent) {
-						// Check if span is in visible range (use scheduled date for range check)
-						if (isDateInVisibleRange(task.scheduled, visibleStart, visibleEnd) ||
-							isDateInVisibleRange(task.due, visibleStart, visibleEnd)) {
-							events.push(spanEvent);
-							showedSpan = true;
+				// Skip scheduled events if this task has planned time entries
+				// (the time entries already represent the schedule)
+				if (!hasPlannedEntries) {
+					// Check if we should show a span event (replaces individual scheduled/due for this task)
+					let showedSpan = false;
+					if (showScheduledToDueSpan && task.scheduled && task.due) {
+						const spanEvent = createScheduledToDueSpanEvent(task, plugin);
+						if (spanEvent) {
+							// Check if span is in visible range (use scheduled date for range check)
+							if (isDateInVisibleRange(task.scheduled, visibleStart, visibleEnd) ||
+								isDateInVisibleRange(task.due, visibleStart, visibleEnd)) {
+								events.push(spanEvent);
+								showedSpan = true;
+							}
+						}
+					}
+
+					// Only show individual scheduled/due events if we didn't show a span
+					if (!showedSpan) {
+						if (showScheduled && task.scheduled) {
+							if (isDateInVisibleRange(task.scheduled, visibleStart, visibleEnd, task.timeEstimate)) {
+								const scheduledEvent = createScheduledEvent(task, plugin);
+								if (scheduledEvent) events.push(scheduledEvent);
+							}
 						}
 					}
 				}
 
-				// Only show individual scheduled/due events if we didn't show a span
-				if (!showedSpan) {
-					if (showScheduled && task.scheduled) {
-						if (isDateInVisibleRange(task.scheduled, visibleStart, visibleEnd, task.timeEstimate)) {
-							const scheduledEvent = createScheduledEvent(task, plugin);
-							if (scheduledEvent) events.push(scheduledEvent);
-						}
-					}
-
-					if (showDue && task.due) {
-						if (isDateInVisibleRange(task.due, visibleStart, visibleEnd)) {
-							const dueEvent = createDueEvent(task, plugin);
-							if (dueEvent) events.push(dueEvent);
-						}
+				// Due events are always shown (independent of time entries)
+				if (showDue && task.due) {
+					if (isDateInVisibleRange(task.due, visibleStart, visibleEnd)) {
+						const dueEvent = createDueEvent(task, plugin);
+						if (dueEvent) events.push(dueEvent);
 					}
 				}
 			}
@@ -1056,6 +1196,12 @@ export async function generateCalendarEvents(
 	if (showTimeblocks && visibleStart && visibleEnd) {
 		const timeblockEvents = await generateTimeblockEvents(plugin, visibleStart, visibleEnd);
 		events.push(...timeblockEvents);
+	}
+
+	// When using dailyNote storage, also generate events from daily note time entries
+	if (plugin.settings.timeEntriesStorage === "dailyNote" && showTimeEntries && visibleStart && visibleEnd) {
+		const dailyNoteTimeEvents = await generateDailyNoteTimeEvents(plugin, visibleStart, visibleEnd);
+		events.push(...dailyNoteTimeEvents);
 	}
 
 	return events;
@@ -1129,8 +1275,9 @@ export async function handleTimeEntryCreation(
 						(end.getTime() - start.getTime()) / 60000
 					);
 
-					// Create new time entry
-					const newEntry = {
+					// Create new unified time entry
+					const newEntry: UnifiedTimeEntry = {
+						id: generateTimeEntryId(),
 						startTime: start.toISOString(),
 						endTime: end.toISOString(),
 						description: "",
@@ -1169,6 +1316,38 @@ export async function handleTimeEntryCreation(
 	} catch (error) {
 		console.error("Error opening task selector for time entry:", error);
 		new Notice(plugin.i18n.translate("modals.timeEntry.createFailed"));
+	}
+}
+
+/**
+ * Handle creation of a unified time entry from calendar interaction.
+ * Determines past/future from the date and creates appropriately.
+ */
+export async function handleUnifiedTimeEntryCreation(
+	start: Date,
+	end: Date,
+	allDay: boolean,
+	plugin: TaskNotesPlugin
+): Promise<void> {
+	const now = new Date();
+	const isFuture = start > now;
+
+	if (isFuture) {
+		// For future entries, create with showUnifiedTimeInfoModal in creation mode
+		const newEntry: UnifiedTimeEntry = {
+			id: generateTimeEntryId(),
+			type: "planned",
+			startTime: start.toISOString(),
+			endTime: end.toISOString(),
+		};
+
+		// Open info modal in creation mode — user selects task inside
+		showUnifiedTimeInfoModal(newEntry, undefined, plugin, () => {
+			plugin.emitter.trigger(EVENT_DATA_CHANGED);
+		}, { isNew: true });
+	} else {
+		// For past entries, use existing time entry creation flow (select task first)
+		await handleTimeEntryCreation(start, end, allDay, plugin);
 	}
 }
 
@@ -1251,7 +1430,9 @@ export async function handleTimeblockResize(
 }
 
 /**
- * Show timeblock info modal
+ * Show timeblock info modal.
+ * If the timeblock has a unified time entry id (starting with "te-"),
+ * redirect to the unified modal instead.
  */
 export async function showTimeblockInfoModal(
 	timeblock: TimeBlock,
@@ -1260,6 +1441,19 @@ export async function showTimeblockInfoModal(
 	plugin: TaskNotesPlugin,
 	onChange?: () => void
 ): Promise<void> {
+
+	// Check if this is a unified time entry disguised as a timeblock
+	if (timeblock.id && timeblock.id.startsWith("te-")) {
+		const unifiedEntry: UnifiedTimeEntry = {
+			id: timeblock.id,
+			startTime: eventDate.toISOString(),
+			title: timeblock.title,
+			color: timeblock.color,
+			description: timeblock.description,
+		};
+		showUnifiedTimeInfoModal(unifiedEntry, undefined, plugin, onChange);
+		return;
+	}
 
 	const modal = new TimeblockInfoModal(
 		plugin.app,

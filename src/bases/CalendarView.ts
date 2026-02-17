@@ -1,6 +1,6 @@
 import TaskNotesPlugin from "../main";
 import { BasesViewBase } from "./BasesViewBase";
-import { TaskInfo } from "../types";
+import { TaskInfo, UnifiedTimeEntry } from "../types";
 import { identifyTaskNotesFromBasesData } from "./helpers";
 import { Calendar, CalendarOptions } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -25,7 +25,9 @@ import {
 	addTaskHoverPreview,
 	createICSEvent,
 	showTimeblockInfoModal,
+	handleUnifiedTimeEntryCreation,
 } from "./calendar-core";
+import { showUnifiedTimeInfoModal } from "../modals/UnifiedTimeInfoModal";
 import { handleCalendarTaskClick } from "../utils/clickHandlers";
 import { TaskCreationModal } from "../modals/TaskCreationModal";
 import { CalendarEventCreationModal } from "../modals/CalendarEventCreationModal";
@@ -1149,16 +1151,37 @@ export class CalendarView extends BasesViewBase {
 		const { taskInfo, timeblock, eventType, filePath, icsEvent, subscriptionName } = info.event.extendedProps || {};
 		const jsEvent = info.jsEvent;
 
-		// Handle timeblock click
-		if (eventType === "timeblock" && timeblock) {
-			const originalDate = format(info.event.start, "yyyy-MM-dd");
-			showTimeblockInfoModal(timeblock, info.event.start, originalDate, this.plugin, () => this.expectImmediateUpdate());
+		// Handle unified time entry click (both future "timeblock" and past "timeEntry" types)
+		// Unified entries have taskInfo + timeEntryIndex from createUnifiedTimeEvents()
+		if ((eventType === "timeblock" || eventType === "timeEntry") && taskInfo && info.event.extendedProps.timeEntryIndex !== undefined) {
+			const entryIndex = info.event.extendedProps.timeEntryIndex;
+			if (taskInfo.timeEntries && entryIndex >= 0 && entryIndex < taskInfo.timeEntries.length) {
+				const entry = taskInfo.timeEntries[entryIndex];
+				if (entry.id) {
+					showUnifiedTimeInfoModal(entry, taskInfo, this.plugin, () => this.expectImmediateUpdate());
+					return;
+				}
+			}
+			// Fall back to legacy editor for entries without id
+			this.plugin.openTimeEntryEditor(taskInfo, () => this.expectImmediateUpdate());
 			return;
 		}
 
-		// Handle time entry click - left click opens time entry modal
-		if (eventType === "timeEntry" && taskInfo && jsEvent.button === 0) {
-			this.plugin.openTimeEntryEditor(taskInfo, () => this.expectImmediateUpdate());
+		// Handle legacy timeblock click (daily note timeblocks without taskInfo)
+		// Convert to UnifiedTimeEntry format and open unified modal for consistent UX
+		if (eventType === "timeblock" && timeblock) {
+			const eventDate = format(info.event.start, "yyyy-MM-dd");
+			const legacyEntry: UnifiedTimeEntry = {
+				id: timeblock.id || `legacy-${Date.now()}`,
+				type: "planned",
+				startTime: `${eventDate}T${timeblock.startTime}:00`,
+				endTime: timeblock.endTime ? `${eventDate}T${timeblock.endTime}:00` : undefined,
+				title: timeblock.title,
+				color: timeblock.color,
+				description: timeblock.description,
+			};
+			// Open unified modal — no taskInfo since it's a daily note entry
+			showUnifiedTimeInfoModal(legacyEntry, undefined, this.plugin, () => this.expectImmediateUpdate());
 			return;
 		}
 
@@ -1661,26 +1684,18 @@ export class CalendarView extends BasesViewBase {
 				});
 		});
 
-		// Only show timeblock option if timeblocking is enabled
-		if (this.plugin.settings.calendarViewSettings.enableTimeblocking) {
+		// Unified time entry/block creation
+		if (this.plugin.settings.calendarViewSettings.enableTimeblocking || info.start <= new Date()) {
 			menu.addItem((item) => {
-				item.setTitle("Create timeblock")
-					.setIcon("clock")
+				const isFuture = info.start > new Date();
+				item.setTitle(isFuture ? "Create time block" : "Create time entry")
+					.setIcon(isFuture ? "clock" : "play")
 					.onClick(async () => {
 						this.expectImmediateUpdate();
-						await handleTimeblockCreation(info.start, info.end, info.allDay, this.plugin);
+						await handleUnifiedTimeEntryCreation(info.start, info.end, info.allDay, this.plugin);
 					});
 			});
 		}
-
-		menu.addItem((item) => {
-			item.setTitle("Create time entry")
-				.setIcon("play")
-				.onClick(async () => {
-					this.expectImmediateUpdate();
-					await handleTimeEntryCreation(info.start, info.end, info.allDay, this.plugin);
-				});
-		});
 
 		// Show "Create calendar event" if any external calendars are connected
 		const registry = this.plugin.calendarProviderRegistry;

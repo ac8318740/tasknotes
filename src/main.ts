@@ -32,6 +32,7 @@ import {
 	POMODORO_STATS_VIEW_TYPE,
 	STATS_VIEW_TYPE,
 	TaskInfo,
+	UnifiedTimeEntry,
 	EVENT_DATA_CHANGED,
 	EVENT_TASK_UPDATED,
 	EVENT_DATE_CHANGED,
@@ -96,6 +97,8 @@ import { GoogleCalendarService } from "./services/GoogleCalendarService";
 import { MicrosoftCalendarService } from "./services/MicrosoftCalendarService";
 import { CalendarProviderRegistry } from "./services/CalendarProvider";
 import { TaskCalendarSyncService } from "./services/TaskCalendarSyncService";
+import { RecurrenceEntryService } from "./services/RecurrenceEntryService";
+import { ScheduledMigrationService } from "./services/ScheduledMigrationService";
 
 interface TranslatedCommandDefinition {
 	id: string;
@@ -236,6 +239,9 @@ export default class TaskNotesPlugin extends Plugin {
 	// Migration state management
 	private migrationComplete = false;
 	private migrationPromise: Promise<void> | null = null;
+
+	// Recurrence window maintenance
+	private recurrenceMaintenanceInterval: ReturnType<typeof setInterval> | null = null;
 
 	// Bases registration state management
 	private basesRegistered = false;
@@ -568,6 +574,28 @@ export default class TaskNotesPlugin extends Plugin {
 			// Initialize date change detection to refresh tasks at midnight
 			this.setupDateChangeDetection();
 
+			// Run scheduled-to-time-entry migration if needed
+			try {
+				const scheduledMigration = new ScheduledMigrationService(this);
+				await scheduledMigration.checkAndMigrate();
+			} catch (error) {
+				console.warn("[TaskNotes] Scheduled migration check failed:", error);
+			}
+
+			// Maintain rolling window of planned entries for recurring tasks
+			// Run after a short delay to avoid blocking plugin startup
+			this.registerInterval(
+				window.setTimeout(async () => {
+					await this.maintainRecurrenceWindows();
+
+					// Set up periodic maintenance (once per day)
+					this.recurrenceMaintenanceInterval = setInterval(
+						() => this.maintainRecurrenceWindows(),
+						24 * 60 * 60 * 1000 // 24 hours
+					);
+				}, 10000) as unknown as number // 10 second delay after startup
+			);
+
 			// Defer heavy service initialization until needed
 			this.initializeServicesLazily();
 
@@ -583,6 +611,43 @@ export default class TaskNotesPlugin extends Plugin {
 			}
 		} catch (error) {
 			console.error("Error during post-layout initialization:", error);
+		}
+	}
+
+	/**
+	 * Maintain the rolling window of planned time entries for recurring tasks.
+	 * Extends the window if needed and prunes old entries.
+	 */
+	private async maintainRecurrenceWindows(): Promise<void> {
+		try {
+			const recurrenceService = new RecurrenceEntryService();
+			const windowMonths = this.settings.recurrenceWindowMonths || 3;
+			const allTasks = await this.cacheManager.getAllTasks();
+
+			let updatedCount = 0;
+			for (const task of allTasks) {
+				if (!task.recurrence || !task.timeEntries?.length) continue;
+
+				// Check if any entries have fromRecurrence flag
+				const hasRecurrenceEntries = task.timeEntries.some((e: UnifiedTimeEntry) => e.fromRecurrence);
+				if (!hasRecurrenceEntries) continue;
+
+				const updatedEntries = recurrenceService.maintainWindow(task, windowMonths);
+				if (updatedEntries) {
+					try {
+						await this.taskService.updateTask(task, { timeEntries: updatedEntries });
+						updatedCount++;
+					} catch (err) {
+						console.warn(`[TaskNotes] Failed to maintain recurrence window for ${task.path}:`, err);
+					}
+				}
+			}
+
+			if (updatedCount > 0) {
+				console.log(`[TaskNotes] Maintained recurrence windows for ${updatedCount} tasks`);
+			}
+		} catch (error) {
+			console.warn("[TaskNotes] Error during recurrence window maintenance:", error);
 		}
 	}
 
@@ -1104,6 +1169,12 @@ export default class TaskNotesPlugin extends Plugin {
 	}
 
 	onunload() {
+		// Clean up recurrence maintenance interval
+		if (this.recurrenceMaintenanceInterval) {
+			clearInterval(this.recurrenceMaintenanceInterval);
+			this.recurrenceMaintenanceInterval = null;
+		}
+
 		// Unregister Bases views
 		if (this.settings?.enableBases) {
 			import("./bases/registration").then(({ unregisterBasesViews }) => {

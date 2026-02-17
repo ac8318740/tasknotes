@@ -439,6 +439,7 @@ export interface TaskInfo {
 	status: string;
 	priority: string;
 	due?: string;
+	/** Computed: earliest future planned time entry's startTime. Do not write to frontmatter directly. */
 	scheduled?: string; // Date (YYYY-MM-DD) when task is scheduled to be worked on
 	path: string;
 	archived: boolean;
@@ -447,11 +448,13 @@ export interface TaskInfo {
 	projects?: string[];
 	recurrence?: string; // RFC 5545 recurrence rule string
 	recurrence_anchor?: 'scheduled' | 'completion'; // Determines if recurrence is from scheduled date (fixed) or completion date (flexible). Defaults to 'scheduled'
+	/** @deprecated Completion is now tracked via logged time entries (type: "logged") */
 	complete_instances?: string[]; // Array of dates (YYYY-MM-DD) when recurring task was completed
+	/** @deprecated Skips are now tracked by absent time entries */
 	skipped_instances?: string[]; // Array of dates (YYYY-MM-DD) when recurring task was skipped
 	completedDate?: string; // Date (YYYY-MM-DD) when task was marked as done
 	timeEstimate?: number; // Estimated time in minutes
-	timeEntries?: TimeEntry[]; // Individual time tracking sessions
+	timeEntries?: UnifiedTimeEntry[]; // Past time entries AND future time blocks
 	totalTrackedTime?: number; // Total tracked time in minutes (calculated from timeEntries)
 	dateCreated?: string; // Creation date (ISO timestamp)
 	dateModified?: string; // Last modification date (ISO timestamp)
@@ -475,11 +478,37 @@ export interface TaskCreationData extends Partial<TaskInfo> {
 	customFrontmatter?: Record<string, any>; // Custom frontmatter properties (including user fields)
 }
 
+/**
+ * @deprecated Use UnifiedTimeEntry instead. Kept for backward compatibility.
+ */
 export interface TimeEntry {
 	startTime: string; // ISO timestamp
 	endTime?: string; // ISO timestamp, undefined if currently running
 	description?: string; // Optional description of what was worked on
 	duration?: number; // Legacy field; duration should be derived from start/end timestamps
+}
+
+/**
+ * Unified time entry representing both past time entries and future time blocks.
+ * UI labels entries as "time block" (future) or "time entry" (past) based on startTime.
+ */
+export interface UnifiedTimeEntry {
+	id: string;            // "te-{timestamp}-{random}"
+	type?: "planned" | "logged"; // "planned" = future timeblock, "logged" = recorded time tracking session
+	startTime: string;     // ISO datetime: "2026-02-18T09:00:00+11:00" (required). Date-only "2026-02-18" for date-only scheduling.
+	endTime?: string;      // ISO datetime (optional — absent if running or date-only)
+	title?: string;        // Display override (falls back to task title)
+	color?: string;        // Hex color override
+	description?: string;  // What was done (past) or what's planned (future)
+	duration?: number;     // Duration in minutes (computed, kept for backward compat)
+	fromRecurrence?: boolean; // true = auto-generated from RRULE pattern
+}
+
+/**
+ * Time entry stored on a daily note, extending UnifiedTimeEntry with a task link.
+ */
+export interface DailyNoteTimeEntry extends UnifiedTimeEntry {
+	taskLink?: string;     // Wikilink: "[[Tasks/Write Q1 report]]"
 }
 
 // Reminder types
@@ -550,7 +579,7 @@ export interface TaskFrontmatter {
 	complete_instances?: string[];
 	completedDate?: string;
 	timeEstimate?: number;
-	timeEntries?: TimeEntry[];
+	timeEntries?: UnifiedTimeEntry[];
 }
 
 export interface NoteFrontmatter {
@@ -565,7 +594,8 @@ export interface DailyNoteFrontmatter {
 	dateCreated?: string;
 	dateModified?: string;
 	tags?: string[];
-	timeblocks?: TimeBlock[]; // Timeblocks for the day
+	timeblocks?: TimeBlock[]; // Timeblocks for the day (legacy format)
+	timeEntries?: DailyNoteTimeEntry[]; // Unified time entries (only present when timeEntriesStorage = "dailyNote")
 }
 
 // Event handler types

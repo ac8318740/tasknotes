@@ -1,8 +1,8 @@
 /* eslint-disable no-console, @typescript-eslint/no-non-null-assertion */
-import { App, Notice, TFile, TAbstractFile, setIcon, setTooltip } from "obsidian";
+import { App, Menu, Notice, TFile, TAbstractFile, setIcon, setTooltip } from "obsidian";
 import TaskNotesPlugin from "../main";
 import { TaskModal } from "./TaskModal";
-import { TaskDependency, TaskInfo } from "../types";
+import { TaskDependency, TaskInfo, UnifiedTimeEntry, EVENT_DATA_CHANGED } from "../types";
 import {
 	getCurrentTimestamp,
 	formatDateForStorage,
@@ -22,12 +22,14 @@ import {
 	formatTime,
 	updateToNextScheduledOccurrence,
 	sanitizeTags,
+	generateTimeEntryId,
 } from "../utils/helpers";
 import { splitListPreservingLinksAndQuotes } from "../utils/stringSplit";
 import { ReminderContextMenu } from "../components/ReminderContextMenu";
 import { generateLinkWithDisplay, parseLinkToPath } from "../utils/linkUtils";
 import { EmbeddableMarkdownEditor } from "../editor/EmbeddableMarkdownEditor";
 import { ConfirmationModal } from "./ConfirmationModal";
+import { showUnifiedTimeInfoModal } from "./UnifiedTimeInfoModal";
 
 export interface TaskEditOptions {
 	task: TaskInfo;
@@ -321,6 +323,7 @@ export class TaskEditModal extends TaskModal {
 	 * Add completions calendar and metadata sections after details
 	 */
 	protected createAdditionalSections(container: HTMLElement): void {
+		this.createTimeSection(container);
 		this.createCompletionsCalendarSection(container);
 		this.createMetadataSection(container);
 	}
@@ -453,15 +456,6 @@ export class TaskEditModal extends TaskModal {
 
 		const metadataContent = this.metadataContainer.createDiv("metadata-content");
 
-		// Total tracked time
-		const totalTimeSpent = calculateTotalTimeSpent(this.task.timeEntries || []);
-		if (totalTimeSpent > 0) {
-			const timeDiv = metadataContent.createDiv("metadata-item");
-			timeDiv.createSpan("metadata-key").textContent =
-				this.t("modals.taskEdit.metadata.totalTrackedTime") + " ";
-			timeDiv.createSpan("metadata-value").textContent = formatTime(totalTimeSpent);
-		}
-
 		// Created date
 		if (this.task.dateCreated) {
 			const createdDiv = metadataContent.createDiv("metadata-item");
@@ -488,6 +482,197 @@ export class TaskEditModal extends TaskModal {
 			pathDiv.createSpan("metadata-key").textContent =
 				this.t("modals.taskEdit.metadata.file") + " ";
 			pathDiv.createSpan("metadata-value").textContent = this.task.path;
+		}
+	}
+
+	private createTimeSection(container: HTMLElement): void {
+		const timeEntries = this.task.timeEntries || [];
+
+		// Only show if there are entries or time tracking is relevant
+		const totalTimeSpent = calculateTotalTimeSpent(timeEntries);
+		if (timeEntries.length === 0 && totalTimeSpent === 0) return;
+
+		const sectionContainer = container.createDiv("time-section-container");
+
+		const sectionLabel = sectionContainer.createDiv("detail-label");
+		sectionLabel.textContent = this.t("modals.taskEdit.sections.time");
+
+		const now = new Date();
+		const futureEntries = timeEntries.filter(e => new Date(e.startTime) > now);
+		const pastEntries = timeEntries.filter(e => new Date(e.startTime) <= now);
+
+		// Upcoming section
+		if (futureEntries.length > 0) {
+			this.renderTimeEntryGroup(sectionContainer,
+				this.t("modals.taskEdit.sections.upcoming"),
+				futureEntries.sort((a, b) => a.startTime.localeCompare(b.startTime)),
+				true
+			);
+		}
+
+		// Add time block button (future)
+		const addBlockBtn = sectionContainer.createEl("button", {
+			cls: "time-section__add-button time-section__add-button--future",
+			text: "+ " + this.t("modals.taskEdit.sections.addTimeBlock"),
+		});
+		addBlockBtn.addEventListener("click", () => {
+			const tomorrow = new Date();
+			tomorrow.setDate(tomorrow.getDate() + 1);
+			tomorrow.setHours(9, 0, 0, 0);
+			const end = new Date(tomorrow);
+			end.setHours(10, 0, 0, 0);
+
+			const newEntry: UnifiedTimeEntry = {
+				id: generateTimeEntryId(),
+				type: "planned",
+				startTime: tomorrow.toISOString(),
+				endTime: end.toISOString(),
+			};
+			showUnifiedTimeInfoModal(newEntry, this.task, this.plugin, () => {
+				this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+			}, { isNew: true });
+		});
+
+		// History section
+		if (pastEntries.length > 0) {
+			this.renderTimeEntryGroup(sectionContainer,
+				this.t("modals.taskEdit.sections.history"),
+				pastEntries.sort((a, b) => b.startTime.localeCompare(a.startTime)),
+				false
+			);
+		}
+
+		// Total tracked time
+		if (totalTimeSpent > 0) {
+			const totalDiv = sectionContainer.createDiv("time-section__total");
+			totalDiv.textContent = this.t("modals.taskEdit.sections.totalTracked", {
+				time: formatTime(totalTimeSpent),
+			});
+		}
+	}
+
+	private renderTimeEntryGroup(
+		container: HTMLElement,
+		headerText: string,
+		entries: UnifiedTimeEntry[],
+		isFuture: boolean
+	): void {
+		const COLLAPSE_THRESHOLD = 5;
+		const shouldCollapse = !isFuture && entries.length > COLLAPSE_THRESHOLD;
+
+		const headerEl = container.createDiv("time-section__group-header");
+		headerEl.textContent = headerText + (entries.length > 1 ? ` (${entries.length})` : "");
+
+		const entriesContainer = container.createDiv("time-section__entries");
+
+		if (shouldCollapse) {
+			// Render only the first N entries initially
+			const visibleEntries = entries.slice(0, COLLAPSE_THRESHOLD);
+			const hiddenEntries = entries.slice(COLLAPSE_THRESHOLD);
+
+			for (const entry of visibleEntries) {
+				this.renderTimeEntryRow(entriesContainer, entry, isFuture);
+			}
+
+			const hiddenContainer = entriesContainer.createDiv("time-section__hidden-entries");
+			hiddenContainer.style.display = "none";
+			for (const entry of hiddenEntries) {
+				this.renderTimeEntryRow(hiddenContainer, entry, isFuture);
+			}
+
+			const toggleBtn = entriesContainer.createEl("button", {
+				cls: "time-section__toggle-button",
+				text: `Show ${hiddenEntries.length} more...`,
+			});
+			toggleBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				const isHidden = hiddenContainer.style.display === "none";
+				hiddenContainer.style.display = isHidden ? "block" : "none";
+				toggleBtn.textContent = isHidden
+					? "Show less"
+					: `Show ${hiddenEntries.length} more...`;
+			});
+		} else {
+			for (const entry of entries) {
+				this.renderTimeEntryRow(entriesContainer, entry, isFuture);
+			}
+		}
+	}
+
+	private renderTimeEntryRow(
+		container: HTMLElement,
+		entry: UnifiedTimeEntry,
+		isFuture: boolean
+	): void {
+		const row = container.createDiv("time-section__entry");
+		row.addEventListener("click", () => {
+			showUnifiedTimeInfoModal(entry, this.task, this.plugin, () => {
+				this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+			});
+		});
+		row.addEventListener("contextmenu", (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const menu = new Menu();
+			menu.addItem((item) => {
+				item.setTitle("Edit")
+					.setIcon("pencil")
+					.onClick(() => {
+						showUnifiedTimeInfoModal(entry, this.task, this.plugin, () => {
+							this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+						});
+					});
+			});
+			menu.addItem((item) => {
+				item.setTitle("Delete")
+					.setIcon("trash")
+					.onClick(async () => {
+						if (entry.id) {
+							const entries = (this.task.timeEntries || []).filter(
+								(e) => e.id !== entry.id
+							);
+							await this.plugin.taskService.updateTask(this.task, { timeEntries: entries });
+							this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+							new Notice("Time entry deleted");
+						}
+					});
+			});
+			menu.showAtMouseEvent(e);
+		});
+
+		// Color dot
+		const dot = row.createDiv("time-section__dot");
+		dot.addClass(isFuture ? "time-section__dot--future" : "time-section__dot--past");
+		if (entry.color) {
+			dot.style.backgroundColor = entry.color;
+		}
+
+		// Info column
+		const infoCol = row.createDiv("time-section__entry-info");
+
+		// Time display
+		const timeEl = infoCol.createDiv("time-section__entry-time");
+		const startDate = new Date(entry.startTime);
+		const startStr = (window as any).moment(startDate).format("MMM D, HH:mm");
+
+		if (entry.endTime) {
+			const endDate = new Date(entry.endTime);
+			const durationMin = Math.round((endDate.getTime() - startDate.getTime()) / 60000);
+			const endStr = (window as any).moment(endDate).format("HH:mm");
+			timeEl.textContent = `${startStr}–${endStr}`;
+
+			const durationSpan = timeEl.createSpan("time-section__entry-duration");
+			durationSpan.textContent = ` (${formatTime(durationMin)})`;
+		} else {
+			timeEl.textContent = startStr;
+			const runningSpan = timeEl.createSpan("time-section__entry-duration");
+			runningSpan.textContent = ` (${this.t("modals.taskEdit.sections.running")})`;
+		}
+
+		// Title (if different from task title)
+		if (entry.title) {
+			const titleEl = infoCol.createDiv("time-section__entry-title");
+			titleEl.textContent = entry.title;
 		}
 	}
 
@@ -736,6 +921,36 @@ export class TaskEditModal extends TaskModal {
 		}
 
 		if (this.scheduledDate !== (this.task.scheduled || "")) {
+			// Convert scheduled date change to a time entry update
+			// The FieldMapper computes scheduled from time entries, so we create/update a planned entry
+			const entries: UnifiedTimeEntry[] = this.task.timeEntries
+				? [...this.task.timeEntries]
+				: [];
+
+			if (this.scheduledDate) {
+				// Find existing non-recurrence planned entry to update
+				const existingIdx = entries.findIndex(
+					(e) => e.type === "planned" && !e.fromRecurrence
+				);
+				if (existingIdx >= 0) {
+					entries[existingIdx] = { ...entries[existingIdx], startTime: this.scheduledDate };
+				} else {
+					entries.push({
+						id: generateTimeEntryId(),
+						type: "planned",
+						startTime: this.scheduledDate,
+					});
+				}
+			} else {
+				// Clear: remove non-recurrence planned entries
+				const filtered = entries.filter(
+					(e) => !(e.type === "planned" && !e.fromRecurrence)
+				);
+				entries.length = 0;
+				entries.push(...filtered);
+			}
+			changes.timeEntries = entries;
+			// Also set scheduled so updateTask knows about the change for recurrence handling
 			changes.scheduled = this.scheduledDate || undefined;
 		}
 

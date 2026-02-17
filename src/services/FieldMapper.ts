@@ -133,6 +133,22 @@ export class FieldMapper {
 			mapped.timeEntries = Array.isArray(timeEntriesValue) ? timeEntriesValue : [];
 		}
 
+		// Compute scheduled from earliest future planned time entry (all tasks)
+		// This overwrites any frontmatter-read scheduled value for tasks with time entries
+		if (mapped.timeEntries?.length) {
+			const now = new Date();
+			const planned = (mapped.timeEntries as any[])
+				.filter((e) => e.type === "planned")
+				.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+			const target = planned.find((e) => new Date(e.startTime) >= now) || planned[0];
+			if (target) {
+				const startTime = target.startTime as string;
+				mapped.scheduled = startTime.length === 10
+					? startTime
+					: startTime.substring(0, 10);
+			}
+		}
+
 		if (frontmatter[this.mapping.completeInstances] !== undefined) {
 			// Validate and clean the complete_instances array
 			mapped.complete_instances = validateCompleteInstances(
@@ -225,9 +241,8 @@ export class FieldMapper {
 			frontmatter[this.mapping.due] = taskData.due;
 		}
 
-		if (taskData.scheduled !== undefined) {
-			frontmatter[this.mapping.scheduled] = taskData.scheduled;
-		}
+		// scheduled is now computed from time entries — do not write to frontmatter.
+		// Pre-migration tasks retain their frontmatter scheduled field until migrated.
 
 		if (taskData.contexts !== undefined && (!Array.isArray(taskData.contexts) || taskData.contexts.length > 0)) {
 			frontmatter[this.mapping.contexts] = taskData.contexts;

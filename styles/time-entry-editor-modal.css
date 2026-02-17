@@ -215,3 +215,156 @@
         width: 100%;
     }
 }
+
+/* =====================================================================
+   UNIFIED TIME SECTION - TASK MODAL
+   ===================================================================== */
+
+.time-section-container {
+    margin-top: 8px;
+}
+
+.time-section__group-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 12px 0 4px 0;
+}
+
+.time-section__entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.time-section__entry:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.time-section__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.time-section__dot--future {
+    background-color: #6366f1;
+}
+
+.time-section__dot--past {
+    background-color: #10b981;
+}
+
+.time-section__entry-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.time-section__entry-time {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-normal);
+}
+
+.time-section__entry-duration {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.time-section__entry-title {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time-section__entry-relative {
+    font-size: 0.75rem;
+    color: var(--text-faint);
+}
+
+.time-section__add-button {
+    background: none;
+    border: 1px dashed var(--background-modifier-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin: 4px 0;
+    width: 100%;
+    text-align: left;
+}
+
+.time-section__add-button--future {
+    color: #6366f1;
+}
+
+.time-section__add-button--past {
+    color: #10b981;
+}
+
+.time-section__add-button:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.time-section__total {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 8px 0 4px 0;
+    border-top: 1px solid var(--background-modifier-border);
+    margin-top: 8px;
+}
+
+/* =====================================================================
+   UNIFIED TIME INFO MODAL
+   ===================================================================== */
+
+.unified-time-info-modal .modal-content {
+    padding: 16px;
+}
+
+.unified-time-info-modal__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.unified-time-info-modal__datetime {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.unified-time-info-modal__actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+/* NLP datetime input styles */
+.nlp-datetime-input {
+    font-family: var(--font-interface);
+}
+
+.nlp-datetime-error {
+    border-color: var(--text-error) !important;
+}
+
+.nlp-datetime-valid {
+    border-color: var(--interactive-accent) !important;
+}
+
+.unified-time-info-modal__task .setting-item {
+    border: none;
+}

@@ -1,14 +1,14 @@
 /* eslint-disable @microsoft/sdl/no-inner-html */
 import { App, Modal, Notice, Setting } from "obsidian";
-import { TimeEntry, TaskInfo } from "../types";
+import { TimeEntry, UnifiedTimeEntry, TaskInfo } from "../types";
 import type TaskNotesPlugin from "../main";
 import { TranslationKey } from "../i18n";
 
 export class TimeEntryEditorModal extends Modal {
 	private plugin: TaskNotesPlugin;
 	private task: TaskInfo;
-	private timeEntries: TimeEntry[];
-	private onSave: (timeEntries: TimeEntry[]) => void;
+	private timeEntries: UnifiedTimeEntry[];
+	private onSave: (timeEntries: UnifiedTimeEntry[]) => void;
 	private translate: (key: TranslationKey, variables?: Record<string, any>) => string;
 	private entriesContainerEl: HTMLElement;
 	private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -17,7 +17,7 @@ export class TimeEntryEditorModal extends Modal {
 		app: App,
 		plugin: TaskNotesPlugin,
 		task: TaskInfo,
-		onSave: (timeEntries: TimeEntry[]) => void
+		onSave: (timeEntries: UnifiedTimeEntry[]) => void
 	) {
 		super(app);
 		this.plugin = plugin;
@@ -119,7 +119,7 @@ export class TimeEntryEditorModal extends Modal {
 		});
 	}
 
-	private renderEntry(entry: TimeEntry, index: number) {
+	private renderEntry(entry: UnifiedTimeEntry, index: number) {
 		const entryEl = this.entriesContainerEl.createDiv({ cls: "time-entry-editor-modal__entry" });
 
 		// Entry header with delete button
@@ -192,7 +192,7 @@ export class TimeEntryEditorModal extends Modal {
 			});
 	}
 
-	private calculateDuration(entry: TimeEntry): number {
+	private calculateDuration(entry: UnifiedTimeEntry): number {
 		if (!entry.endTime) {
 			// Entry is still running, calculate from start to now
 			const now = new Date();
@@ -215,7 +215,8 @@ export class TimeEntryEditorModal extends Modal {
 		const now = new Date();
 		const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-		const newEntry: TimeEntry = {
+		const newEntry: UnifiedTimeEntry = {
+			id: `te-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
 			startTime: oneHourAgo.toISOString(),
 			endTime: now.toISOString(),
 			description: "",

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { TFile, setIcon, Notice, Modal, App, setTooltip, parseLinktext, Menu, type CachedMetadata } from "obsidian";
-import { TaskInfo } from "../types";
+import { TaskInfo, UnifiedTimeEntry } from "../types";
 import TaskNotesPlugin from "../main";
 import { TaskContextMenu } from "../components/TaskContextMenu";
 import {
@@ -9,6 +9,7 @@ import {
 	filterEmptyProjects,
 	calculateTotalTimeSpent,
 	sanitizeForCssClass,
+	generateTimeEntryId,
 } from "../utils/helpers";
 import { FilterUtils } from "../utils/FilterUtils";
 import {
@@ -24,6 +25,7 @@ import { PriorityContextMenu } from "../components/PriorityContextMenu";
 import { RecurrenceContextMenu } from "../components/RecurrenceContextMenu";
 import { createTaskClickHandler, createTaskHoverHandler } from "../utils/clickHandlers";
 import { ReminderModal } from "../modals/ReminderModal";
+import { showUnifiedTimeInfoModal } from "../modals/UnifiedTimeInfoModal";
 import {
 	renderProjectLinks,
 	renderTextWithLinks,
@@ -402,35 +404,64 @@ function attachDateClickHandler(
 ): void {
 	span.addEventListener("click", (e) => {
 		e.stopPropagation(); // Don't trigger card click
-		const currentValue = dateType === "due" ? task.due : task.scheduled;
-		const menu = new DateContextMenu({
-			currentValue: getDatePart(currentValue || ""),
-			currentTime: getTimePart(currentValue || ""),
-			onSelect: async (dateValue, timeValue) => {
-				try {
-					let finalValue: string | undefined;
-					if (!dateValue) {
-						finalValue = undefined;
-					} else if (timeValue) {
-						finalValue = `${dateValue}T${timeValue}`;
-					} else {
-						finalValue = dateValue;
+
+		if (dateType === "scheduled") {
+			// Open UnifiedTimeInfoModal for scheduled dates
+			// Find existing planned entry or create a new one
+			const plannedEntries = (task.timeEntries || [])
+				.filter((entry: UnifiedTimeEntry) => entry.type === "planned")
+				.sort((a: UnifiedTimeEntry, b: UnifiedTimeEntry) =>
+					new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+				);
+			const now = new Date();
+			const futureEntry = plannedEntries.find(
+				(entry: UnifiedTimeEntry) => new Date(entry.startTime) >= now
+			);
+			const targetEntry = futureEntry || plannedEntries[0];
+
+			if (targetEntry) {
+				showUnifiedTimeInfoModal(targetEntry, task, plugin, () => {
+					plugin.notifyDataChanged();
+				});
+			} else {
+				// No planned entry exists — create one and open in creation mode
+				const newEntry: UnifiedTimeEntry = {
+					id: generateTimeEntryId(),
+					type: "planned",
+					startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+				};
+				showUnifiedTimeInfoModal(newEntry, task, plugin, () => {
+					plugin.notifyDataChanged();
+				}, { isNew: true });
+			}
+		} else {
+			// Keep DateContextMenu for due dates
+			const currentValue = task.due;
+			const menu = new DateContextMenu({
+				currentValue: getDatePart(currentValue || ""),
+				currentTime: getTimePart(currentValue || ""),
+				onSelect: async (dateValue, timeValue) => {
+					try {
+						let finalValue: string | undefined;
+						if (!dateValue) {
+							finalValue = undefined;
+						} else if (timeValue) {
+							finalValue = `${dateValue}T${timeValue}`;
+						} else {
+							finalValue = dateValue;
+						}
+						await plugin.updateTaskProperty(task, "due", finalValue);
+					} catch (error) {
+						const errorMessage = error instanceof Error ? error.message : String(error);
+						console.error(`Error updating due date:`, errorMessage);
+						new Notice(plugin.i18n.translate("contextMenus.task.notices.updateDueDateFailure", { message: errorMessage }));
 					}
-					await plugin.updateTaskProperty(task, dateType, finalValue);
-				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : String(error);
-					console.error(`Error updating ${dateType} date:`, errorMessage);
-					const noticeKey =
-						dateType === "due"
-							? "contextMenus.task.notices.updateDueDateFailure"
-							: "contextMenus.task.notices.updateScheduledFailure";
-					new Notice(plugin.i18n.translate(noticeKey, { message: errorMessage }));
-				}
-			},
-			plugin,
-			app: plugin.app,
-		});
-		menu.show(e as MouseEvent);
+				},
+				plugin,
+				app: plugin.app,
+			});
+			menu.show(e as MouseEvent);
+		}
 	});
 }
 

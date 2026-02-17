@@ -28,6 +28,10 @@ export interface TimeblockCreationOptions {
 	prefilledTitle?: string;
 }
 
+/**
+ * @deprecated Use UnifiedTimeInfoModal with `isNew: true` instead.
+ * Kept for backward compatibility with legacy timeblock creation flow.
+ */
 export class TimeblockCreationModal extends Modal {
 	plugin: TaskNotesPlugin;
 	options: TimeblockCreationOptions;
