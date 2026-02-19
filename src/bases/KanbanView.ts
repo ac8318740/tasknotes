@@ -39,7 +39,6 @@ export class KanbanView extends BasesViewBase {
 	private dragContainer: HTMLElement | null = null; // Container holding siblings during drag
 	private currentInsertionIndex: number = -1; // Current gap/slot position
 	private dragSourceColumnEl: HTMLElement | null = null; // Source column element (height-locked during drag)
-	private dragTargetColumnEl: HTMLElement | null = null; // Target column element (max-height expanded during drag)
 	private draggedSourceColumns: Map<string, string> = new Map(); // Track source column per task for batch operations
 	private draggedSourceSwimlanes: Map<string, string> = new Map(); // Track source swimlane per task for batch operations
 	private taskInfoCache = new Map<string, TaskInfo>();
@@ -2145,12 +2144,6 @@ export class KanbanView extends BasesViewBase {
 				w.classList.remove("kanban-view__card-wrapper--drag-shift", "kanban-view__card-wrapper--shift-down");
 			}
 			this.dragContainer = null;
-		}
-
-		// Reset target column max-height
-		if (this.dragTargetColumnEl) {
-			this.dragTargetColumnEl.style.maxHeight = "";
-			this.dragTargetColumnEl = null;
 		}
 
 		// Also clean any wrappers on the entire board (safety net for cross-column)
