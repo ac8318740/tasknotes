@@ -155,11 +155,23 @@ export class ScheduledMigrationService {
 			if (!scheduledValue) return;
 
 			// Create planned time entry from scheduled value
+			const rawValue = String(scheduledValue);
+			const hasTime = rawValue.includes("T");
 			const newEntry: UnifiedTimeEntry = {
 				id: generateTimeEntryId(),
 				type: "planned",
-				startTime: String(scheduledValue),
+				startTime: rawValue,
 			};
+
+			if (hasTime) {
+				// Timed entry: endTime from timeEstimate or default 60 min
+				const durationMin = task.timeEstimate && task.timeEstimate > 0
+					? task.timeEstimate : 60;
+				const startMs = new Date(rawValue).getTime();
+				newEntry.endTime = new Date(startMs + durationMin * 60 * 1000).toISOString();
+				newEntry.duration = durationMin;
+			}
+			// Date-only entries stay as-is: all-day tasks don't need endTime
 
 			// Add to existing time entries
 			const entries: UnifiedTimeEntry[] = Array.isArray(frontmatter[timeEntriesField])
