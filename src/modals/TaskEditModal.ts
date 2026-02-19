@@ -55,6 +55,7 @@ export class TaskEditModal extends TaskModal {
 	private initialTags = "";
 	private isShowingConfirmation = false;
 	private pendingClose = false;
+	private timeSectionParent: HTMLElement | null = null;
 
 	constructor(app: App, plugin: TaskNotesPlugin, options: TaskEditOptions) {
 		super(app, plugin);
@@ -486,11 +487,10 @@ export class TaskEditModal extends TaskModal {
 	}
 
 	private createTimeSection(container: HTMLElement): void {
+		this.timeSectionParent = container;
 		const timeEntries = this.task.timeEntries || [];
 
-		// Only show if there are entries or time tracking is relevant
 		const totalTimeSpent = calculateTotalTimeSpent(timeEntries);
-		if (timeEntries.length === 0 && totalTimeSpent === 0) return;
 
 		const sectionContainer = container.createDiv("time-section-container");
 
@@ -528,8 +528,9 @@ export class TaskEditModal extends TaskModal {
 				startTime: tomorrow.toISOString(),
 				endTime: end.toISOString(),
 			};
-			showUnifiedTimeInfoModal(newEntry, this.task, this.plugin, () => {
+			showUnifiedTimeInfoModal(newEntry, this.task, this.plugin, async () => {
 				this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+				await this.rebuildTimeSection();
 			}, { isNew: true });
 		});
 
@@ -549,6 +550,14 @@ export class TaskEditModal extends TaskModal {
 				time: formatTime(totalTimeSpent),
 			});
 		}
+	}
+
+	private async rebuildTimeSection(): Promise<void> {
+		if (!this.timeSectionParent) return;
+		const old = this.timeSectionParent.querySelector(".time-section-container");
+		if (old) old.remove();
+		await this.refreshTaskData();
+		this.createTimeSection(this.timeSectionParent);
 	}
 
 	private renderTimeEntryGroup(
@@ -606,8 +615,9 @@ export class TaskEditModal extends TaskModal {
 	): void {
 		const row = container.createDiv("time-section__entry");
 		row.addEventListener("click", () => {
-			showUnifiedTimeInfoModal(entry, this.task, this.plugin, () => {
+			showUnifiedTimeInfoModal(entry, this.task, this.plugin, async () => {
 				this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+				await this.rebuildTimeSection();
 			});
 		});
 		row.addEventListener("contextmenu", (e) => {
@@ -618,8 +628,9 @@ export class TaskEditModal extends TaskModal {
 				item.setTitle("Edit")
 					.setIcon("pencil")
 					.onClick(() => {
-						showUnifiedTimeInfoModal(entry, this.task, this.plugin, () => {
+						showUnifiedTimeInfoModal(entry, this.task, this.plugin, async () => {
 							this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+							await this.rebuildTimeSection();
 						});
 					});
 			});
@@ -634,6 +645,7 @@ export class TaskEditModal extends TaskModal {
 							await this.plugin.taskService.updateTask(this.task, { timeEntries: entries });
 							this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
 							new Notice("Time entry deleted");
+							await this.rebuildTimeSection();
 						}
 					});
 			});
