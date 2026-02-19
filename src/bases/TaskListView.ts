@@ -2,7 +2,7 @@
 import { Notice, TFile, setIcon } from "obsidian";
 import TaskNotesPlugin from "../main";
 import { BasesViewBase } from "./BasesViewBase";
-import { TaskInfo } from "../types";
+import { TaskInfo, UnifiedTimeEntry } from "../types";
 import { identifyTaskNotesFromBasesData, BasesDataItem } from "./helpers";
 import { createTaskCard, showTaskContextMenu } from "../ui/TaskCard";
 import { renderGroupTitle } from "./groupTitleRenderer";
@@ -19,6 +19,8 @@ import {
 	computeSortOrder,
 	DropOperationQueue,
 } from "./sortOrderUtils";
+import { showUnifiedTimeInfoModal } from "../modals/UnifiedTimeInfoModal";
+import { generateTimeEntryId } from "../utils/helpers";
 
 export class TaskListView extends BasesViewBase {
 	type = "tasknotesTaskList";
@@ -1423,9 +1425,39 @@ export class TaskListView extends BasesViewBase {
 			case "task-context-menu":
 				await showTaskContextMenu(event, task.path, this.plugin, this.getTaskActionDate(task));
 				return;
-			case "edit-date":
-				await this.openDateContextMenu(task, target.dataset.tnDateType as "due" | "scheduled" | undefined, event);
+			case "edit-date": {
+				const dateType = target.dataset.tnDateType as "due" | "scheduled" | undefined;
+				if (dateType === "scheduled") {
+					// Open UnifiedTimeInfoModal for scheduled dates
+					const plannedEntries = (task.timeEntries || [])
+						.filter((entry: UnifiedTimeEntry) => entry.type === "planned")
+						.sort((a: UnifiedTimeEntry, b: UnifiedTimeEntry) =>
+							new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+						);
+					const now = new Date();
+					const futureEntry = plannedEntries.find(
+						(entry: UnifiedTimeEntry) => new Date(entry.startTime) >= now
+					);
+					const targetEntry = futureEntry || plannedEntries[0];
+					if (targetEntry) {
+						showUnifiedTimeInfoModal(targetEntry, task, this.plugin, () => {
+							this.plugin.notifyDataChanged();
+						});
+					} else {
+						const newEntry: UnifiedTimeEntry = {
+							id: generateTimeEntryId(),
+							type: "planned",
+							startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+						};
+						showUnifiedTimeInfoModal(newEntry, task, this.plugin, () => {
+							this.plugin.notifyDataChanged();
+						}, { isNew: true });
+					}
+				} else {
+					await this.openDateContextMenu(task, dateType, event);
+				}
 				return;
+			}
 			case "filter-project-subtasks":
 				await this.filterProjectSubtasks(task);
 				return;
