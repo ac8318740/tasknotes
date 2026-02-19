@@ -1,4 +1,4 @@
-import { TaskInfo, TimeEntry } from "../types";
+import { TaskInfo, TimeEntry, UnifiedTimeEntry } from "../types";
 
 export interface ActiveSessionInfo {
 	task: {
@@ -82,10 +82,12 @@ export function calculateTotalTimeSpent(timeEntries: TimeEntry[]): number {
 			const durationMs =
 				new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime();
 			return total + Math.floor(durationMs / (1000 * 60));
-		} else {
-			// Active session
+		} else if ((entry as UnifiedTimeEntry).type !== "planned" && entry.startTime.includes("T")) {
+			// Active session (only for timed, non-planned entries)
 			const elapsedMs = Date.now() - new Date(entry.startTime).getTime();
 			return total + Math.floor(elapsedMs / (1000 * 60));
+		} else {
+			return total;
 		}
 	}, 0);
 }
@@ -192,12 +194,14 @@ export function computeTimeSummary(
 			const entryStart = new Date(entry.startTime);
 
 			if (entryStart >= startDate && entryStart <= endDate) {
-				if (!entry.endTime) {
+				if (entry.duration) {
+					taskMinutes += entry.duration;
+				} else if (!entry.endTime && entry.type !== "planned" && entry.startTime.includes("T")) {
 					taskMinutes += Math.floor(
 						(Date.now() - entryStart.getTime()) / (1000 * 60)
 					);
 					hasActiveSession = true;
-				} else {
+				} else if (entry.endTime) {
 					const entryEnd = new Date(entry.endTime);
 					taskMinutes += Math.floor(
 						(entryEnd.getTime() - entryStart.getTime()) / (1000 * 60)
@@ -325,17 +329,19 @@ export function computeTaskTimeData(
 			startTime: entry.startTime,
 			endTime: entry.endTime || null,
 			description: entry.description || null,
-			duration: entry.endTime
-				? Math.floor(
-						(new Date(entry.endTime).getTime() -
-							new Date(entry.startTime).getTime()) /
-							(1000 * 60)
-					)
-				: Math.floor(
-						(Date.now() - new Date(entry.startTime).getTime()) /
-							(1000 * 60)
-					),
-			isActive: !entry.endTime,
+			duration:
+				entry.duration ||
+				(entry.endTime
+					? Math.floor(
+							(new Date(entry.endTime).getTime() -
+								new Date(entry.startTime).getTime()) /
+								(1000 * 60)
+						)
+					: Math.floor(
+							(Date.now() - new Date(entry.startTime).getTime()) /
+								(1000 * 60)
+						)),
+			isActive: !entry.endTime && entry.type !== "planned" && entry.startTime.includes("T"),
 		})),
 	};
 }

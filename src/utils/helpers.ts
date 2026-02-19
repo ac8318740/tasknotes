@@ -145,7 +145,12 @@ export function getActiveTimeEntry(timeEntries: TimeEntry[]): TimeEntry | null {
 		return null;
 	}
 
-	return timeEntries.find((entry) => entry.startTime && !entry.endTime) || null;
+	return timeEntries.find((entry) =>
+		entry.startTime &&
+		!entry.endTime &&
+		(entry as UnifiedTimeEntry).type !== "planned" &&
+		entry.startTime.includes("T")  // Exclude date-only (all-day) entries
+	) || null;
 }
 
 /**

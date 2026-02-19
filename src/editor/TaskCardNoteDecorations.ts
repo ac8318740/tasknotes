@@ -233,7 +233,7 @@ export class TaskCardNoteDecorationsPlugin implements PluginValue {
 				const hasActiveSession = (task: TaskInfo | null): boolean => {
 					if (!task?.timeEntries || task.timeEntries.length === 0) return false;
 					const lastEntry = task.timeEntries[task.timeEntries.length - 1];
-					return !lastEntry.endTime;
+					return !lastEntry.endTime && lastEntry.type !== "planned" && lastEntry.startTime.includes("T");
 				};
 
 				// Check if task actually changed - must check all properties that affect widget display
