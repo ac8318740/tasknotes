@@ -40,7 +40,7 @@ import { createPropertyEventCard } from "../ui/PropertyEventCard";
 import { createTimeBlockCard } from "../ui/TimeBlockCard";
 import { TaskContextMenu } from "../components/TaskContextMenu";
 import { ICSEventContextMenu } from "../components/ICSEventContextMenu";
-import { formatDateForStorage, hasTimeComponent, parseDateToLocal, parseDateToUTC } from "../utils/dateUtils";
+import { formatDateForStorage, formatDateWithTimezone, hasTimeComponent, parseDateToLocal, parseDateToUTC } from "../utils/dateUtils";
 
 /**
  * Normalize date-like inputs to UTC-anchored strings for all-day values, or
@@ -1157,13 +1157,9 @@ export class CalendarView extends BasesViewBase {
 			const entryIndex = info.event.extendedProps.timeEntryIndex;
 			if (taskInfo.timeEntries && entryIndex >= 0 && entryIndex < taskInfo.timeEntries.length) {
 				const entry = taskInfo.timeEntries[entryIndex];
-				if (entry.id) {
-					showUnifiedTimeInfoModal(entry, taskInfo, this.plugin, () => this.expectImmediateUpdate());
-					return;
-				}
+				showUnifiedTimeInfoModal(entry, taskInfo, this.plugin, () => this.expectImmediateUpdate());
+				return;
 			}
-			// Fall back to legacy editor for entries without id
-			this.plugin.openTimeEntryEditor(taskInfo, () => this.expectImmediateUpdate());
 			return;
 		}
 
@@ -1385,8 +1381,8 @@ export class CalendarView extends BasesViewBase {
 					}
 					const oldEndDate = new Date(entry.endTime);
 
-					entry.startTime = new Date(oldStartDate.getTime() + timeDiffMs).toISOString();
-					entry.endTime = new Date(oldEndDate.getTime() + timeDiffMs).toISOString();
+					entry.startTime = formatDateWithTimezone(new Date(oldStartDate.getTime() + timeDiffMs));
+					entry.endTime = formatDateWithTimezone(new Date(oldEndDate.getTime() + timeDiffMs));
 					delete entry.duration;
 
 					const sanitizedEntries = updatedEntries.map((timeEntry) => {
@@ -1505,8 +1501,8 @@ export class CalendarView extends BasesViewBase {
 
 				if (entry) {
 					// Update start and end times
-					entry.startTime = newStart.toISOString();
-					entry.endTime = newEnd.toISOString();
+					entry.startTime = formatDateWithTimezone(newStart);
+					entry.endTime = formatDateWithTimezone(newEnd);
 					delete entry.duration;
 
 					const sanitizedEntries = updatedEntries.map((timeEntry) => {
@@ -1685,17 +1681,15 @@ export class CalendarView extends BasesViewBase {
 		});
 
 		// Unified time entry/block creation
-		if (this.plugin.settings.calendarViewSettings.enableTimeblocking || info.start <= new Date()) {
-			menu.addItem((item) => {
-				const isFuture = info.start > new Date();
-				item.setTitle(isFuture ? "Create time block" : "Create time entry")
-					.setIcon(isFuture ? "clock" : "play")
-					.onClick(async () => {
-						this.expectImmediateUpdate();
-						await handleUnifiedTimeEntryCreation(info.start, info.end, info.allDay, this.plugin);
-					});
-			});
-		}
+		menu.addItem((item) => {
+			const isFuture = info.start > new Date();
+			item.setTitle(isFuture ? "Create time block" : "Create time entry")
+				.setIcon(isFuture ? "clock" : "play")
+				.onClick(async () => {
+					this.expectImmediateUpdate();
+					await handleUnifiedTimeEntryCreation(info.start, info.end, info.allDay, this.plugin);
+				});
+		});
 
 		// Show "Create calendar event" if any external calendars are connected
 		const registry = this.plugin.calendarProviderRegistry;

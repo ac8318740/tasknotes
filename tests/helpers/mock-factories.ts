@@ -567,7 +567,17 @@ export const PluginFactory = {
       stopTimeTracking: jest.fn().mockImplementation(async (_task) => {
         return { success: true, sessionEnded: true };
       }),
-      
+
+      // Time entry storage service
+      timeEntryStorageService: {
+        getActiveEntry: jest.fn().mockResolvedValue(null),
+        findRunningEntries: jest.fn().mockResolvedValue([]),
+        readEntries: jest.fn().mockResolvedValue([]),
+        writeEntry: jest.fn().mockResolvedValue(undefined),
+        deleteEntry: jest.fn().mockResolvedValue(undefined),
+        writeAllEntries: jest.fn().mockResolvedValue(undefined),
+      },
+
       ...overrides
     };
 

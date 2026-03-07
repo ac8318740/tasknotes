@@ -345,3 +345,94 @@ export function computeTaskTimeData(
 		})),
 	};
 }
+
+/**
+ * Describes what should happen to an overlapping time entry.
+ */
+export interface OverlapResult {
+	task: TaskInfo;
+	entry: UnifiedTimeEntry;
+	action: "adjust-start" | "adjust-end" | "remove";
+	newStartTime?: string; // for adjust-start
+	newEndTime?: string;   // for adjust-end
+}
+
+/**
+ * Detect time entries across all tasks that overlap with the given edited entry.
+ * Only checks "logged" (past) entries — planned (future) entries are ignored.
+ * Skips the edited entry itself (matched by id).
+ * Skips entries that fully contain the edited entry (larger range).
+ *
+ * Returns a list of overlap results describing what adjustment is needed.
+ */
+export function detectTimeEntryOverlaps(
+	editedEntry: UnifiedTimeEntry,
+	allTasks: TaskInfo[]
+): OverlapResult[] {
+	if (!editedEntry.endTime) return []; // Can't overlap-check a running entry
+
+	const editedStart = new Date(editedEntry.startTime).getTime();
+	const editedEnd = new Date(editedEntry.endTime).getTime();
+	if (editedStart >= editedEnd) return []; // Invalid range
+
+	const results: OverlapResult[] = [];
+
+	for (const task of allTasks) {
+		if (!task.timeEntries || task.timeEntries.length === 0) continue;
+
+		for (const entry of task.timeEntries) {
+			// Skip the entry being edited
+			if (entry.id === editedEntry.id) continue;
+
+			// Only check logged (past) entries, not planned (future) ones
+			if (entry.type === "planned") continue;
+
+			// Must have both start and end times to be checkable
+			if (!entry.startTime || !entry.endTime) continue;
+
+			// Skip date-only entries (no time component)
+			if (!entry.startTime.includes("T")) continue;
+
+			const entryStart = new Date(entry.startTime).getTime();
+			const entryEnd = new Date(entry.endTime).getTime();
+
+			// Check if ranges overlap: two ranges [A,B] and [C,D] overlap iff A < D and C < B
+			if (editedStart < entryEnd && entryStart < editedEnd) {
+				// Entry fully contains the edited entry — skip (don't adjust larger entries)
+				if (entryStart <= editedStart && entryEnd >= editedEnd) {
+					continue;
+				}
+
+				// Edited entry fully contains this entry — remove it
+				if (entryStart >= editedStart && entryEnd <= editedEnd) {
+					results.push({ task, entry, action: "remove" });
+					continue;
+				}
+
+				// Partial overlap: entry starts during the edited entry (entry starts before edited ends)
+				if (entryStart >= editedStart && entryStart < editedEnd) {
+					results.push({
+						task,
+						entry,
+						action: "adjust-start",
+						newStartTime: editedEntry.endTime,
+					});
+					continue;
+				}
+
+				// Partial overlap: entry ends during the edited entry (entry ends after edited starts)
+				if (entryEnd > editedStart && entryEnd <= editedEnd) {
+					results.push({
+						task,
+						entry,
+						action: "adjust-end",
+						newEndTime: editedEntry.startTime,
+					});
+					continue;
+				}
+			}
+		}
+	}
+
+	return results;
+}

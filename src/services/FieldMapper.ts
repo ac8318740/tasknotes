@@ -6,6 +6,7 @@ import {
 	serializeDependencies,
 } from "../utils/dependencyUtils";
 import { validateCompleteInstances } from "../utils/dateUtils";
+import { generateTimeEntryId } from "../utils/helpers";
 
 /**
  * Service for mapping between internal field names and user-configured property names
@@ -131,6 +132,15 @@ export class FieldMapper {
 			// Ensure timeEntries is always an array
 			const timeEntriesValue = frontmatter[this.mapping.timeEntries];
 			mapped.timeEntries = Array.isArray(timeEntriesValue) ? timeEntriesValue : [];
+		}
+
+		if (mapped.timeEntries) {
+			mapped.timeEntries = mapped.timeEntries.map((entry: any) => {
+				if (!entry.id) {
+					return { ...entry, id: generateTimeEntryId() };
+				}
+				return entry;
+			});
 		}
 
 		// Compute scheduled from earliest future planned time entry (all tasks)

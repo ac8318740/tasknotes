@@ -571,6 +571,9 @@ export const ja: TranslationTree = {
 				autoStopDesc: "タスクが完了とマークされたときに時間追跡を自動停止",
 				stopNotificationName: "時間追跡停止通知",
 				stopNotificationDesc: "時間追跡が自動停止されたときに通知を表示",
+				autoStopOtherName: "排他的時間追跡",
+				autoStopOtherDesc:
+					"一度に追跡できるタスクは1つだけです。新しいセッションを開始すると、実行中のセッションが自動的に停止され、過去のエントリを編集すると、重複するエントリが調整されてギャップや重複が防止されます。",
 			},
 			recurring: {
 				maintainOffsetName: "繰り返しタスクで期限日オフセットを維持",

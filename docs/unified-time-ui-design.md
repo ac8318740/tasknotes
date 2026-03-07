@@ -6,6 +6,37 @@ This document specifies the UI/UX changes required to support the unified time a
 
 ---
 
+## Implementation Status
+
+### Completed
+
+| Area | What was done | Key files |
+|------|---------------|-----------|
+| **UnifiedTimeInfoModal** | Full 665-line modal with CRUD, dynamic heading, NLP date input option, quick date buttons, color picker, task linking, Ctrl+Enter save | `src/modals/UnifiedTimeInfoModal.ts` |
+| **Task modal "Time" section** | UPCOMING/HISTORY groups with indigo/green dots, add buttons, collapsible history (>5), total tracked time, click-to-edit, auto-refresh | `src/modals/TaskEditModal.ts` |
+| **Calendar context menu** | Conditional menu item: future → "Create time block" (clock), past → "Create time entry" (play) | `src/bases/CalendarView.ts` |
+| **Calendar event click** | Merged handlers — unified entries open UnifiedTimeInfoModal, legacy timeblocks converted to UnifiedTimeEntry format | `src/bases/CalendarView.ts:1150–1186` |
+| **Kanban/TaskList/TaskCard** | Scheduled date chip click opens UnifiedTimeInfoModal instead of DateContextMenu | `src/bases/KanbanView.ts`, `src/bases/TaskListView.ts`, `src/ui/TaskCard.ts` |
+| **Settings dropdown** | `timeEntriesStorage` dropdown ("task" / "dailyNote") with TimeMigrationConfirmationModal | `src/settings/tabs/featuresTab.ts` |
+| **CSS** | All `.time-section-*` classes (~80 lines) | `styles/time-entry-editor-modal.css` |
+| **i18n** | ~56 new keys for modals, migration, settings, time section | `src/i18n/resources/en.ts` |
+| **Deprecation markings** | `@deprecated` on TimeblockInfoModal and TimeblockCreationModal | `src/modals/TimeblockInfoModal.ts`, `src/modals/TimeblockCreationModal.ts` |
+
+### Remaining UI/UX Work
+
+| # | Area | What needs to be done | Design doc section | Notes |
+|---|------|----------------------|-------------------|-------|
+| 1 | **Past entry creation flow** | `handleUnifiedTimeEntryCreation()` currently falls through to old `handleTimeEntryCreation()` for past entries (line 1350 of `calendar-core.ts`). Should use the unified modal flow with task selector instead. | Section 4 | The future path already opens UnifiedTimeInfoModal in creation mode; the past path should do the same. |
+| 2 | **Remove `enableTimeblocking` guard** | `CalendarView.ts:1688` still gates the time entry menu item behind `enableTimeblocking`. The design doc says to remove this since time blocking is now integral to the unified system. | Section 1 | Guard is `enableTimeblocking \|\| info.start <= new Date()` — the past fallback works but the future path is still gated. |
+| 3 | **Deprecate old creation functions** | `handleTimeblockCreation()` (line 1213) and `handleTimeEntryCreation()` (line 1244) in `calendar-core.ts` still exist and are called. Mark them `@deprecated` and migrate remaining callers to `handleUnifiedTimeEntryCreation()`. | Section 4 | `handleTimeEntryCreation` is still called from the past-entry branch of the unified function. |
+| 4 | **Legacy entry fallback in event click** | `handleEventClick()` falls back to `openTimeEntryEditor()` for entries without an `id` (line 1166). Entries created by the old system lack IDs. Need a migration path or generate IDs on read. | Section 2 | Could add ID generation in FieldMapper when reading entries without IDs. |
+| 5 | **Mark `TimeEntryEditorModal` deprecated** | `TimeblockInfoModal` and `TimeblockCreationModal` are marked deprecated but `TimeEntryEditorModal` is not. Design doc says to keep it for bulk editing but mark deprecated for single-entry use. | Section 2 | Still used by `main.ts:openTimeEntryEditor()` and as fallback in calendar event click. |
+| 6 | **Storage-aware write paths** | Several write operations (calendar drag/resize, `TaskService.startTimeTracking`/`stopTimeTracking`) don't yet check `timeEntriesStorage` to route writes to task file vs daily note. | Architecture plan Section 5D | Currently all writes go to task files regardless of the setting. |
+| 7 | **Daily note time event rendering** | `generateDailyNoteTimeEvents()` function described in architecture plan (Section 5C) for reading entries from daily notes when `timeEntriesStorage = "dailyNote"` — not yet implemented in calendar-core. | Architecture plan Section 5B/5C | Calendar currently only reads time entries from task files. |
+| 8 | **NLP date input toggle** | Setting `nlpDateTimeInput` exists and the modal supports it, but there's no UI toggle in the settings tab to enable/disable it. | Section 2 (modal) | The modal code checks the setting but users can't change it via settings UI. |
+
+---
+
 ## 1. Calendar Click Behavior
 
 ### Current Implementation

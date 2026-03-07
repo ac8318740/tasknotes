@@ -165,6 +165,7 @@ export interface TaskNotesSettings {
 	// Time tracking settings
 	autoStopTimeTrackingOnComplete: boolean;
 	autoStopTimeTrackingNotification: boolean;
+	autoStopOtherTimeTracking: boolean;
 	/** Where time data physically lives: "task" = task file frontmatter, "dailyNote" = daily note frontmatter */
 	timeEntriesStorage: "task" | "dailyNote";
 	/** Use natural language input for date/time fields in time entry modals */

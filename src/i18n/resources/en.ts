@@ -577,6 +577,9 @@ export const en: TranslationTree = {
 				stopNotificationName: "Time tracking stop notification",
 				stopNotificationDesc:
 					"Show notification when time tracking is automatically stopped",
+				autoStopOtherName: "Exclusive time tracking",
+				autoStopOtherDesc:
+					"Only one task can be tracked at a time. Starting a new session automatically stops any running session, and editing past entries adjusts overlapping entries to prevent gaps or overlaps.",
 			},
 			recurring: {
 				maintainOffsetName: "Maintain due date offset in recurring tasks",
@@ -2282,6 +2285,10 @@ export const en: TranslationTree = {
 			proceed: "Proceed",
 			cancel: "Cancel",
 			migrating: "Migrating time entries...",
+			stageLabel: "Stage {stage}/3",
+			progressLabel: "Migrating: {migrated} of {total} entries...",
+			writingProgress: "Writing: {migrated} of {total} files...",
+			cleanupProgress: "Cleaning up: {migrated} of {total} files...",
 			success: "Migrated {migrated} entries. {skipped} skipped.",
 			error: "Migration completed with {errors} errors.",
 		},

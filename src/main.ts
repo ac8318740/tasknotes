@@ -174,6 +174,9 @@ export default class TaskNotesPlugin extends Plugin {
 	autoArchiveService: AutoArchiveService;
 	viewPerformanceService: ViewPerformanceService;
 
+	// Time entry storage service
+	timeEntryStorageService: import("./services/TimeEntryStorageService").TimeEntryStorageService;
+
 	// Task selection service for batch operations
 	taskSelectionService: import("./services/TaskSelectionService").TaskSelectionService;
 
@@ -352,6 +355,8 @@ export default class TaskNotesPlugin extends Plugin {
 
 		// Initialize business logic services (lightweight constructors)
 		this.taskService = new TaskService(this);
+		const { TimeEntryStorageService } = await import("./services/TimeEntryStorageService");
+		this.timeEntryStorageService = new TimeEntryStorageService(this);
 		this.filterService = new FilterService(
 			this.cacheManager,
 			this.statusManager,

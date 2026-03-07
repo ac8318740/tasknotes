@@ -13,6 +13,7 @@ import {
 	getUTCEndOfMonth,
 	getTodayLocal,
 	parseDateAsLocal,
+	formatDateWithTimezone,
 } from "../utils/dateUtils";
 import { formatTimestampForDisplay } from "../utils/dateUtils";
 import {
@@ -250,8 +251,8 @@ export class TaskEditModal extends TaskModal {
 		};
 		this.containerEl.addEventListener("keydown", this.editModalKeyboardHandler);
 
-		this.initializeFormData().then(() => {
-			this.createModalContent();
+		this.initializeFormData().then(async () => {
+			await this.createModalContent();
 			// Render projects list after modal content is created
 			this.renderProjectsList();
 			// Update icon states after creating the action bar
@@ -323,8 +324,8 @@ export class TaskEditModal extends TaskModal {
 	/**
 	 * Add completions calendar and metadata sections after details
 	 */
-	protected createAdditionalSections(container: HTMLElement): void {
-		this.createTimeSection(container);
+	protected async createAdditionalSections(container: HTMLElement): Promise<void> {
+		await this.createTimeSection(container);
 		this.createCompletionsCalendarSection(container);
 		this.createMetadataSection(container);
 	}
@@ -486,9 +487,9 @@ export class TaskEditModal extends TaskModal {
 		}
 	}
 
-	private createTimeSection(container: HTMLElement): void {
+	private async createTimeSection(container: HTMLElement): Promise<void> {
 		this.timeSectionParent = container;
-		const timeEntries = this.task.timeEntries || [];
+		const timeEntries = await this.plugin.timeEntryStorageService.readEntries(this.task);
 
 		const totalTimeSpent = calculateTotalTimeSpent(timeEntries);
 
@@ -525,8 +526,8 @@ export class TaskEditModal extends TaskModal {
 			const newEntry: UnifiedTimeEntry = {
 				id: generateTimeEntryId(),
 				type: "planned",
-				startTime: tomorrow.toISOString(),
-				endTime: end.toISOString(),
+				startTime: formatDateWithTimezone(tomorrow),
+				endTime: formatDateWithTimezone(end),
 			};
 			showUnifiedTimeInfoModal(newEntry, this.task, this.plugin, async () => {
 				this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
@@ -557,7 +558,7 @@ export class TaskEditModal extends TaskModal {
 		const old = this.timeSectionParent.querySelector(".time-section-container");
 		if (old) old.remove();
 		await this.refreshTaskData();
-		this.createTimeSection(this.timeSectionParent);
+		await this.createTimeSection(this.timeSectionParent);
 	}
 
 	private renderTimeEntryGroup(

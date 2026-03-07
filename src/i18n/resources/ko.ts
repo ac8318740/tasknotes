@@ -567,6 +567,9 @@ export const ko: TranslationTree = {
 				autoStopDesc: "작업 완료 시 시간 추적 자동 중지",
 				stopNotificationName: "시간 추적 중지 알림",
 				stopNotificationDesc: "시간 추적이 자동 중지되면 알림 표시",
+				autoStopOtherName: "배타적 시간 추적",
+				autoStopOtherDesc:
+					"한 번에 하나의 작업만 추적할 수 있습니다. 새 세션을 시작하면 실행 중인 세션이 자동으로 중지되며, 과거 항목을 편집하면 겹치는 항목이 조정되어 공백이나 중복이 방지됩니다.",
 			},
 			recurring: {
 				maintainOffsetName: "반복 작업에서 마감일 오프셋 유지",

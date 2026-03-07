@@ -1692,15 +1692,6 @@ export class KanbanView extends BasesViewBase {
 						// Also bump the column's max-height so it can grow
 						// to accommodate the taller container.
 						container.style.paddingBottom = `${totalGap}px`;
-						const parentCol = container.closest<HTMLElement>(
-							".kanban-view__column, .kanban-view__swimlane-column"
-						);
-						if (parentCol) {
-							const currentHeight = parentCol.getBoundingClientRect().height;
-							parentCol.style.maxHeight = `${currentHeight + totalGap}px`;
-							this.dragTargetColumnEl = parentCol;
-						}
-
 						const siblings = container.querySelectorAll<HTMLElement>(".kanban-view__card-wrapper");
 						for (const sib of siblings) {
 							if (!this.draggedTaskPaths.includes(sib.dataset.taskPath || "")) {

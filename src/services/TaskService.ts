@@ -5,6 +5,7 @@ import {
 	TaskDependency,
 	TaskInfo,
 	UnifiedTimeEntry,
+	TimeEntry,
 	IWebhookNotifier,
 } from "../types";
 import { AutoArchiveService } from "./AutoArchiveService";
@@ -38,6 +39,7 @@ import {
 import { getProjectDisplayName } from "../utils/linkUtils";
 import {
 	formatDateForStorage,
+	formatDateWithTimezone,
 	getCurrentDateString,
 	getCurrentTimestamp,
 	getTodayLocal,
@@ -1196,15 +1198,40 @@ export class TaskService {
 			throw new Error(`Cannot find task file: ${task.path}`);
 		}
 
-		// Check if already tracking
-		const activeSession = this.plugin.getActiveTimeSession(task);
+		// Check if already tracking (storage-aware)
+		const activeSession = await this.plugin.timeEntryStorageService.getActiveEntry(task);
 		if (activeSession) {
 			throw new Error("Time tracking is already active for this task");
 		}
 
+		// Capture a single transition timestamp. Auto-stopped entries get this
+		// as their endTime; the new entry starts 1ms later for a seamless,
+		// non-overlapping timeline.
+		const transitionTime = new Date();
+		const stopTimestampStr = formatDateWithTimezone(transitionTime);
+		const startDate = new Date(transitionTime.getTime() + 1);
+		const startTimestamp = formatDateWithTimezone(startDate);
+
+		// Auto-stop other time tracking sessions if enabled (storage-aware)
+		if (this.plugin.settings.autoStopOtherTimeTracking) {
+			const runningEntries = await this.plugin.timeEntryStorageService.findRunningEntries();
+			for (const { taskPath } of runningEntries) {
+				if (taskPath !== task.path) {
+					const otherTask = await this.plugin.cacheManager.getTaskInfo(taskPath);
+					if (otherTask) {
+						try {
+							await this.stopTimeTracking(otherTask, stopTimestampStr);
+						} catch (error) {
+							console.warn(`[TaskNotes] Failed to auto-stop time tracking for ${taskPath}:`, error);
+						}
+					}
+				}
+			}
+		}
+
 		// Step 1: Construct new state in memory
 		const updatedTask = { ...task };
-		updatedTask.dateModified = getCurrentTimestamp();
+		updatedTask.dateModified = startTimestamp;
 
 		if (!updatedTask.timeEntries) {
 			updatedTask.timeEntries = [];
@@ -1218,56 +1245,39 @@ export class TaskService {
 		const newEntry: UnifiedTimeEntry = {
 			id: generateTimeEntryId(),
 			type: "logged",
-			startTime: getCurrentTimestamp(),
+			startTime: startTimestamp,
 			description: "Work session",
 		};
 		updatedTask.timeEntries = [...updatedTask.timeEntries, newEntry];
 
 		// Step 2: Persist to file
-		await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
-			const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
-			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
+		if (this.plugin.settings.timeEntriesStorage !== "dailyNote") {
+			await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+				const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
+				const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
 
-			if (!frontmatter[timeEntriesField]) {
-				frontmatter[timeEntriesField] = [];
-			}
-			if (Array.isArray(frontmatter[timeEntriesField])) {
-				frontmatter[timeEntriesField] = frontmatter[timeEntriesField].map((entry: TimeEntry) => {
-					const sanitizedEntry = { ...entry };
-					delete sanitizedEntry.duration;
-					return sanitizedEntry;
-				});
-			}
-
-			// Add new time entry with start time
-			frontmatter[timeEntriesField].push(newEntry);
-			frontmatter[dateModifiedField] = updatedTask.dateModified;
-		});
-
-		// If storing in daily notes, also create entry in today's daily note
-		if (this.plugin.settings.timeEntriesStorage === "dailyNote") {
-			try {
-				const { getDailyNote, getAllDailyNotes, createDailyNote, appHasDailyNotesPluginLoaded } = await import("obsidian-daily-notes-interface");
-				if (appHasDailyNotesPluginLoaded()) {
-					const today = (window as any).moment();
-					const allDailyNotes = getAllDailyNotes();
-					let dailyNote = getDailyNote(today, allDailyNotes);
-					if (!dailyNote) {
-						dailyNote = await createDailyNote(today);
-					}
-					if (dailyNote) {
-						await this.plugin.app.fileManager.processFrontMatter(dailyNote, (fm) => {
-							if (!fm.timeEntries) fm.timeEntries = [];
-							fm.timeEntries.push({
-								...newEntry,
-								taskLink: `[[${task.path.replace(/\.md$/, "")}]]`,
-							});
-						});
-					}
+				if (!frontmatter[timeEntriesField]) {
+					frontmatter[timeEntriesField] = [];
 				}
-			} catch (error) {
-				console.warn("[TaskNotes] Failed to write time entry to daily note:", error);
-			}
+				if (Array.isArray(frontmatter[timeEntriesField])) {
+					frontmatter[timeEntriesField] = frontmatter[timeEntriesField].map((entry: TimeEntry) => {
+						const sanitizedEntry = { ...entry };
+						delete sanitizedEntry.duration;
+						return sanitizedEntry;
+					});
+				}
+
+				frontmatter[timeEntriesField].push(newEntry);
+				frontmatter[dateModifiedField] = updatedTask.dateModified;
+			});
+		} else {
+			// dailyNote mode: write entry to daily note only via service
+			await this.plugin.timeEntryStorageService.writeEntry(updatedTask, newEntry, "add");
+			// Still update dateModified on task file
+			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
+			await this.plugin.app.fileManager.processFrontMatter(file, (fm) => {
+				fm[dateModifiedField] = updatedTask.dateModified;
+			});
 		}
 
 		// Step 3: Wait for fresh data and update cache
@@ -1306,18 +1316,27 @@ export class TaskService {
 
 	/**
 	 * Stop time tracking for a task
+	 * @param stopAt - Optional timestamp to use as endTime (used by auto-stop to align with new entry's startTime)
 	 */
-	async stopTimeTracking(task: TaskInfo): Promise<TaskInfo> {
+	async stopTimeTracking(task: TaskInfo, stopAt?: string): Promise<TaskInfo> {
 		const file = this.plugin.app.vault.getAbstractFileByPath(task.path);
 		if (!(file instanceof TFile)) {
 			throw new Error(`Cannot find task file: ${task.path}`);
+		}
+
+		// In daily note mode, task.timeEntries may be empty since entries live on daily notes.
+		// Load them from storage so the active session can be found.
+		if (this.plugin.settings.timeEntriesStorage === "dailyNote" &&
+			(!task.timeEntries || task.timeEntries.length === 0)) {
+			const entries = await this.plugin.timeEntryStorageService.readEntries(task);
+			task = { ...task, timeEntries: entries };
 		}
 
 		const activeSession = this.plugin.getActiveTimeSession(task);
 		if (!activeSession) {
 			throw new Error("No active time tracking session for this task");
 		}
-		const stopTimestamp = new Date().toISOString();
+		const stopTimestamp = stopAt ?? getCurrentTimestamp();
 
 		// Step 1: Construct new state in memory
 		const updatedTask = { ...task };
@@ -1342,53 +1361,40 @@ export class TaskService {
 		}
 
 		// Step 2: Persist to file
-		await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
-			const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
-			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
+		if (this.plugin.settings.timeEntriesStorage !== "dailyNote") {
+			await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+				const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
+				const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
 
-			if (frontmatter[timeEntriesField] && Array.isArray(frontmatter[timeEntriesField])) {
-				frontmatter[timeEntriesField] = frontmatter[timeEntriesField].map((entry: TimeEntry) => {
-					const sanitizedEntry = { ...entry };
-					delete sanitizedEntry.duration;
-					return sanitizedEntry;
-				});
-				// Find and update the active session
-				const entryIndex = frontmatter[timeEntriesField].findIndex(
-					(entry: UnifiedTimeEntry) =>
-						entry.startTime === activeSession.startTime && !entry.endTime
-				);
-
-				if (entryIndex !== -1) {
-					frontmatter[timeEntriesField][entryIndex].endTime = stopTimestamp;
-				}
-			}
-			frontmatter[dateModifiedField] = updatedTask.dateModified;
-		});
-
-		// If storing in daily notes, update the entry in today's daily note too
-		if (this.plugin.settings.timeEntriesStorage === "dailyNote") {
-			try {
-				const { getDailyNote, getAllDailyNotes, appHasDailyNotesPluginLoaded } = await import("obsidian-daily-notes-interface");
-				if (appHasDailyNotesPluginLoaded()) {
-					const today = (window as any).moment();
-					const allDailyNotes = getAllDailyNotes();
-					const dailyNote = getDailyNote(today, allDailyNotes);
-					if (dailyNote) {
-						await this.plugin.app.fileManager.processFrontMatter(dailyNote, (fm) => {
-							if (fm.timeEntries && Array.isArray(fm.timeEntries)) {
-								const idx = fm.timeEntries.findIndex(
-									(e: any) => e.startTime === activeSession.startTime && !e.endTime
-								);
-								if (idx !== -1) {
-									fm.timeEntries[idx].endTime = getCurrentTimestamp();
-								}
-							}
-						});
+				if (frontmatter[timeEntriesField] && Array.isArray(frontmatter[timeEntriesField])) {
+					frontmatter[timeEntriesField] = frontmatter[timeEntriesField].map((entry: TimeEntry) => {
+						const sanitizedEntry = { ...entry };
+						delete sanitizedEntry.duration;
+						return sanitizedEntry;
+					});
+					const entryIndex = frontmatter[timeEntriesField].findIndex(
+						(entry: UnifiedTimeEntry) =>
+							entry.startTime === activeSession.startTime && !entry.endTime
+					);
+					if (entryIndex !== -1) {
+						frontmatter[timeEntriesField][entryIndex].endTime = stopTimestamp;
 					}
 				}
-			} catch (error) {
-				console.warn("[TaskNotes] Failed to update time entry in daily note:", error);
+				frontmatter[dateModifiedField] = updatedTask.dateModified;
+			});
+		} else {
+			// dailyNote mode: update entry on daily note via service
+			const matchingEntry = updatedTask.timeEntries?.find(
+				(e) => e.startTime === activeSession.startTime && e.endTime === stopTimestamp
+			);
+			if (matchingEntry) {
+				await this.plugin.timeEntryStorageService.writeEntry(updatedTask, matchingEntry, "update");
 			}
+			// Still update dateModified on task file
+			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
+			await this.plugin.app.fileManager.processFrontMatter(file, (fm) => {
+				fm[dateModifiedField] = updatedTask.dateModified;
+			});
 		}
 
 		// Step 3: Wait for fresh data and update cache
@@ -1551,6 +1557,20 @@ export class TaskService {
 						: "";
 			}
 
+			// Route time entries to correct storage before writing task frontmatter
+			let timeEntriesToRoute: UnifiedTimeEntry[] | undefined;
+			if (this.plugin.settings.timeEntriesStorage === "dailyNote") {
+				if (updates.timeEntries !== undefined) {
+					timeEntriesToRoute = updates.timeEntries;
+					const { timeEntries: _stripped, ...updatesWithoutEntries } = updates;
+					updates = updatesWithoutEntries as typeof updates;
+				}
+				if (recurrenceUpdates.timeEntries !== undefined) {
+					timeEntriesToRoute = recurrenceUpdates.timeEntries;
+					delete recurrenceUpdates.timeEntries;
+				}
+			}
+
 			await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
 				const completeTaskData: Partial<TaskInfo> = {
 					...originalTask,
@@ -1642,6 +1662,14 @@ export class TaskService {
 					}
 				}
 			});
+
+			// Write time entries to daily notes if in dailyNote storage mode
+			if (timeEntriesToRoute !== undefined) {
+				await this.plugin.timeEntryStorageService.writeAllEntries(
+					{ ...originalTask, ...updates, path: newPath },
+					timeEntriesToRoute
+				);
+			}
 
 			// Step 2: Rename the file if needed, after frontmatter is updated
 			if (isRenameNeeded) {

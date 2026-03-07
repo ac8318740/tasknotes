@@ -547,6 +547,18 @@ export function renderFeaturesTab(
 
 			group.addSetting((setting) =>
 				configureToggleSetting(setting, {
+					name: translate("settings.features.timeTracking.autoStopOtherName"),
+					desc: translate("settings.features.timeTracking.autoStopOtherDesc"),
+					getValue: () => plugin.settings.autoStopOtherTimeTracking,
+					setValue: async (value: boolean) => {
+						plugin.settings.autoStopOtherTimeTracking = value;
+						save();
+					},
+				})
+			);
+
+			group.addSetting((setting) =>
+				configureToggleSetting(setting, {
 					name: translate("settings.features.nlpDateTimeInput.name"),
 					desc: translate("settings.features.nlpDateTimeInput.description"),
 					getValue: () => plugin.settings.nlpDateTimeInput,

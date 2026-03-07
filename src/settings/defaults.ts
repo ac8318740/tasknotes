@@ -330,6 +330,7 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 	// Time tracking defaults
 	autoStopTimeTrackingOnComplete: true,
 	autoStopTimeTrackingNotification: false,
+	autoStopOtherTimeTracking: true,
 	timeEntriesStorage: "task",
 	nlpDateTimeInput: false,
 	// Relationships widget defaults (unified subtasks, projects, and dependencies)

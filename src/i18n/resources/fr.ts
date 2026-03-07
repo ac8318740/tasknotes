@@ -571,6 +571,9 @@ export const fr: TranslationTree = {
 				autoStopDesc: "Arrêter automatiquement le suivi du temps lorsqu'une tâche est marquée comme terminée",
 				stopNotificationName: "Notification d'arrêt du suivi du temps",
 				stopNotificationDesc: "Afficher une notification lorsque le suivi du temps est automatiquement arrêté",
+				autoStopOtherName: "Suivi du temps exclusif",
+				autoStopOtherDesc:
+					"Une seule tâche peut être suivie à la fois. Le démarrage d'une nouvelle session arrête automatiquement toute session en cours, et la modification d'entrées passées ajuste les entrées chevauchantes pour éviter les lacunes ou les chevauchements.",
 			},
 			recurring: {
 				maintainOffsetName: "Maintenir le décalage de date d'échéance dans les tâches récurrentes",

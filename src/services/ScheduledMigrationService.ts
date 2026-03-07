@@ -4,6 +4,7 @@ import TaskNotesPlugin from "../main";
 import { TaskInfo, UnifiedTimeEntry } from "../types";
 import { RecurrenceEntryService } from "./RecurrenceEntryService";
 import { generateTimeEntryId } from "../utils/helpers";
+import { formatDateWithTimezone } from "../utils/dateUtils";
 
 /**
  * Migration service that converts legacy `scheduled` frontmatter properties
@@ -168,7 +169,7 @@ export class ScheduledMigrationService {
 				const durationMin = task.timeEstimate && task.timeEstimate > 0
 					? task.timeEstimate : 60;
 				const startMs = new Date(rawValue).getTime();
-				newEntry.endTime = new Date(startMs + durationMin * 60 * 1000).toISOString();
+				newEntry.endTime = formatDateWithTimezone(new Date(startMs + durationMin * 60 * 1000));
 				newEntry.duration = durationMin;
 			}
 			// Date-only entries stay as-is: all-day tasks don't need endTime

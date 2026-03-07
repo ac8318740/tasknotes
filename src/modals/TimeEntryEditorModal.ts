@@ -3,7 +3,12 @@ import { App, Modal, Notice, Setting } from "obsidian";
 import { TimeEntry, UnifiedTimeEntry, TaskInfo } from "../types";
 import type TaskNotesPlugin from "../main";
 import { TranslationKey } from "../i18n";
+import { formatDateWithTimezone } from "../utils/dateUtils";
 
+/**
+ * @deprecated Use UnifiedTimeInfoModal for single-entry editing.
+ * Still used by TaskActionPaletteModal, TaskContextMenu, and main.ts for bulk editing.
+ */
 export class TimeEntryEditorModal extends Modal {
 	private plugin: TaskNotesPlugin;
 	private task: TaskInfo;
@@ -153,7 +158,7 @@ export class TimeEntryEditorModal extends Modal {
 		startInput.addEventListener("change", () => {
 			const newDate = new Date(startInput.value);
 			if (!isNaN(newDate.getTime())) {
-				entry.startTime = newDate.toISOString();
+				entry.startTime = formatDateWithTimezone(newDate);
 			}
 		});
 
@@ -172,7 +177,7 @@ export class TimeEntryEditorModal extends Modal {
 			if (endInput.value) {
 				const newDate = new Date(endInput.value);
 				if (!isNaN(newDate.getTime())) {
-					entry.endTime = newDate.toISOString();
+					entry.endTime = formatDateWithTimezone(newDate);
 				}
 			} else {
 				entry.endTime = undefined;
@@ -217,8 +222,8 @@ export class TimeEntryEditorModal extends Modal {
 
 		const newEntry: UnifiedTimeEntry = {
 			id: `te-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-			startTime: oneHourAgo.toISOString(),
-			endTime: now.toISOString(),
+			startTime: formatDateWithTimezone(oneHourAgo),
+			endTime: formatDateWithTimezone(now),
 			description: "",
 		};
 

@@ -527,8 +527,8 @@ export abstract class TaskModal extends Modal {
 		};
 		this.containerEl.addEventListener("keydown", this.keyboardHandler);
 
-		this.initializeFormData().then(() => {
-			this.createModalContent();
+		this.initializeFormData().then(async () => {
+			await this.createModalContent();
 			this.focusTitleInput();
 		});
 	}
@@ -538,7 +538,7 @@ export abstract class TaskModal extends Modal {
 	protected splitLeftColumn: HTMLElement;
 	protected splitRightColumn: HTMLElement;
 
-	protected createModalContent(): void {
+	protected async createModalContent(): Promise<void> {
 		const { contentEl } = this;
 		contentEl.empty();
 
@@ -560,7 +560,7 @@ export abstract class TaskModal extends Modal {
 		this.createDetailsSection(container);
 
 		// Hook for subclasses to add additional sections to left column
-		this.createAdditionalSections(this.splitLeftColumn);
+		await this.createAdditionalSections(this.splitLeftColumn);
 
 		// Create save/cancel buttons - outside the split, at bottom
 		this.createActionButtons(container);
@@ -578,7 +578,7 @@ export abstract class TaskModal extends Modal {
 	 * Hook for subclasses to add additional sections after the details section.
 	 * Default: no-op
 	 */
-	protected createAdditionalSections(container: HTMLElement): void {
+	protected createAdditionalSections(container: HTMLElement): void | Promise<void> {
 		// Override in subclasses (e.g., TaskEditModal adds completions calendar and metadata)
 	}
 

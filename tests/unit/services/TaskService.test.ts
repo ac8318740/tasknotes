@@ -18,8 +18,12 @@ import { TaskInfo, TimeEntry } from '../../../src/types';
 
 // Mock external dependencies
 jest.mock('../../../src/utils/dateUtils', () => ({
-  getCurrentTimestamp: jest.fn(() => '2025-01-01T12:00:00Z'),
-  getCurrentDateString: jest.fn(() => '2025-01-01')
+  getCurrentTimestamp: jest.fn(() => '2025-01-01T12:00:00-05:00'),
+  getCurrentDateString: jest.fn(() => '2025-01-01'),
+  formatDateWithTimezone: jest.fn((date: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${String(date.getMilliseconds()).padStart(3,'0')}-05:00`;
+  }),
 }));
 
 jest.mock('../../../src/utils/filenameGenerator', () => ({
@@ -98,8 +102,8 @@ describe('TaskService', () => {
         archived: false
       });
       expect(taskInfo.path).toMatch(/test-task\.md$/);
-      expect(taskInfo.dateCreated).toBe('2025-01-01T12:00:00Z');
-      expect(taskInfo.dateModified).toBe('2025-01-01T12:00:00Z');
+      expect(taskInfo.dateCreated).toBe('2025-01-01T12:00:00-05:00');
+      expect(taskInfo.dateModified).toBe('2025-01-01T12:00:00-05:00');
     });
 
     it('should create a task with all properties', async () => {
@@ -710,7 +714,7 @@ describe('TaskService', () => {
       const result = await taskService.updateProperty(task, 'priority', 'high');
 
       expect(result.priority).toBe('high');
-      expect(result.dateModified).toBe('2025-01-01T12:00:00Z');
+      expect(result.dateModified).toBe('2025-01-01T12:00:00-05:00');
     });
 
     it('should handle status updates with completion date for non-recurring tasks', async () => {
@@ -864,10 +868,8 @@ describe('TaskService', () => {
       const result = await taskService.startTimeTracking(task);
 
       expect(result.timeEntries).toHaveLength(1);
-      expect(result.timeEntries![0]).toMatchObject({
-        startTime: '2025-01-01T12:00:00.000Z',
-        description: 'Work session'
-      });
+      expect(result.timeEntries![0].startTime).toContain('2025-01-01T');
+      expect(result.timeEntries![0].description).toBe('Work session');
       expect(result.timeEntries![0].endTime).toBeUndefined();
     });
 
@@ -881,8 +883,8 @@ describe('TaskService', () => {
     });
 
     it('should prevent starting when already tracking', async () => {
-      const activeSession = { startTime: '2025-01-01T11:00:00Z' };
-      mockPlugin.getActiveTimeSession.mockReturnValue(activeSession);
+      const activeSession = { id: 'te-1', startTime: '2025-01-01T11:00:00Z' };
+      mockPlugin.timeEntryStorageService.getActiveEntry.mockResolvedValue(activeSession);
 
       await expect(taskService.startTimeTracking(task))
         .rejects.toThrow('Time tracking is already active for this task');
@@ -928,7 +930,7 @@ describe('TaskService', () => {
 
       expect(result.timeEntries![0]).toMatchObject({
         startTime: '2025-01-01T11:00:00Z',
-        endTime: '2025-01-01T12:00:00.000Z',
+        endTime: '2025-01-01T12:00:00-05:00',
         description: 'Active session'
       });
     });
@@ -968,7 +970,7 @@ describe('TaskService', () => {
       const result = await taskService.updateTask(task, updates);
 
       expect(result).toMatchObject(updates);
-      expect(result.dateModified).toBe('2025-01-01T12:00:00Z');
+      expect(result.dateModified).toBe('2025-01-01T12:00:00-05:00');
     });
 
     it('should handle completion date for status changes', async () => {

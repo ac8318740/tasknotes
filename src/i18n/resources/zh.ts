@@ -571,6 +571,9 @@ export const zh: TranslationTree = {
 				autoStopDesc: "任务标记为完成时自动停止时间跟踪",
 				stopNotificationName: "时间跟踪停止通知",
 				stopNotificationDesc: "自动停止时间跟踪时显示通知",
+				autoStopOtherName: "独占式时间跟踪",
+				autoStopOtherDesc:
+					"同一时间只能跟踪一个任务。开始新会话时会自动停止正在运行的会话，编辑过去的条目时会调整重叠的条目以防止间隙或重叠。",
 			},
 			recurring: {
 				maintainOffsetName: "在重复任务中保持到期日期偏移",

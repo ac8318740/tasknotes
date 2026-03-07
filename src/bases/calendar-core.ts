@@ -18,6 +18,7 @@ import {
 	formatDateForStorage,
 	parseDateToUTC,
 	getTodayLocal,
+	formatDateWithTimezone,
 } from "../utils/dateUtils";
 import { generateRecurringInstances, updateTimeblockInDailyNote, addDTSTARTToRecurrenceRuleWithDraggedTime, generateTimeEntryId } from "../utils/helpers";
 import { Notice } from "obsidian";
@@ -513,7 +514,7 @@ export function createScheduledToDueSpanEvent(task: TaskInfo, plugin: TaskNotesP
 }
 
 /**
- * Create time entry events from task
+ * @deprecated Use createUnifiedTimeEvents instead.
  */
 export function createTimeEntryEvents(task: TaskInfo, plugin: TaskNotesPlugin): CalendarEvent[] {
 	if (!task.timeEntries) return [];
@@ -1164,7 +1165,7 @@ export async function generateCalendarEvents(
 
 			// Add time entry events with date range filtering
 			if (showTimeEntries && task.timeEntries) {
-				const timeEvents = createTimeEntryEvents(task, plugin);
+				const timeEvents = createUnifiedTimeEvents(task, plugin);
 				// Filter time entries by visible range
 				for (const event of timeEvents) {
 					if (isDateInVisibleRange(event.start, visibleStart, visibleEnd)) {
@@ -1208,7 +1209,7 @@ export async function generateCalendarEvents(
 }
 
 /**
- * Handle timeblock creation (drag selection with context menu)
+ * @deprecated Use handleUnifiedTimeEntryCreation instead. Already dead code.
  */
 export async function handleTimeblockCreation(
 	start: Date,
@@ -1239,7 +1240,7 @@ export async function handleTimeblockCreation(
 }
 
 /**
- * Handle time entry creation (Alt+drag to create time entry)
+ * @deprecated Use handleUnifiedTimeEntryCreation instead. No callers after B1 unification.
  */
 export async function handleTimeEntryCreation(
 	start: Date,
@@ -1278,8 +1279,8 @@ export async function handleTimeEntryCreation(
 					// Create new unified time entry
 					const newEntry: UnifiedTimeEntry = {
 						id: generateTimeEntryId(),
-						startTime: start.toISOString(),
-						endTime: end.toISOString(),
+						startTime: formatDateWithTimezone(start),
+						endTime: formatDateWithTimezone(end),
 						description: "",
 					};
 
@@ -1337,8 +1338,8 @@ export async function handleUnifiedTimeEntryCreation(
 		const newEntry: UnifiedTimeEntry = {
 			id: generateTimeEntryId(),
 			type: "planned",
-			startTime: start.toISOString(),
-			endTime: end.toISOString(),
+			startTime: formatDateWithTimezone(start),
+			endTime: formatDateWithTimezone(end),
 		};
 
 		// Open info modal in creation mode — user selects task inside
@@ -1346,8 +1347,16 @@ export async function handleUnifiedTimeEntryCreation(
 			plugin.emitter.trigger(EVENT_DATA_CHANGED);
 		}, { isNew: true });
 	} else {
-		// For past entries, use existing time entry creation flow (select task first)
-		await handleTimeEntryCreation(start, end, allDay, plugin);
+		// For past entries, create as logged and open unified modal
+		const newEntry: UnifiedTimeEntry = {
+			id: generateTimeEntryId(),
+			type: "logged",
+			startTime: formatDateWithTimezone(start),
+			endTime: formatDateWithTimezone(end),
+		};
+		showUnifiedTimeInfoModal(newEntry, undefined, plugin, () => {
+			plugin.emitter.trigger(EVENT_DATA_CHANGED);
+		}, { isNew: true });
 	}
 }
 
@@ -1446,7 +1455,7 @@ export async function showTimeblockInfoModal(
 	if (timeblock.id && timeblock.id.startsWith("te-")) {
 		const unifiedEntry: UnifiedTimeEntry = {
 			id: timeblock.id,
-			startTime: eventDate.toISOString(),
+			startTime: formatDateWithTimezone(eventDate),
 			title: timeblock.title,
 			color: timeblock.color,
 			description: timeblock.description,

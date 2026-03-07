@@ -7,6 +7,7 @@ import {
 	DailyNoteFrontmatter,
 } from "../types";
 import { generateTimeEntryId } from "../utils/helpers";
+import { getTimezoneOffsetString } from "../utils/dateUtils";
 
 // ── Result types ────────────────────────────────────────────────────────
 
@@ -57,8 +58,9 @@ export function mapLegacyTimeblockToUnified(
 	block: TimeBlock,
 	date: string,
 ): UnifiedTimeEntry {
-	const startISO = `${date}T${block.startTime}:00`;
-	const endISO = `${date}T${block.endTime}:00`;
+	const tzSuffix = getTimezoneOffsetString();
+	const startISO = `${date}T${block.startTime}:00${tzSuffix}`;
+	const endISO = `${date}T${block.endTime}:00${tzSuffix}`;
 
 	const [sh, sm] = block.startTime.split(":").map(Number);
 	const [eh, em] = block.endTime.split(":").map(Number);
@@ -123,13 +125,13 @@ async function writeFrontmatterAndBody(
 
 /**
  * Yield to the UI thread to prevent long-running migrations from blocking.
- * Called every BATCH_SIZE items.
  */
 function yieldToUI(): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 const BATCH_SIZE = 50;
+const WRITE_CONCURRENCY = 5;
 
 /**
  * Resolve a wikilink string like `[[Tasks/Write Q1 report]]` to a TFile.
@@ -141,21 +143,22 @@ function resolveWikilink(plugin: TaskNotesPlugin, wikilink: string): TFile | nul
 	return plugin.app.metadataCache.getFirstLinkpathDest(inner, "");
 }
 
-// ── Migration: Daily Note  Task ────────────────────────────────────
+// ── Migration: Daily Note → Task ────────────────────────────────────
 
 /**
  * Migrate time entries FROM daily notes TO their respective task files.
  *
- * For each daily note that has `timeEntries` (or legacy `timeblocks`):
- *  - Entries WITH a `taskLink` are moved to the linked task file.
- *  - Entries WITHOUT a `taskLink` stay on the daily note.
- *  - Legacy `timeblocks` are converted to UnifiedTimeEntry first.
+ * Uses a three-phase approach for performance:
+ *  Phase 1: Scan daily notes, collect entries, group by destination task.
+ *  Phase 2: Batch-write to task files (one write per task, concurrent).
+ *  Phase 3: Clean up source daily notes (concurrent).
  *
- * Uses entry `id` for idempotency  entries already present at the
+ * Uses entry `id` for idempotency — entries already present at the
  * destination are skipped.
  */
 export async function migrateDailyNoteToTask(
 	plugin: TaskNotesPlugin,
+	onProgress?: (progress: { migrated: number; total: number; phase?: "collecting" | "writing" | "cleanup" }) => void,
 ): Promise<MigrationResult> {
 	const result: MigrationResult = {
 		migratedCount: 0,
@@ -180,9 +183,27 @@ export async function migrateDailyNoteToTask(
 	const dailyNoteFiles = Object.values(allDailyNotes);
 	const timeEntriesField = plugin.fieldMapper.toUserField("timeEntries");
 
-	// Cache of task files we've already resolved  path  existing entry IDs
-	const taskEntryCache = new Map<string, Set<string>>();
+	// ── Phase 1: Collect entries and group by destination task ──
 
+	interface DailyNoteState {
+		file: TFile;
+		entriesToKeep: DailyNoteTimeEntry[];
+		legacyConverted: DailyNoteTimeEntry[];
+		frontmatter: Record<string, any>;
+		body: string;
+		modified: boolean;
+	}
+
+	interface PendingWrite {
+		entry: UnifiedTimeEntry;
+		source: DailyNoteState;
+		originalEntry: DailyNoteTimeEntry;
+	}
+
+	const taskBatches = new Map<string, { taskFile: TFile; pending: PendingWrite[] }>();
+	const dailyNoteStates: DailyNoteState[] = [];
+	const taskEntryCache = new Map<string, Set<string>>();
+	let total = 0;
 	let processed = 0;
 
 	for (const dnFile of dailyNoteFiles) {
@@ -203,7 +224,7 @@ export async function migrateDailyNoteToTask(
 		}
 
 		// Also convert legacy timeblocks
-		let legacyConverted: DailyNoteTimeEntry[] = [];
+		const legacyConverted: DailyNoteTimeEntry[] = [];
 		if (Array.isArray(fm.timeblocks)) {
 			for (const block of fm.timeblocks) {
 				if (block && block.startTime && block.endTime) {
@@ -232,116 +253,168 @@ export async function migrateDailyNoteToTask(
 
 		if (toMigrate.length === 0) continue;
 
-		let dailyNoteModified = false;
+		total += toMigrate.length;
+
+		const state: DailyNoteState = {
+			file: dnFile,
+			entriesToKeep: toKeepOnDailyNote,
+			legacyConverted,
+			frontmatter,
+			body,
+			modified: false,
+		};
 
 		for (const entry of toMigrate) {
+			const taskFile = resolveWikilink(plugin, entry.taskLink!);
+			if (!taskFile) {
+				result.errors.push(
+					`Could not resolve task link "${entry.taskLink}" in ${dnFile.path}`,
+				);
+				result.errorCount++;
+				// Keep entry on daily note if we can't resolve it
+				state.entriesToKeep.push(entry);
+				processed++;
+				onProgress?.({ migrated: processed, total });
+				continue;
+			}
+
+			// Populate task entry cache for idempotency
+			if (!taskEntryCache.has(taskFile.path)) {
+				const taskParsed = await readFrontmatterAndBody(plugin, taskFile);
+				const existingEntries: UnifiedTimeEntry[] =
+					(taskParsed?.frontmatter?.[timeEntriesField] as UnifiedTimeEntry[]) || [];
+				taskEntryCache.set(
+					taskFile.path,
+					new Set(existingEntries.map((e) => e.id)),
+				);
+			}
+
+			const existingIds = taskEntryCache.get(taskFile.path)!;
+
+			// Idempotency: skip if already at destination
+			if (existingIds.has(entry.id)) {
+				result.skippedCount++;
+				state.modified = true; // still remove from daily note
+				processed++;
+				onProgress?.({ migrated: processed, total });
+				continue;
+			}
+
+			// Queue for batch write
+			if (!taskBatches.has(taskFile.path)) {
+				taskBatches.set(taskFile.path, { taskFile, pending: [] });
+			}
+			taskBatches.get(taskFile.path)!.pending.push({
+				entry: mapToUnifiedTimeEntry(entry),
+				source: state,
+				originalEntry: entry,
+			});
+			existingIds.add(entry.id);
+			state.modified = true;
+			processed++;
+			onProgress?.({ migrated: processed, total });
+		}
+
+		dailyNoteStates.push(state);
+
+		if (processed % BATCH_SIZE === 0) {
+			await yieldToUI();
+		}
+	}
+
+	// ── Phase 2: Batch write to task files with concurrency ──
+	// One processFrontMatter call per task file instead of per entry.
+
+	const taskBatchList = Array.from(taskBatches.values());
+
+	for (let i = 0; i < taskBatchList.length; i += WRITE_CONCURRENCY) {
+		const chunk = taskBatchList.slice(i, i + WRITE_CONCURRENCY);
+		onProgress?.({
+			migrated: Math.min(i + WRITE_CONCURRENCY, taskBatchList.length),
+			total: taskBatchList.length,
+			phase: "writing",
+		});
+		await Promise.all(chunk.map(async ({ taskFile, pending }) => {
 			try {
-				const taskFile = resolveWikilink(plugin, entry.taskLink!);
-				if (!taskFile) {
-					result.errors.push(
-						`Could not resolve task link "${entry.taskLink}" in ${dnFile.path}`,
-					);
-					result.errorCount++;
-					// Keep entry on daily note if we can't resolve it
-					toKeepOnDailyNote.push(entry);
-					continue;
-				}
-
-				// Get or populate the task entry cache
-				if (!taskEntryCache.has(taskFile.path)) {
-					const taskParsed = await readFrontmatterAndBody(plugin, taskFile);
-					const existingEntries: UnifiedTimeEntry[] =
-						(taskParsed?.frontmatter?.[timeEntriesField] as UnifiedTimeEntry[]) || [];
-					taskEntryCache.set(
-						taskFile.path,
-						new Set(existingEntries.map((e) => e.id)),
-					);
-				}
-
-				const existingIds = taskEntryCache.get(taskFile.path)!;
-
-				// Idempotency: skip if already at destination
-				if (existingIds.has(entry.id)) {
-					result.skippedCount++;
-					dailyNoteModified = true; // still remove from daily note
-					continue;
-				}
-
-				// Add entry to task file via processFrontMatter for atomic write
-				const unifiedEntry = mapToUnifiedTimeEntry(entry);
 				await plugin.app.fileManager.processFrontMatter(taskFile, (taskFm) => {
 					if (!taskFm[timeEntriesField]) {
 						taskFm[timeEntriesField] = [];
 					}
-					taskFm[timeEntriesField].push(unifiedEntry);
+					taskFm[timeEntriesField].push(...pending.map((p) => p.entry));
 				});
-
-				existingIds.add(entry.id);
-				result.migratedCount++;
-				dailyNoteModified = true;
+				result.migratedCount += pending.length;
 			} catch (e) {
 				const msg = e instanceof Error ? e.message : String(e);
-				result.errors.push(`Error migrating entry ${entry.id}: ${msg}`);
-				result.errorCount++;
-				// Keep the entry on the daily note so no data is lost
-				toKeepOnDailyNote.push(entry);
+				result.errors.push(`Error writing entries to ${taskFile.path}: ${msg}`);
+				result.errorCount += pending.length;
+				// Return entries to their source daily notes so no data is lost
+				for (const p of pending) {
+					p.source.entriesToKeep.push(p.originalEntry);
+				}
+			}
+		}));
+		await yieldToUI();
+	}
+
+	// ── Phase 3: Clean up source daily notes with concurrency ──
+	// Uses cached frontmatter/body from Phase 1 (no re-read needed since
+	// Phase 2 only wrote to task files, not daily notes).
+
+	const modifiedStates = dailyNoteStates.filter((s) => s.modified);
+
+	for (let i = 0; i < modifiedStates.length; i += WRITE_CONCURRENCY) {
+		const chunk = modifiedStates.slice(i, i + WRITE_CONCURRENCY);
+		onProgress?.({
+			migrated: Math.min(i + WRITE_CONCURRENCY, modifiedStates.length),
+			total: modifiedStates.length,
+			phase: "cleanup",
+		});
+		await Promise.all(chunk.map(async (state) => {
+			const fm = state.frontmatter;
+
+			// Replace timeEntries with only those that should stay
+			if (state.entriesToKeep.length > 0) {
+				fm.timeEntries = state.entriesToKeep;
+			} else {
+				delete fm.timeEntries;
 			}
 
-			processed++;
-			if (processed % BATCH_SIZE === 0) {
-				await yieldToUI();
-			}
-		}
-
-		// Update the daily note: keep only non-migrated entries, remove legacy timeblocks
-		if (dailyNoteModified) {
-			const updatedParsed = await readFrontmatterAndBody(plugin, dnFile);
-			if (updatedParsed) {
-				const updatedFm = updatedParsed.frontmatter;
-
-				// Replace timeEntries with only those that should stay
-				if (toKeepOnDailyNote.length > 0) {
-					updatedFm.timeEntries = toKeepOnDailyNote;
+			// Remove legacy timeblocks that were converted and migrated
+			if (state.legacyConverted.length > 0 && Array.isArray(fm.timeblocks)) {
+				const remainingLegacy = fm.timeblocks.filter(
+					(tb: TimeBlock) => !tb.attachments?.[0],
+				);
+				if (remainingLegacy.length > 0) {
+					fm.timeblocks = remainingLegacy;
 				} else {
-					delete updatedFm.timeEntries;
+					delete fm.timeblocks;
 				}
-
-				// Remove legacy timeblocks that were converted and migrated
-				if (legacyConverted.length > 0 && Array.isArray(updatedFm.timeblocks)) {
-					// If all legacy timeblocks had task links and were migrated, remove
-					const remainingLegacy = updatedFm.timeblocks.filter(
-						(tb: TimeBlock) => !tb.attachments?.[0],
-					);
-					if (remainingLegacy.length > 0) {
-						updatedFm.timeblocks = remainingLegacy;
-					} else {
-						delete updatedFm.timeblocks;
-					}
-				}
-
-				await writeFrontmatterAndBody(plugin, dnFile, updatedFm, updatedParsed.body);
 			}
-		}
+
+			await writeFrontmatterAndBody(plugin, state.file, fm, state.body);
+		}));
+		await yieldToUI();
 	}
 
 	return result;
 }
 
-// ── Migration: Task  Daily Note ────────────────────────────────────
+// ── Migration: Task → Daily Note ────────────────────────────────────
 
 /**
  * Migrate time entries FROM task files TO daily notes.
  *
- * For each task file with `timeEntries`:
- *  - Group entries by date (from startTime).
- *  - For each date, find or create the corresponding daily note.
- *  - Add entries as DailyNoteTimeEntry (with taskLink pointing back to the task).
- *  - Remove migrated entries from the task file.
+ * Uses a three-phase approach for performance:
+ *  Phase 1: Scan tasks, collect entries, find/create daily notes, group
+ *           by destination daily note.
+ *  Phase 2: Batch-write to daily notes (one write per note, concurrent).
+ *  Phase 3: Clean up source task files (concurrent).
  *
  * Uses entry `id` for idempotency.
  */
 export async function migrateTaskToDailyNote(
 	plugin: TaskNotesPlugin,
+	onProgress?: (progress: { migrated: number; total: number; phase?: "collecting" | "writing" | "cleanup" }) => void,
 ): Promise<MigrationResult> {
 	const result: MigrationResult = {
 		migratedCount: 0,
@@ -359,8 +432,29 @@ export async function migrateTaskToDailyNote(
 	const timeEntriesField = plugin.fieldMapper.toUserField("timeEntries");
 	const allTasks = await plugin.cacheManager.getAllTasks();
 
-	// Cache daily note entry IDs to avoid duplicates
+	// Pre-count total entries for progress reporting
+	let total = 0;
+	for (const task of allTasks) {
+		if (task.timeEntries) total += task.timeEntries.length;
+	}
+
+	// ── Phase 1: Collect entries and group by destination daily note ──
+
+	// Load daily notes map once; refresh only after creating new notes
+	let allDailyNotesMap = getAllDailyNotes();
+	const dailyNoteCache = new Map<string, TFile>();
+
+	// Per-daily-note: entries to write
+	const dailyNoteBatches = new Map<string, { dailyNote: TFile; entries: DailyNoteTimeEntry[] }>();
+
+	// Per-daily-note: existing entry IDs for idempotency
 	const dailyNoteEntryCache = new Map<string, Set<string>>();
+
+	// Per-task: entry IDs queued or skipped for migration
+	const taskMigratedIds = new Map<string, { taskFile: TFile; ids: Set<string> }>();
+
+	// Track IDs that were queued for writing (not skipped)
+	const queuedEntryIds = new Set<string>();
 
 	let processed = 0;
 
@@ -385,28 +479,37 @@ export async function migrateTaskToDailyNote(
 
 		for (const [date, entries] of entriesByDate) {
 			try {
-				// Find or create daily note for this date
-				const moment = (window as any).moment(date);
-				let allDailyNotes = getAllDailyNotes();
-				let dailyNote = getDailyNote(moment, allDailyNotes);
-
+				// Find or create daily note for this date (with caching)
+				let dailyNote = dailyNoteCache.get(date);
 				if (!dailyNote) {
-					try {
-						dailyNote = await createDailyNote(moment);
-					} catch (e) {
-						const msg = e instanceof Error ? e.message : String(e);
-						result.errors.push(
-							`Failed to create daily note for ${date}: ${msg}`,
-						);
+					const moment = (window as any).moment(date);
+					dailyNote = getDailyNote(moment, allDailyNotesMap) ?? undefined;
+
+					if (!dailyNote) {
+						try {
+							dailyNote = await createDailyNote(moment);
+							allDailyNotesMap = getAllDailyNotes();
+						} catch (e) {
+							const msg = e instanceof Error ? e.message : String(e);
+							result.errors.push(
+								`Failed to create daily note for ${date}: ${msg}`,
+							);
+							result.errorCount += entries.length;
+							processed += entries.length;
+							onProgress?.({ migrated: processed, total });
+							continue;
+						}
+					}
+
+					if (!dailyNote) {
+						result.errors.push(`Could not find or create daily note for ${date}`);
 						result.errorCount += entries.length;
+						processed += entries.length;
+						onProgress?.({ migrated: processed, total });
 						continue;
 					}
-				}
 
-				if (!dailyNote) {
-					result.errors.push(`Could not find or create daily note for ${date}`);
-					result.errorCount += entries.length;
-					continue;
+					dailyNoteCache.set(date, dailyNote);
 				}
 
 				// Get or populate the daily note entry cache
@@ -422,9 +525,7 @@ export async function migrateTaskToDailyNote(
 
 				const existingIds = dailyNoteEntryCache.get(dailyNote.path)!;
 
-				// Add each entry to the daily note
-				const entriesToAdd: DailyNoteTimeEntry[] = [];
-
+				// Queue entries for batch write
 				for (const entry of entries) {
 					if (existingIds.has(entry.id)) {
 						result.skippedCount++;
@@ -433,28 +534,14 @@ export async function migrateTaskToDailyNote(
 					}
 
 					const dailyEntry = mapToDailyNoteTimeEntry(entry, task.path);
-					entriesToAdd.push(dailyEntry);
+
+					if (!dailyNoteBatches.has(dailyNote.path)) {
+						dailyNoteBatches.set(dailyNote.path, { dailyNote, entries: [] });
+					}
+					dailyNoteBatches.get(dailyNote.path)!.entries.push(dailyEntry);
 					existingIds.add(entry.id);
 					migratedIds.add(entry.id);
-					result.migratedCount++;
-				}
-
-				if (entriesToAdd.length > 0) {
-					// Read current daily note content and append entries
-					const dnParsed = await readFrontmatterAndBody(plugin, dailyNote);
-					if (dnParsed) {
-						const dnFm = dnParsed.frontmatter;
-						if (!dnFm.timeEntries) {
-							dnFm.timeEntries = [];
-						}
-						dnFm.timeEntries.push(...entriesToAdd);
-						await writeFrontmatterAndBody(
-							plugin,
-							dailyNote,
-							dnFm,
-							dnParsed.body,
-						);
-					}
+					queuedEntryIds.add(entry.id);
 				}
 			} catch (e) {
 				const msg = e instanceof Error ? e.message : String(e);
@@ -465,18 +552,95 @@ export async function migrateTaskToDailyNote(
 			}
 
 			processed += entries.length;
+			onProgress?.({ migrated: processed, total });
 			if (processed % BATCH_SIZE === 0) {
 				await yieldToUI();
 			}
 		}
 
-		// Remove migrated entries from the task file
 		if (migratedIds.size > 0) {
+			taskMigratedIds.set(task.path, { taskFile, ids: migratedIds });
+		}
+	}
+
+	// ── Phase 2: Batch write to daily notes with concurrency ──
+	// One writeFrontmatterAndBody call per daily note instead of per date-group.
+
+	const successfulEntryIds = new Set<string>();
+	const dailyNoteBatchList = Array.from(dailyNoteBatches.values());
+
+	for (let i = 0; i < dailyNoteBatchList.length; i += WRITE_CONCURRENCY) {
+		const chunk = dailyNoteBatchList.slice(i, i + WRITE_CONCURRENCY);
+		onProgress?.({
+			migrated: Math.min(i + WRITE_CONCURRENCY, dailyNoteBatchList.length),
+			total: dailyNoteBatchList.length,
+			phase: "writing",
+		});
+		await Promise.all(chunk.map(async ({ dailyNote, entries }) => {
 			try {
+				const dnParsed = await readFrontmatterAndBody(plugin, dailyNote);
+				if (dnParsed) {
+					const dnFm = dnParsed.frontmatter;
+					if (!dnFm.timeEntries) {
+						dnFm.timeEntries = [];
+					}
+					dnFm.timeEntries.push(...entries);
+					await writeFrontmatterAndBody(
+						plugin,
+						dailyNote,
+						dnFm,
+						dnParsed.body,
+					);
+				}
+				result.migratedCount += entries.length;
+				for (const e of entries) {
+					successfulEntryIds.add(e.id);
+				}
+			} catch (e) {
+				const msg = e instanceof Error ? e.message : String(e);
+				result.errors.push(
+					`Error writing entries to daily note ${dailyNote.path}: ${msg}`,
+				);
+				result.errorCount += entries.length;
+			}
+		}));
+		await yieldToUI();
+	}
+
+	// ── Phase 3: Clean up source task files with concurrency ──
+	// Only remove entries that were successfully written or already existed.
+
+	const taskCleanupList = Array.from(taskMigratedIds.values()).filter(
+		({ ids }) => {
+			for (const id of ids) {
+				// Entry is safe to remove if it was successfully written or was skipped
+				if (successfulEntryIds.has(id) || !queuedEntryIds.has(id)) return true;
+			}
+			return false;
+		},
+	);
+
+	for (let i = 0; i < taskCleanupList.length; i += WRITE_CONCURRENCY) {
+		const chunk = taskCleanupList.slice(i, i + WRITE_CONCURRENCY);
+		onProgress?.({
+			migrated: Math.min(i + WRITE_CONCURRENCY, taskCleanupList.length),
+			total: taskCleanupList.length,
+			phase: "cleanup",
+		});
+		await Promise.all(chunk.map(async ({ taskFile, ids }) => {
+			try {
+				// Only remove IDs that were successfully written or were skipped
+				const safeToRemove = new Set<string>();
+				for (const id of ids) {
+					if (successfulEntryIds.has(id) || !queuedEntryIds.has(id)) {
+						safeToRemove.add(id);
+					}
+				}
+
 				await plugin.app.fileManager.processFrontMatter(taskFile, (taskFm) => {
 					if (Array.isArray(taskFm[timeEntriesField])) {
 						taskFm[timeEntriesField] = taskFm[timeEntriesField].filter(
-							(e: UnifiedTimeEntry) => !migratedIds.has(e.id),
+							(e: UnifiedTimeEntry) => !safeToRemove.has(e.id),
 						);
 						if (taskFm[timeEntriesField].length === 0) {
 							delete taskFm[timeEntriesField];
@@ -486,11 +650,12 @@ export async function migrateTaskToDailyNote(
 			} catch (e) {
 				const msg = e instanceof Error ? e.message : String(e);
 				result.errors.push(
-					`Error removing migrated entries from ${task.path}: ${msg}`,
+					`Error removing migrated entries from ${taskFile.path}: ${msg}`,
 				);
 				result.errorCount++;
 			}
-		}
+		}));
+		await yieldToUI();
 	}
 
 	return result;

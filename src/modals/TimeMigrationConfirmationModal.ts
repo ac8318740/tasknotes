@@ -1,4 +1,4 @@
-import { Modal, Notice, Setting } from "obsidian";
+import { Modal, Notice } from "obsidian";
 import type TaskNotesPlugin from "../main";
 import {
 	countMigratableEntries,
@@ -39,9 +39,9 @@ export class TimeMigrationConfirmationModal extends Modal {
 		contentEl.empty();
 
 		// Title
-		new Setting(contentEl)
-			.setName(this.t("modals.timeMigration.title"))
-			.setHeading();
+		const headingEl = contentEl.createEl("h3");
+		headingEl.setText(this.t("modals.timeMigration.title"));
+		headingEl.style.margin = "0 0 8px 0";
 
 		// Description
 		const descKey = this.direction === "toTask"
@@ -104,13 +104,56 @@ export class TimeMigrationConfirmationModal extends Modal {
 
 		proceedButton.addEventListener("click", async () => {
 			proceedButton.disabled = true;
-			proceedButton.textContent = "...";
+			proceedButton.textContent = this.t("modals.timeMigration.migrating");
+
+			// Progress display
+			const stageEl = contentEl.createEl("p");
+			stageEl.style.fontWeight = "bold";
+			stageEl.style.marginBottom = "4px";
+			const progressEl = contentEl.createEl("p");
+			progressEl.style.fontStyle = "italic";
+			progressEl.style.marginTop = "0";
+
+			const formatPct = (migrated: number, total: number) =>
+				total > 0 ? Math.round((migrated / total) * 100) : 0;
+
+			// Initialize stage 1
+			stageEl.textContent = this.t("modals.timeMigration.stageLabel", { stage: 1 });
+			progressEl.textContent = this.t("modals.timeMigration.progressLabel", {
+				migrated: 0,
+				total: migrationCount.entries,
+			});
+
+			const onProgress = (progress: { migrated: number; total: number; phase?: string }) => {
+				const pct = formatPct(progress.migrated, progress.total);
+				if (progress.phase === "writing") {
+					stageEl.textContent = this.t("modals.timeMigration.stageLabel", { stage: 2 });
+					progressEl.textContent = this.t("modals.timeMigration.writingProgress", {
+						migrated: progress.migrated,
+						total: progress.total,
+					});
+					proceedButton.textContent = `${this.t("modals.timeMigration.stageLabel", { stage: 2 })} (${pct}%)`;
+				} else if (progress.phase === "cleanup") {
+					stageEl.textContent = this.t("modals.timeMigration.stageLabel", { stage: 3 });
+					progressEl.textContent = this.t("modals.timeMigration.cleanupProgress", {
+						migrated: progress.migrated,
+						total: progress.total,
+					});
+					proceedButton.textContent = `${this.t("modals.timeMigration.stageLabel", { stage: 3 })} (${pct}%)`;
+				} else {
+					progressEl.textContent = this.t("modals.timeMigration.progressLabel", {
+						migrated: progress.migrated,
+						total: progress.total,
+					});
+					proceedButton.textContent = `${this.t("modals.timeMigration.stageLabel", { stage: 1 })} (${pct}%)`;
+				}
+			};
 
 			try {
 				const migrationResult =
 					this.direction === "toTask"
-						? await migrateDailyNoteToTask(this.plugin)
-						: await migrateTaskToDailyNote(this.plugin);
+						? await migrateDailyNoteToTask(this.plugin, onProgress)
+						: await migrateTaskToDailyNote(this.plugin, onProgress);
 
 				new Notice(
 					this.t("modals.timeMigration.success", {

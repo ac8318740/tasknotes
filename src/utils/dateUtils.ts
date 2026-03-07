@@ -652,27 +652,44 @@ export function formatDateForDisplay(dateString: string, formatString = "MMM d, 
 }
 
 /**
- * Get current timestamp in local timezone ISO format for consistent timestamp generation
+ * Format a Date as a local ISO-8601 string with timezone offset.
+ * Example: "2026-03-07T13:10:35.298-05:00"
  */
-export function getCurrentTimestamp(): string {
-	const now = new Date();
-	const tzOffset = -now.getTimezoneOffset();
+export function formatDateWithTimezone(date: Date): string {
+	const tzOffset = -date.getTimezoneOffset();
 	const diff = tzOffset >= 0 ? "+" : "-";
 	const pad = (num: number) => String(Math.abs(num)).padStart(2, "0");
 
 	const tzOffsetHours = pad(Math.floor(Math.abs(tzOffset) / 60));
 	const tzOffsetMinutes = pad(Math.abs(tzOffset) % 60);
 
-	// Get local date/time components
-	const year = now.getFullYear();
-	const month = pad(now.getMonth() + 1);
-	const day = pad(now.getDate());
-	const hours = pad(now.getHours());
-	const minutes = pad(now.getMinutes());
-	const seconds = pad(now.getSeconds());
-	const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
+	const year = date.getFullYear();
+	const month = pad(date.getMonth() + 1);
+	const day = pad(date.getDate());
+	const hours = pad(date.getHours());
+	const minutes = pad(date.getMinutes());
+	const seconds = pad(date.getSeconds());
+	const milliseconds = String(date.getMilliseconds()).padStart(3, "0");
 
 	return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${diff}${tzOffsetHours}:${tzOffsetMinutes}`;
+}
+
+/**
+ * Get the current timezone offset as a string (e.g., "-05:00", "+11:00").
+ */
+export function getTimezoneOffsetString(): string {
+	const now = new Date();
+	const tzOffset = -now.getTimezoneOffset();
+	const diff = tzOffset >= 0 ? "+" : "-";
+	const pad = (num: number) => String(Math.abs(num)).padStart(2, "0");
+	return `${diff}${pad(Math.floor(Math.abs(tzOffset) / 60))}:${pad(Math.abs(tzOffset) % 60)}`;
+}
+
+/**
+ * Get current timestamp in local timezone ISO format for consistent timestamp generation
+ */
+export function getCurrentTimestamp(): string {
+	return formatDateWithTimezone(new Date());
 }
 
 /**

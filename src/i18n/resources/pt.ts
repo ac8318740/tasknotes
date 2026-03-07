@@ -572,6 +572,9 @@ export const pt: TranslationTree = {
 				stopNotificationName: "Notificação de parada de registro de tempo",
 				stopNotificationDesc:
 					"Mostrar notificação quando o registro de tempo é parado automaticamente",
+				autoStopOtherName: "Registro de tempo exclusivo",
+				autoStopOtherDesc:
+					"Apenas uma tarefa pode ser rastreada por vez. Ao iniciar uma nova sessão, qualquer sessão em andamento é automaticamente interrompida, e ao editar entradas passadas, as entradas sobrepostas são ajustadas para evitar lacunas ou sobreposições.",
 			},
 			stopNotificationName: "Notificação de parada de registro de tempo",
 			stopNotificationDesc: "Mostrar notificação quando o registro de tempo é parado automaticamente",

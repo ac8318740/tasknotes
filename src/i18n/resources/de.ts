@@ -571,6 +571,9 @@ export const de: TranslationTree = {
 				autoStopDesc: "Zeiterfassung automatisch stoppen, wenn eine Aufgabe als abgeschlossen markiert wird",
 				stopNotificationName: "Zeiterfassung-Stopp-Benachrichtigung",
 				stopNotificationDesc: "Benachrichtigung anzeigen, wenn Zeiterfassung automatisch gestoppt wird",
+				autoStopOtherName: "Exklusive Zeiterfassung",
+				autoStopOtherDesc:
+					"Es kann immer nur eine Aufgabe gleichzeitig erfasst werden. Beim Starten einer neuen Sitzung wird eine laufende Sitzung automatisch gestoppt, und das Bearbeiten vergangener Einträge passt überlappende Einträge an, um Lücken oder Überschneidungen zu vermeiden.",
 			},
 			recurring: {
 				maintainOffsetName: "Fälligkeitsdatum-Offset in wiederkehrenden Aufgaben beibehalten",

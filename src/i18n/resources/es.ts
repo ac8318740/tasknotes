@@ -571,6 +571,9 @@ export const es: TranslationTree = {
 				autoStopDesc: "Detener automáticamente el seguimiento de tiempo cuando una tarea se marca como completa",
 				stopNotificationName: "Notificación de detención de seguimiento de tiempo",
 				stopNotificationDesc: "Mostrar notificación cuando el seguimiento de tiempo se detiene automáticamente",
+				autoStopOtherName: "Seguimiento de tiempo exclusivo",
+				autoStopOtherDesc:
+					"Solo se puede rastrear una tarea a la vez. Al iniciar una nueva sesión se detiene automáticamente cualquier sesión en curso, y al editar entradas pasadas se ajustan las entradas superpuestas para evitar huecos o solapamientos.",
 			},
 			recurring: {
 				maintainOffsetName: "Mantener desplazamiento de fecha de vencimiento en tareas recurrentes",
