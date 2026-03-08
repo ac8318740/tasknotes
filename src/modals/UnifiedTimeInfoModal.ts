@@ -4,8 +4,6 @@ import { UnifiedTimeEntry, DailyNoteTimeEntry, TaskInfo } from "../types";
 import type TaskNotesPlugin from "../main";
 import { TranslationKey } from "../i18n";
 import { openTaskSelector } from "./TaskSelectorWithCreateModal";
-import { detectTimeEntryOverlaps, OverlapResult } from "../utils/timeTrackingUtils";
-import { OverlapConfirmationModal } from "./OverlapConfirmationModal";
 import { getTimezoneOffsetString } from "../utils/dateUtils";
 
 export interface UnifiedTimeInfoModalOptions {
@@ -536,25 +534,8 @@ export class UnifiedTimeInfoModal extends Modal {
 			const task = this.selectedTask;
 
 			// Overlap detection: check if this entry overlaps with others
-			if (
-				this.plugin.settings.autoStopOtherTimeTracking &&
-				updatedEntry.endTime
-			) {
-				const allTasks = await this.plugin.cacheManager.getAllTasks();
-				const overlaps = detectTimeEntryOverlaps(updatedEntry, allTasks);
-
-				if (overlaps.length > 0) {
-					const confirmed = await new OverlapConfirmationModal(
-						this.app,
-						overlaps
-					).show();
-
-					if (!confirmed) return;
-
-					// Apply overlap adjustments to affected tasks
-					await this.applyOverlapAdjustments(overlaps);
-				}
-			}
+			const proceed = await this.plugin.timeEntryStorageService.checkAndResolveOverlaps(updatedEntry);
+			if (!proceed) return;
 
 			// Save the edited entry itself
 			const entries = [...(await this.plugin.timeEntryStorageService.readEntries(task))];
@@ -584,52 +565,6 @@ export class UnifiedTimeInfoModal extends Modal {
 		} catch (error) {
 			console.error("Error saving time entry:", error);
 			new Notice(String(error));
-		}
-	}
-
-	/**
-	 * Apply overlap adjustments: update or remove affected time entries on other tasks.
-	 * Groups adjustments by task to minimise file writes.
-	 */
-	private async applyOverlapAdjustments(overlaps: OverlapResult[]): Promise<void> {
-		// Group overlaps by task path so we only update each task file once
-		const byTask = new Map<string, { task: TaskInfo; adjustments: OverlapResult[] }>();
-		for (const overlap of overlaps) {
-			const key = overlap.task.path;
-			if (!byTask.has(key)) {
-				byTask.set(key, { task: overlap.task, adjustments: [] });
-			}
-			byTask.get(key)!.adjustments.push(overlap);
-		}
-
-		for (const { task, adjustments } of byTask.values()) {
-			const taskEntries = [...(await this.plugin.timeEntryStorageService.readEntries(task))];
-			let modified = false;
-
-			const updatedEntries = taskEntries
-				.map((entry) => {
-					const adj = adjustments.find((a) => a.entry.id === entry.id);
-					if (!adj) return entry;
-
-					if (adj.action === "remove") {
-						modified = true;
-						return null; // Will be filtered out
-					}
-					if (adj.action === "adjust-start" && adj.newStartTime) {
-						modified = true;
-						return { ...entry, startTime: adj.newStartTime };
-					}
-					if (adj.action === "adjust-end" && adj.newEndTime) {
-						modified = true;
-						return { ...entry, endTime: adj.newEndTime };
-					}
-					return entry;
-				})
-				.filter((e): e is UnifiedTimeEntry => e !== null);
-
-			if (modified) {
-				await this.plugin.taskService.updateTask(task, { timeEntries: updatedEntries });
-			}
 		}
 	}
 

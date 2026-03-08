@@ -1385,6 +1385,13 @@ export class CalendarView extends BasesViewBase {
 					entry.endTime = formatDateWithTimezone(new Date(oldEndDate.getTime() + timeDiffMs));
 					delete entry.duration;
 
+					// Overlap detection before saving
+					const proceed = await this.plugin.timeEntryStorageService.checkAndResolveOverlaps(entry);
+					if (!proceed) {
+						info.revert();
+						return;
+					}
+
 					const sanitizedEntries = updatedEntries.map((timeEntry) => {
 						const sanitizedEntry = { ...timeEntry };
 						delete sanitizedEntry.duration;
@@ -1504,6 +1511,13 @@ export class CalendarView extends BasesViewBase {
 					entry.startTime = formatDateWithTimezone(newStart);
 					entry.endTime = formatDateWithTimezone(newEnd);
 					delete entry.duration;
+
+					// Overlap detection before saving
+					const proceed = await this.plugin.timeEntryStorageService.checkAndResolveOverlaps(entry);
+					if (!proceed) {
+						info.revert();
+						return;
+					}
 
 					const sanitizedEntries = updatedEntries.map((timeEntry) => {
 						const sanitizedEntry = { ...timeEntry };

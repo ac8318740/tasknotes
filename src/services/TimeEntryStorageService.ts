@@ -3,6 +3,8 @@ import type TaskNotesPlugin from "../main";
 import { UnifiedTimeEntry, TaskInfo } from "../types";
 import { mapToDailyNoteTimeEntry, mapToUnifiedTimeEntry } from "./TimeMigrationService";
 import { getActiveTimeEntry } from "../utils/helpers";
+import { detectTimeEntryOverlaps, OverlapResult } from "../utils/timeTrackingUtils";
+import { OverlapConfirmationModal } from "../modals/OverlapConfirmationModal";
 
 export class TimeEntryStorageService {
 	constructor(private plugin: TaskNotesPlugin) {}
@@ -217,6 +219,126 @@ export class TimeEntryStorageService {
 			}
 		}
 		return results;
+	}
+
+	/**
+	 * Central overlap check: detect overlapping time entries, prompt the user,
+	 * and apply adjustments if confirmed.  Returns true if the caller should
+	 * proceed with its own save, false if the user cancelled.
+	 *
+	 * Call this from ANY code path that modifies a time entry's start/end time
+	 * before persisting the change.
+	 */
+	async checkAndResolveOverlaps(editedEntry: UnifiedTimeEntry): Promise<boolean> {
+		// Gate: only run when exclusive time tracking is enabled
+		if (!this.plugin.settings.autoStopOtherTimeTracking) return true;
+
+		// Can't overlap-check a running entry (no endTime)
+		if (!editedEntry.endTime) return true;
+
+		// Build a task list with entries populated (works in both storage modes)
+		const allTasks = await this.getTasksWithEntries();
+
+		const overlaps = detectTimeEntryOverlaps(editedEntry, allTasks);
+		if (overlaps.length === 0) return true;
+
+		const confirmed = await new OverlapConfirmationModal(
+			this.plugin.app,
+			overlaps
+		).show();
+
+		if (!confirmed) return false;
+
+		await this.applyOverlapAdjustments(overlaps);
+		return true;
+	}
+
+	/**
+	 * Get all tasks with their time entries populated from the correct storage.
+	 * In task mode, entries are already on cached tasks.
+	 * In daily note mode, entries must be read from daily notes.
+	 */
+	private async getTasksWithEntries(): Promise<TaskInfo[]> {
+		const allTasks = await this.plugin.cacheManager.getAllTasks();
+
+		if (this.plugin.settings.timeEntriesStorage === "task") {
+			return allTasks;
+		}
+
+		// Daily note mode: scan all daily notes and group entries by task
+		const { getAllDailyNotes } = await import("obsidian-daily-notes-interface");
+		const allDailyNotes = getAllDailyNotes();
+		const entriesByTaskPath = new Map<string, UnifiedTimeEntry[]>();
+
+		for (const dnFile of Object.values(allDailyNotes)) {
+			const cache = this.plugin.app.metadataCache.getFileCache(dnFile as TFile);
+			const entries = cache?.frontmatter?.timeEntries;
+			if (!Array.isArray(entries)) continue;
+			for (const entry of entries) {
+				if (!entry.taskLink) continue;
+				const linkPath = entry.taskLink.replace(/^\[\[/, "").replace(/\]\]$/, "").split("|")[0].trim();
+				const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPath, "");
+				if (!file) continue;
+				if (!entriesByTaskPath.has(file.path)) {
+					entriesByTaskPath.set(file.path, []);
+				}
+				entriesByTaskPath.get(file.path)!.push(mapToUnifiedTimeEntry(entry));
+			}
+		}
+
+		// Merge entries onto tasks
+		return allTasks.map(task => {
+			const entries = entriesByTaskPath.get(task.path);
+			if (entries) {
+				return { ...task, timeEntries: entries };
+			}
+			return task;
+		});
+	}
+
+	/**
+	 * Apply overlap adjustments: update or remove affected time entries.
+	 * Groups adjustments by task to minimise file writes.
+	 */
+	private async applyOverlapAdjustments(overlaps: OverlapResult[]): Promise<void> {
+		const byTask = new Map<string, { task: TaskInfo; adjustments: OverlapResult[] }>();
+		for (const overlap of overlaps) {
+			const key = overlap.task.path;
+			if (!byTask.has(key)) {
+				byTask.set(key, { task: overlap.task, adjustments: [] });
+			}
+			byTask.get(key)!.adjustments.push(overlap);
+		}
+
+		for (const { task, adjustments } of byTask.values()) {
+			const taskEntries = [...(await this.readEntries(task))];
+			let modified = false;
+
+			const updatedEntries = taskEntries
+				.map((entry) => {
+					const adj = adjustments.find((a) => a.entry.id === entry.id);
+					if (!adj) return entry;
+
+					if (adj.action === "remove") {
+						modified = true;
+						return null;
+					}
+					if (adj.action === "adjust-start" && adj.newStartTime) {
+						modified = true;
+						return { ...entry, startTime: adj.newStartTime };
+					}
+					if (adj.action === "adjust-end" && adj.newEndTime) {
+						modified = true;
+						return { ...entry, endTime: adj.newEndTime };
+					}
+					return entry;
+				})
+				.filter((e): e is UnifiedTimeEntry => e !== null);
+
+			if (modified) {
+				await this.plugin.taskService.updateTask(task, { timeEntries: updatedEntries });
+			}
+		}
 	}
 
 	/** Update the denormalized `scheduled` field on the task file based on earliest future planned entry */

@@ -13,7 +13,7 @@
 - [x] Migration shows progress (X of Y entries migrated, or percentage)
 - [x] Start time tracking — verify entry appears on today's daily note (with taskLink), NOT on the task file
 - [x] Stop time tracking — verify endTime updated on the daily note
-- [ ] Open Task Edit modal — verify the Time section loads and shows entries (lazy-loaded from daily notes)
+- [x] Open Task Edit modal — verify the Time section loads and shows entries (lazy-loaded from daily notes)
 - [ ] Create a time block from the calendar for a future date — verify saved to that date's daily note
 - [ ] Delete an entry via the unified modal — verify removed from the daily note
 - [ ] Check the task file — `scheduled` field should be present (denormalized), but `timeEntries` should be absent
@@ -36,8 +36,8 @@
 
 - [x] Auto-stop: Start tracking task A, then start tracking task B — task A should auto-stop
 - [x] Timestamp consistency: startTime and endTime should both use local timezone format (not UTC Z)
-- [ ] Overlap detection on edit: Edit a past entry to extend its time range into another entry — confirmation modal should appear listing affected entries
-- [ ] Overlap resolution: After confirming, overlapping entries should be adjusted (start/end pushed) or removed (if fully covered)
+- [x] Overlap detection on edit: Edit a past entry to extend its time range into another entry — confirmation modal should appear listing affected entries
+- [x] Overlap resolution: After confirming, overlapping entries should be adjusted (start/end pushed) or removed (if fully covered)
 - [ ] Setting toggle: "Exclusive time tracking" in Settings > Features > Time Tracking — toggling off should disable both auto-stop and overlap detection
 
 ## Migration Issues (found during testing)

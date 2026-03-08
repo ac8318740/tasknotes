@@ -247,7 +247,7 @@ export class TimeEntryEditorModal extends Modal {
 		return `${year}-${month}-${day}T${hours}:${minutes}`;
 	}
 
-	private save() {
+	private async save() {
 		// Validate entries
 		for (const entry of this.timeEntries) {
 			if (!entry.startTime) {
@@ -262,6 +262,14 @@ export class TimeEntryEditorModal extends Modal {
 					new Notice(this.translate("modals.timeEntryEditor.validation.endBeforeStart"));
 					return;
 				}
+			}
+		}
+
+		// Overlap detection for each entry with an endTime
+		for (const entry of this.timeEntries) {
+			if (entry.endTime) {
+				const proceed = await this.plugin.timeEntryStorageService.checkAndResolveOverlaps(entry);
+				if (!proceed) return;
 			}
 		}
 
