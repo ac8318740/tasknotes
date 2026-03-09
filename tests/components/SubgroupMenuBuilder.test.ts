@@ -23,7 +23,7 @@ describe('SubgroupMenuBuilder', () => {
     expect(options['context']).toBe('Context');
     expect(options['project']).toBe('Project');
     expect(options['due']).toBe('Due Date');
-    expect(options['scheduled']).toBe('Scheduled Date');
+    expect(options['next_scheduled']).toBe('Scheduled Date');
     expect(options['tags']).toBe('Tags');
   });
 

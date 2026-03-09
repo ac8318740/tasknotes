@@ -102,7 +102,7 @@ describe('ICSNoteService - Due Date from ICS End Time (Issue #1220)', () => {
 
 			expect(mockTaskService.createTask).toHaveBeenCalledWith(
 				expect.objectContaining({
-					scheduled: '2025-02-12T09:00',
+					next_scheduled: '2025-02-12T09:00',
 				}),
 				expect.anything()
 			);
@@ -129,7 +129,7 @@ describe('ICSNoteService - Due Date from ICS End Time (Issue #1220)', () => {
 
 			expect(mockTaskService.createTask).toHaveBeenCalledWith(
 				expect.objectContaining({
-					scheduled: '2025-02-12T09:00',
+					next_scheduled: '2025-02-12T09:00',
 					due: '2025-02-12T11:00',
 				}),
 				expect.anything()
@@ -154,7 +154,7 @@ describe('ICSNoteService - Due Date from ICS End Time (Issue #1220)', () => {
 			// Due should be 2025-02-12 (the actual event date), not 2025-02-13
 			expect(mockTaskService.createTask).toHaveBeenCalledWith(
 				expect.objectContaining({
-					scheduled: '2025-02-12',
+					next_scheduled: '2025-02-12',
 					due: '2025-02-12',
 				}),
 				expect.anything()

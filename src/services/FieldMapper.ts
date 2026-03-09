@@ -81,8 +81,8 @@ export class FieldMapper {
 			mapped.due = frontmatter[this.mapping.due];
 		}
 
-		if (frontmatter[this.mapping.scheduled] !== undefined) {
-			mapped.scheduled = frontmatter[this.mapping.scheduled];
+		if (frontmatter[this.mapping.nextScheduled] !== undefined) {
+			mapped.next_scheduled = frontmatter[this.mapping.nextScheduled];
 		}
 
 		if (frontmatter[this.mapping.contexts] !== undefined) {
@@ -143,22 +143,19 @@ export class FieldMapper {
 			});
 		}
 
-		// Compute scheduled from earliest future planned time entry (all tasks)
-		// This overwrites any frontmatter-read scheduled value for tasks with time entries
+		// Compute next_scheduled from earliest future planned time entry (all tasks)
+		// This overwrites any frontmatter-read next_scheduled value for tasks with time entries
 		if (mapped.timeEntries?.length) {
 			const now = new Date();
 			const planned = (mapped.timeEntries as any[])
 				.filter((e) => e.type === "planned")
 				.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-			const target = planned.find((e) => new Date(e.startTime) >= now) || planned[0];
+			const target = planned.find((e) => new Date(e.startTime) >= now);
 			if (target) {
-				const startTime = target.startTime as string;
-				mapped.scheduled = startTime.length === 10
-					? startTime
-					: startTime.substring(0, 10);
+				mapped.next_scheduled = target.startTime as string;
 			} else {
-				// No planned entries — clear any stale scheduled value
-				mapped.scheduled = undefined;
+				// No future planned entries — clear any stale next_scheduled value
+				mapped.next_scheduled = undefined;
 			}
 		}
 

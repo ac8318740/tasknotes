@@ -72,7 +72,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily standup',
 				status: ' ',
 				path: 'tasks/daily-standup.md',
-				scheduled: yesterdayStr, // Yesterday - overdue!
+				next_scheduled: yesterdayStr, // Yesterday - overdue!
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [],
 				skipped_instances: [],
@@ -116,7 +116,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily review',
 				status: ' ',
 				path: 'tasks/daily-review.md',
-				scheduled: yesterdayStr,
+				next_scheduled: yesterdayStr,
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [],
 				skipped_instances: [],
@@ -126,7 +126,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 			const buggyTask = {
 				...overdueTask,
 				complete_instances: [todayStr],
-				scheduled: '2025-01-11', // Moves to tomorrow
+				next_scheduled: '2025-01-11', // Moves to tomorrow
 			};
 
 			// The effective status for today would be "done" - WRONG!
@@ -137,7 +137,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 			const correctTask = {
 				...overdueTask,
 				complete_instances: [yesterdayStr],
-				scheduled: todayStr, // Moves to today
+				next_scheduled: todayStr, // Moves to today
 			};
 
 			// The effective status for today should be "open"
@@ -165,7 +165,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily exercise',
 				status: ' ',
 				path: 'tasks/daily-exercise.md',
-				scheduled: twoDaysAgoStr, // 2 days overdue!
+				next_scheduled: twoDaysAgoStr, // 2 days overdue!
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [],
 				skipped_instances: [],
@@ -176,7 +176,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 			const afterFirstClick = {
 				...veryOverdueTask,
 				complete_instances: [twoDaysAgoStr],
-				scheduled: yesterdayStr,
+				next_scheduled: yesterdayStr,
 			};
 			const nextAfterFirst = getNextUncompletedOccurrence(afterFirstClick);
 			expect(formatDateForStorage(nextAfterFirst!)).toBe(yesterdayStr);
@@ -185,7 +185,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 			const afterSecondClick = {
 				...afterFirstClick,
 				complete_instances: [twoDaysAgoStr, yesterdayStr],
-				scheduled: todayStr,
+				next_scheduled: todayStr,
 			};
 			const nextAfterSecond = getNextUncompletedOccurrence(afterSecondClick);
 			expect(formatDateForStorage(nextAfterSecond!)).toBe(todayStr);
@@ -208,7 +208,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily medication',
 				status: ' ',
 				path: 'tasks/daily-medication.md',
-				scheduled: weekAgoStr, // 7 days overdue!
+				next_scheduled: weekAgoStr, // 7 days overdue!
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [],
 				skipped_instances: [],
@@ -246,7 +246,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Weekly review',
 				status: ' ',
 				path: 'tasks/weekly-review.md',
-				scheduled: lastWeekStr, // 1 week overdue
+				next_scheduled: lastWeekStr, // 1 week overdue
 				recurrence: 'DTSTART:20250103;FREQ=WEEKLY;BYDAY=FR',
 				complete_instances: [],
 				skipped_instances: [],
@@ -259,7 +259,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 			const correctTask = {
 				...weeklyTask,
 				complete_instances: [lastWeekStr],
-				scheduled: todayStr, // This Friday
+				next_scheduled: todayStr, // This Friday
 			};
 
 			const nextOccurrence = getNextUncompletedOccurrence(correctTask);
@@ -281,7 +281,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily task',
 				status: ' ',
 				path: 'tasks/daily.md',
-				scheduled: scheduledStr,
+				next_scheduled: scheduledStr,
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [],
 				skipped_instances: [],
@@ -294,7 +294,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 
 			const determineCompletionDate = (task: TaskInfo): Date => {
 				const todayDate = parseDateToUTC(getTodayString());
-				const scheduledDate = task.scheduled ? parseDateToUTC(task.scheduled) : todayDate;
+				const scheduledDate = task.next_scheduled ? parseDateToUTC(task.next_scheduled) : todayDate;
 
 				// For overdue tasks, complete the scheduled (past) date
 				if (scheduledDate < todayDate) {
@@ -322,7 +322,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily task',
 				status: ' ',
 				path: 'tasks/daily.md',
-				scheduled: yesterdayStr, // Overdue
+				next_scheduled: yesterdayStr, // Overdue
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [],
 				skipped_instances: [],
@@ -355,7 +355,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily task',
 				status: ' ',
 				path: 'tasks/daily.md',
-				scheduled: yesterdayStr, // Yesterday - overdue
+				next_scheduled: yesterdayStr, // Yesterday - overdue
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [yesterdayStr], // Yesterday just completed
 				skipped_instances: [],
@@ -364,7 +364,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 			const nextDates = updateToNextScheduledOccurrence(overdueTask, false);
 
 			// Next scheduled should be today (not tomorrow)
-			expect(nextDates.scheduled).toBe(todayStr);
+			expect(nextDates.next_scheduled).toBe(todayStr);
 		});
 
 		it.skip('reproduces issue #936 - completing current day instance should move to tomorrow', () => {
@@ -381,7 +381,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily task',
 				status: ' ',
 				path: 'tasks/daily.md',
-				scheduled: todayStr, // Today - not overdue
+				next_scheduled: todayStr, // Today - not overdue
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [todayStr], // Today just completed
 				skipped_instances: [],
@@ -390,7 +390,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 			const nextDates = updateToNextScheduledOccurrence(currentTask, false);
 
 			// Next scheduled should be tomorrow
-			expect(nextDates.scheduled).toBe(tomorrowStr);
+			expect(nextDates.next_scheduled).toBe(tomorrowStr);
 		});
 	});
 
@@ -410,7 +410,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily task',
 				status: ' ',
 				path: 'tasks/daily.md',
-				scheduled: todayStr, // Now scheduled for today
+				next_scheduled: todayStr, // Now scheduled for today
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: [yesterdayStr], // Yesterday completed
 				skipped_instances: [],
@@ -440,7 +440,7 @@ describe('Issue #936: Overdue recurring task completion handling', () => {
 				title: 'Daily task',
 				status: ' ',
 				path: 'tasks/daily.md',
-				scheduled: tomorrowStr, // Now scheduled for tomorrow
+				next_scheduled: tomorrowStr, // Now scheduled for tomorrow
 				recurrence: 'DTSTART:20250101;FREQ=DAILY',
 				complete_instances: ['2025-01-09', todayStr], // Yesterday AND today completed
 				skipped_instances: [],
@@ -486,8 +486,8 @@ describe('Issue #936: Potential fix approaches', () => {
 			//   const todayStr = formatDateForStorage(today);
 			//
 			//   // If task has a scheduled date in the past, complete that date instead
-			//   if (task.scheduled) {
-			//     const scheduledDate = parseDateToUTC(task.scheduled);
+			//   if (task.next_scheduled) {
+			//     const scheduledDate = parseDateToUTC(task.next_scheduled);
 			//     if (scheduledDate < today) {
 			//       // Task is overdue - complete the scheduled (overdue) date
 			//       return scheduledDate;

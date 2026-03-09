@@ -341,7 +341,7 @@ export class TimeEntryStorageService {
 		}
 	}
 
-	/** Update the denormalized `scheduled` field on the task file based on earliest future planned entry */
+	/** Update the denormalized `next_scheduled` field on the task file based on earliest future planned entry */
 	private async updateDenormalizedScheduled(task: TaskInfo, entries?: UnifiedTimeEntry[]): Promise<void> {
 		const file = this.plugin.app.vault.getAbstractFileByPath(task.path);
 		if (!(file instanceof TFile)) return;
@@ -352,13 +352,12 @@ export class TimeEntryStorageService {
 		const planned = allEntries
 			.filter(e => e.type === "planned")
 			.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-		const target = planned.find(e => new Date(e.startTime) >= now) || planned[0];
+		const target = planned.find(e => new Date(e.startTime) >= now);
 
-		const scheduledField = this.plugin.fieldMapper.toUserField("scheduled");
+		const scheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
 		await this.plugin.app.fileManager.processFrontMatter(file, (fm) => {
 			if (target) {
-				const startTime = target.startTime;
-				fm[scheduledField] = startTime.length === 10 ? startTime : startTime.substring(0, 10);
+				fm[scheduledField] = target.startTime;
 			} else {
 				delete fm[scheduledField];
 			}

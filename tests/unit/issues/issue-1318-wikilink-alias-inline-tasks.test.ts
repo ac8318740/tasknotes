@@ -385,7 +385,7 @@ describe.skip('Issue #1318: createTaskCard displayText support', () => {
                     status: 'status',
                     priority: 'priority',
                     due: 'due',
-                    scheduled: 'scheduled',
+                    nextScheduled: 'next_scheduled',
                     title: 'title',
                     tags: 'tags',
                     contexts: 'contexts',

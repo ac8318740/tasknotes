@@ -238,7 +238,7 @@ export class FilterUtils {
 				"is-empty",
 				"is-not-empty",
 			],
-			scheduled: [
+			next_scheduled: [
 				"is",
 				"is-not",
 				"is-before",
@@ -352,8 +352,8 @@ export class FilterUtils {
 				return task.blocking || [];
 			case "due":
 				return task.due;
-			case "scheduled":
-				return task.scheduled;
+			case "next_scheduled":
+				return task.next_scheduled;
 			case "completedDate":
 				return task.completedDate;
 			case "dateCreated":
@@ -748,7 +748,7 @@ export class FilterUtils {
 	private static isDateProperty(property: FilterProperty): boolean {
 		const dateProperties: FilterProperty[] = [
 			"due",
-			"scheduled",
+			"next_scheduled",
 			"completedDate",
 			"dateCreated",
 			"dateModified",

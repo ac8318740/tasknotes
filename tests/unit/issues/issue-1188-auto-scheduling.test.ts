@@ -49,7 +49,7 @@ interface MockTaskInfo {
 	status?: string;
 	priority?: string;
 	due?: string;
-	scheduled?: string;
+	next_scheduled?: string;
 	timeEstimate?: number; // minutes
 	tags?: string[];
 	contexts?: string[];
@@ -600,18 +600,18 @@ describe("Issue #1188 - Auto-Scheduling Feature Request", () => {
 				title: "Task Before Scheduling",
 				due: "2025-03-15",
 				timeEstimate: 60,
-				// scheduled: undefined
+				// next_scheduled: undefined
 			};
 
 			const afterScheduling: MockTaskInfo = {
 				...beforeScheduling,
-				scheduled: "2025-03-10T14:00:00",
+				next_scheduled: "2025-03-10T14:00:00",
 				autoScheduledSlot: "2025-03-10T14:00:00",
 			};
 
 			// Task should have scheduled field updated
-			expect(beforeScheduling.scheduled).toBeUndefined();
-			expect(afterScheduling.scheduled).toBe("2025-03-10T14:00:00");
+			expect(beforeScheduling.next_scheduled).toBeUndefined();
+			expect(afterScheduling.next_scheduled).toBe("2025-03-10T14:00:00");
 		});
 	});
 

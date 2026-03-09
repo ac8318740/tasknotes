@@ -21,7 +21,7 @@ describe('Issue #160: TaskEditModal vs TaskService inconsistency', () => {
       id: 'test-friday-task',
       title: 'Weekly Friday Task',
       recurrence: 'FREQ=WEEKLY;BYDAY=FR',
-      scheduled: '2024-01-12', // Friday
+      next_scheduled: '2024-01-12', // Friday
       complete_instances: []
     });
 
@@ -101,7 +101,7 @@ describe('Issue #160: TaskEditModal vs TaskService inconsistency', () => {
       id: 'test-friday-task',
       title: 'Weekly Friday Task',
       recurrence: 'FREQ=WEEKLY;BYDAY=FR',
-      scheduled: '2024-01-12', // Friday
+      next_scheduled: '2024-01-12', // Friday
       complete_instances: []
     });
 

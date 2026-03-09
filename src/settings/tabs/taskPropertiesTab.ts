@@ -70,7 +70,7 @@ export function renderTaskPropertiesTab(
 
 	// Scheduled Date Property Card
 	renderSimplePropertyCard(container, plugin, save, translate, {
-		propertyId: "scheduled",
+		propertyId: "nextScheduled",
 		displayName: translate("settings.taskProperties.properties.scheduled.name"),
 		description: translate("settings.taskProperties.properties.scheduled.description"),
 		hasDefault: true,

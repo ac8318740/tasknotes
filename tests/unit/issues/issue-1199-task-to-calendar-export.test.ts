@@ -66,7 +66,7 @@ interface MockTaskInfo {
 	status?: string;
 	priority?: string;
 	due?: string;
-	scheduled?: string;
+	next_scheduled?: string;
 	tags?: string[];
 	contexts?: string[];
 	projects?: string[];
@@ -85,7 +85,7 @@ interface MockGoogleCalendarExportSettings {
 	eventTitleTemplate: string;
 	includeDescription: boolean;
 	eventColorId: string | null;
-	syncTrigger: "scheduled" | "due" | "both";
+	syncTrigger: "next_scheduled" | "due" | "both";
 	createAsAllDay: boolean;
 	defaultEventDuration: number;
 	includeObsidianLink: boolean;
@@ -101,7 +101,7 @@ interface MockMicrosoftCalendarExportSettings {
 	syncOnTaskDelete: boolean;
 	eventTitleTemplate: string;
 	includeDescription: boolean;
-	syncTrigger: "scheduled" | "due" | "both";
+	syncTrigger: "next_scheduled" | "due" | "both";
 	createAsAllDay: boolean;
 	defaultEventDuration: number;
 	includeObsidianLink: boolean;
@@ -153,7 +153,7 @@ describe("Issue #1199 - Add due dates/scheduled times to Google/Office calendars
 			const task: MockTaskInfo = {
 				path: "tasks/meeting-prep.md",
 				title: "Meeting Prep",
-				scheduled: "2025-03-15T14:00:00",
+				next_scheduled: "2025-03-15T14:00:00",
 				timeEstimate: 45, // 45 minutes
 			};
 
@@ -167,7 +167,7 @@ describe("Issue #1199 - Add due dates/scheduled times to Google/Office calendars
 				eventTitleTemplate: "{{title}}",
 				includeDescription: true,
 				eventColorId: null,
-				syncTrigger: "scheduled",
+				syncTrigger: "next_scheduled",
 				createAsAllDay: false,
 				defaultEventDuration: 60,
 				includeObsidianLink: true,
@@ -177,7 +177,7 @@ describe("Issue #1199 - Add due dates/scheduled times to Google/Office calendars
 			// Expected: Timed event created with:
 			// - start: 2025-03-15T14:00:00
 			// - end: 2025-03-15T14:45:00 (using timeEstimate)
-			expect(task.scheduled).toContain("T");
+			expect(task.next_scheduled).toContain("T");
 			expect(task.timeEstimate).toBe(45);
 		});
 
@@ -207,7 +207,7 @@ describe("Issue #1199 - Add due dates/scheduled times to Google/Office calendars
 				status: "todo",
 				priority: "medium",
 				due: "2025-03-20",
-				scheduled: "2025-03-15T09:00:00",
+				next_scheduled: "2025-03-15T09:00:00",
 				tags: ["feature", "v2.0"],
 				contexts: ["work", "desk"],
 				projects: ["ProjectX"],
@@ -253,16 +253,16 @@ describe("Issue #1199 - Add due dates/scheduled times to Google/Office calendars
 			const task: MockTaskInfo = {
 				path: "tasks/scheduled-work.md",
 				title: "Scheduled Work Block",
-				scheduled: "2025-03-15T10:00:00",
+				next_scheduled: "2025-03-15T10:00:00",
 			};
 
 			const settings: Partial<MockGoogleCalendarExportSettings> = {
 				enabled: true,
-				syncTrigger: "scheduled",
+				syncTrigger: "next_scheduled",
 			};
 
 			// Should sync: task has scheduled date and syncTrigger is "scheduled"
-			const shouldSync = settings.enabled && task.scheduled && settings.syncTrigger === "scheduled";
+			const shouldSync = settings.enabled && task.next_scheduled && settings.syncTrigger === "next_scheduled";
 			expect(shouldSync).toBe(true);
 		});
 
@@ -276,14 +276,14 @@ describe("Issue #1199 - Add due dates/scheduled times to Google/Office calendars
 			const taskWithScheduled: MockTaskInfo = {
 				path: "tasks/scheduled-only.md",
 				title: "Scheduled Only",
-				scheduled: "2025-03-15T10:00:00",
+				next_scheduled: "2025-03-15T10:00:00",
 			};
 
 			const taskWithBoth: MockTaskInfo = {
 				path: "tasks/both-dates.md",
 				title: "Both Dates",
 				due: "2025-03-30",
-				scheduled: "2025-03-15T10:00:00",
+				next_scheduled: "2025-03-15T10:00:00",
 			};
 
 			const settings: Partial<MockGoogleCalendarExportSettings> = {
@@ -292,9 +292,9 @@ describe("Issue #1199 - Add due dates/scheduled times to Google/Office calendars
 			};
 
 			// All three should sync when trigger is "both"
-			const shouldSyncDue = settings.syncTrigger === "both" && (taskWithDue.due || taskWithDue.scheduled);
-			const shouldSyncScheduled = settings.syncTrigger === "both" && (taskWithScheduled.due || taskWithScheduled.scheduled);
-			const shouldSyncBoth = settings.syncTrigger === "both" && (taskWithBoth.due || taskWithBoth.scheduled);
+			const shouldSyncDue = settings.syncTrigger === "both" && (taskWithDue.due || taskWithDue.next_scheduled);
+			const shouldSyncScheduled = settings.syncTrigger === "both" && (taskWithScheduled.due || taskWithScheduled.next_scheduled);
+			const shouldSyncBoth = settings.syncTrigger === "both" && (taskWithBoth.due || taskWithBoth.next_scheduled);
 
 			expect(shouldSyncDue).toBe(true);
 			expect(shouldSyncScheduled).toBe(true);
@@ -692,14 +692,14 @@ describe("Issue #1199 - Integration Scenarios", () => {
 		// User mentioned: "My inspiration is Notion's integration of Databases and Notion Calendar"
 
 		// Scenario:
-		// - Task has scheduled: "2025-03-15T14:00:00"
+		// - Task has next_scheduled: "2025-03-15T14:00:00"
 		// - Event created for that exact time slot
 		// - Duration based on timeEstimate or defaultEventDuration
 
 		const scheduledTask: MockTaskInfo = {
 			path: "tasks/scheduled-block.md",
 			title: "Deep Work Session",
-			scheduled: "2025-03-15T14:00:00",
+			next_scheduled: "2025-03-15T14:00:00",
 			timeEstimate: 120, // 2 hours
 		};
 
@@ -708,7 +708,7 @@ describe("Issue #1199 - Integration Scenarios", () => {
 		// - End: 2025-03-15T16:00:00 (start + timeEstimate)
 		// - Shows as 2-hour block in calendar
 
-		expect(scheduledTask.scheduled).toBeDefined();
+		expect(scheduledTask.next_scheduled).toBeDefined();
 		expect(scheduledTask.timeEstimate).toBe(120);
 	});
 
@@ -737,19 +737,19 @@ describe("Issue #1199 - Integration Scenarios", () => {
 			{
 				path: "tasks/project/research.md",
 				title: "Research Phase",
-				scheduled: "2025-03-10T09:00:00",
+				next_scheduled: "2025-03-10T09:00:00",
 				timeEstimate: 180,
 			},
 			{
 				path: "tasks/project/design.md",
 				title: "Design Phase",
-				scheduled: "2025-03-12T10:00:00",
+				next_scheduled: "2025-03-12T10:00:00",
 				timeEstimate: 240,
 			},
 			{
 				path: "tasks/project/implement.md",
 				title: "Implementation",
-				scheduled: "2025-03-15T09:00:00",
+				next_scheduled: "2025-03-15T09:00:00",
 				due: "2025-03-17",
 				timeEstimate: 480,
 			},
@@ -762,6 +762,6 @@ describe("Issue #1199 - Integration Scenarios", () => {
 
 		// All tasks should appear in calendar showing the project timeline
 		expect(projectTasks.length).toBe(4);
-		expect(projectTasks.every((t) => t.due || t.scheduled)).toBe(true);
+		expect(projectTasks.every((t) => t.due || t.next_scheduled)).toBe(true);
 	});
 });

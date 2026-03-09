@@ -253,7 +253,7 @@ export interface DefaultReminder {
 	id: string;
 	type: "relative" | "absolute";
 	// For relative reminders
-	relatedTo?: "due" | "scheduled";
+	relatedTo?: "due" | "next_scheduled";
 	offset?: number; // Amount in specified unit
 	unit?: "minutes" | "hours" | "days";
 	direction?: "before" | "after";
@@ -311,7 +311,7 @@ export interface GoogleCalendarExportSettings {
 	eventTitleTemplate: string; // Template for event title (e.g., "{{title}}" or "[TaskNotes] {{title}}")
 	includeDescription: boolean; // Include task details in event description
 	eventColorId: string | null; // Optional: Google Calendar color ID for TaskNotes events (null = calendar default)
-	syncTrigger: "scheduled" | "due" | "both"; // Which date triggers event creation
+	syncTrigger: "next_scheduled" | "due" | "both"; // Which date triggers event creation
 	createAsAllDay: boolean; // Create as all-day events vs timed
 	defaultEventDuration: number; // Duration in minutes if timed (uses timeEstimate if available)
 	includeObsidianLink: boolean; // Include obsidian:// link in event description

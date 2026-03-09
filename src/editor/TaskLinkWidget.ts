@@ -36,7 +36,7 @@ export class TaskLinkWidget extends WidgetType {
 			"status",
 			"priority",
 			"due",
-			"scheduled",
+			"next_scheduled",
 			"recurrence",
 		];
 		const visibleProperties = convertInternalToUserProperties(internalProperties, this.plugin);
@@ -92,7 +92,7 @@ export class TaskLinkWidget extends WidgetType {
 			this.taskInfo.priority === other.taskInfo.priority &&
 			this.taskInfo.archived === other.taskInfo.archived &&
 			this.taskInfo.due === other.taskInfo.due &&
-			this.taskInfo.scheduled === other.taskInfo.scheduled &&
+			this.taskInfo.next_scheduled === other.taskInfo.next_scheduled &&
 			this.taskInfo.recurrence === other.taskInfo.recurrence &&
 			JSON.stringify(this.taskInfo.complete_instances) ===
 				JSON.stringify(other.taskInfo.complete_instances) &&

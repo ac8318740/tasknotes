@@ -17,7 +17,7 @@ export const DEFAULT_INTERNAL_VISIBLE_PROPERTIES: (keyof FieldMapping)[] = [
 	"status",
 	"priority",
 	"due",
-	"scheduled",
+	"nextScheduled",
 	"projects",
 	"contexts",
 ];
@@ -28,7 +28,7 @@ export const DEFAULT_FIELD_MAPPING: FieldMapping = {
 	status: "status",
 	priority: "priority",
 	due: "due",
-	scheduled: "scheduled",
+	nextScheduled: "next_scheduled",
 	contexts: "contexts",
 	projects: "projects",
 	timeEstimate: "timeEstimate",
@@ -208,7 +208,7 @@ export const DEFAULT_GOOGLE_CALENDAR_EXPORT: GoogleCalendarExportSettings = {
 	eventTitleTemplate: "{{title}}", // Simple title by default
 	includeDescription: true,
 	eventColorId: null, // Use calendar default color
-	syncTrigger: "scheduled", // Default to scheduled date
+	syncTrigger: "next_scheduled", // Default to scheduled date
 	createAsAllDay: true, // All-day events by default
 	defaultEventDuration: 60, // 1 hour if timed events
 	includeObsidianLink: true, // Include link back to Obsidian
@@ -371,7 +371,7 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 		"status", // Status dot
 		"priority", // Priority dot
 		"due", // Due date
-		"scheduled", // Scheduled date
+		"next_scheduled", // Scheduled date
 		"projects", // Projects
 		"contexts", // Contexts
 		"tags", // Tags
@@ -379,7 +379,7 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 		"blocking", // Blocking indicator
 	],
 	// Default visible properties for inline task cards (more compact by default)
-	inlineVisibleProperties: ["status", "priority", "due", "scheduled", "recurrence"],
+	inlineVisibleProperties: ["status", "priority", "due", "next_scheduled", "recurrence"],
 	// Bases integration defaults
 	enableBases: true,
 	enableMdbaseSpec: false,

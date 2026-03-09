@@ -325,7 +325,7 @@ export class TaskSelectorWithCreateModal extends SuggestModal<TaskInfo> {
 
 		// Handle scheduled date with time
 		if (parsed.scheduledDate) {
-			taskData.scheduled = parsed.scheduledTime
+			taskData.next_scheduled = parsed.scheduledTime
 				? combineDateAndTime(parsed.scheduledDate, parsed.scheduledTime)
 				: parsed.scheduledDate;
 		}

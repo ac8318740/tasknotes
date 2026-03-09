@@ -56,12 +56,12 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 
 	// Current implementation (without atTime support)
 	const calculateNotificationTimeCurrent = (
-		task: Pick<TaskInfo, 'due' | 'scheduled'>,
+		task: Pick<TaskInfo, 'due' | 'next_scheduled'>,
 		reminder: Reminder
 	): Date | null => {
 		if (reminder.type !== 'relative') return null;
 
-		const anchorDateStr = reminder.relatedTo === 'due' ? task.due : task.scheduled;
+		const anchorDateStr = reminder.relatedTo === 'due' ? task.due : task.next_scheduled;
 		if (!anchorDateStr) return null;
 
 		// Parse anchor date (assuming local timezone)
@@ -76,12 +76,12 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 
 	// Proposed implementation (with atTime support)
 	const calculateNotificationTimeProposed = (
-		task: Pick<TaskInfo, 'due' | 'scheduled'>,
+		task: Pick<TaskInfo, 'due' | 'next_scheduled'>,
 		reminder: Reminder & { atTime?: string }
 	): Date | null => {
 		if (reminder.type !== 'relative') return null;
 
-		const anchorDateStr = reminder.relatedTo === 'due' ? task.due : task.scheduled;
+		const anchorDateStr = reminder.relatedTo === 'due' ? task.due : task.next_scheduled;
 		if (!anchorDateStr) return null;
 
 		// Parse anchor date
@@ -107,9 +107,9 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 	describe('Current behavior (documenting the limitation)', () => {
 		it.skip('reproduces issue #1588: relative reminder on date-only task fires at midnight', () => {
 			// Task with due date but no time
-			const task: Pick<TaskInfo, 'due' | 'scheduled'> = {
+			const task: Pick<TaskInfo, 'due' | 'next_scheduled'> = {
 				due: '2025-03-05', // Date only, no time
-				scheduled: undefined,
+				next_scheduled: undefined,
 			};
 
 			// Reminder: 1 day before due
@@ -132,9 +132,9 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 
 		it.skip('reproduces issue #1588: relative reminder uses due time when present', () => {
 			// Task with due date AND time
-			const task: Pick<TaskInfo, 'due' | 'scheduled'> = {
+			const task: Pick<TaskInfo, 'due' | 'next_scheduled'> = {
 				due: '2025-03-05T14:00:00', // Due at 2pm
-				scheduled: undefined,
+				next_scheduled: undefined,
 			};
 
 			// Reminder: 1 day before due
@@ -157,9 +157,9 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 	describe('Expected behavior after implementation', () => {
 		it.skip('reproduces issue #1588: should allow setting independent reminder time for relative reminders', () => {
 			// Task with due date but no time
-			const task: Pick<TaskInfo, 'due' | 'scheduled'> = {
+			const task: Pick<TaskInfo, 'due' | 'next_scheduled'> = {
 				due: '2025-03-05', // Date only
-				scheduled: undefined,
+				next_scheduled: undefined,
 			};
 
 			// Reminder: 2 days before at 18:00
@@ -184,9 +184,9 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 
 		it.skip('reproduces issue #1588: should support multiple reminders with different times', () => {
 			// Example from the issue: "Test Task" due on 5 Mar
-			const task: Pick<TaskInfo, 'due' | 'scheduled'> = {
+			const task: Pick<TaskInfo, 'due' | 'next_scheduled'> = {
 				due: '2025-03-05',
-				scheduled: undefined,
+				next_scheduled: undefined,
 			};
 
 			// Reminder 1: 2 days before at 18:00
@@ -223,9 +223,9 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 
 		it.skip('reproduces issue #1588: should preserve backward compatibility when atTime is not set', () => {
 			// Task with due date and time
-			const task: Pick<TaskInfo, 'due' | 'scheduled'> = {
+			const task: Pick<TaskInfo, 'due' | 'next_scheduled'> = {
 				due: '2025-03-05T14:00:00',
-				scheduled: undefined,
+				next_scheduled: undefined,
 			};
 
 			// Reminder without atTime (existing behavior)
@@ -247,9 +247,9 @@ describe('Issue #1588: Relative Reminders with independent Reminder Time', () =>
 
 		it.skip('reproduces issue #1588: atTime should override due time when both are present', () => {
 			// Task with due date AND time
-			const task: Pick<TaskInfo, 'due' | 'scheduled'> = {
+			const task: Pick<TaskInfo, 'due' | 'next_scheduled'> = {
 				due: '2025-03-05T14:00:00', // Due at 2pm
-				scheduled: undefined,
+				next_scheduled: undefined,
 			};
 
 			// Reminder with custom atTime that differs from due time

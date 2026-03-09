@@ -42,7 +42,7 @@ describe('First Day of Week Calendar Display Off-by-One', () => {
         id: 'tuesday-visual-test',
         title: 'Weekly Tuesday Task',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-01-21', // Tuesday, January 21, 2025
+        next_scheduled: '2025-01-21', // Tuesday, January 21, 2025
         complete_instances: []
       });
 
@@ -231,7 +231,7 @@ describe('First Day of Week Calendar Display Off-by-One', () => {
         id: 'first-day-integration-test',
         title: 'Tuesday Task',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-01-21',
+        next_scheduled: '2025-01-21',
         complete_instances: []
       });
 

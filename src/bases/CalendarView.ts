@@ -1425,7 +1425,7 @@ export class CalendarView extends BasesViewBase {
 						? format(newStart, "yyyy-MM-dd")
 						: format(newStart, "yyyy-MM-dd'T'HH:mm");
 
-					const property = eventType === "scheduled" ? "scheduled" : "due";
+					const property = eventType === "scheduled" ? "next_scheduled" : "due";
 					await this.plugin.taskService.updateProperty(taskInfo, property, newDateString);
 				} else if (eventType === "scheduledToDueSpan") {
 					// Handle span event drag - shift both scheduled and due by the same amount
@@ -1444,8 +1444,8 @@ export class CalendarView extends BasesViewBase {
 					let scheduledString: string | undefined;
 					let dueString: string | undefined;
 
-					if (taskInfo.scheduled) {
-						const oldScheduled = new Date(taskInfo.scheduled);
+					if (taskInfo.next_scheduled) {
+						const oldScheduled = new Date(taskInfo.next_scheduled);
 						const newScheduled = new Date(oldScheduled.getTime() + timeDiffMs);
 						scheduledString = format(newScheduled, "yyyy-MM-dd");
 					}
@@ -1459,7 +1459,7 @@ export class CalendarView extends BasesViewBase {
 					// Update both dates atomically in a single frontmatter write
 					const spanFile = this.plugin.app.vault.getAbstractFileByPath(taskInfo.path);
 					if (spanFile instanceof TFile) {
-						const scheduledField = this.plugin.fieldMapper.toUserField("scheduled");
+						const scheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
 						const dueField = this.plugin.fieldMapper.toUserField("due");
 
 						await this.plugin.app.fileManager.processFrontMatter(spanFile, (frontmatter) => {

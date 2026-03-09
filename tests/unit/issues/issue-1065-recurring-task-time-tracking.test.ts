@@ -67,7 +67,7 @@ function createRecurringTask(overrides: Partial<TaskInfo> = {}): TaskInfo {
 		title: 'Weekly Recurring Task',
 		status: 'in-progress',
 		recurrence: 'FREQ=WEEKLY;BYDAY=MO', // Weekly on Monday
-		scheduled: '2026-01-05', // A Monday
+		next_scheduled: '2026-01-05', // A Monday
 		timeEntries: [],
 		complete_instances: [],
 		skipped_instances: [],

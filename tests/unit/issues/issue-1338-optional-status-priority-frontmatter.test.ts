@@ -128,7 +128,7 @@ describe.skip("Issue #1338: Optional Status/Priority in Frontmatter", () => {
 			const taskData: Partial<TaskInfo> = {
 				title: "Test task with dates only",
 				due: "2025-02-01",
-				scheduled: "2025-01-25",
+				next_scheduled: "2025-01-25",
 				contexts: ["personal"],
 				tags: ["life"],
 			};
@@ -137,7 +137,7 @@ describe.skip("Issue #1338: Optional Status/Priority in Frontmatter", () => {
 			const frontmatter = fieldMapper.mapToFrontmatter(taskData, "task", true);
 
 			expect(frontmatter.due).toBe("2025-02-01");
-			expect(frontmatter.scheduled).toBe("2025-01-25");
+			expect(frontmatter.next_scheduled).toBe("2025-01-25");
 			expect(frontmatter.contexts).toEqual(["personal"]);
 			expect(frontmatter.tags).toContain("task");
 			expect(frontmatter.tags).toContain("life");

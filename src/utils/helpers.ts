@@ -262,7 +262,7 @@ export function extractTaskInfo(
 				status: mappedTask.status || (defaultStatus || "open"),
 				priority: mappedTask.priority || "normal",
 				due: mappedTask.due,
-				scheduled: mappedTask.scheduled,
+				next_scheduled: mappedTask.next_scheduled,
 				path,
 				archived: mappedTask.archived || false,
 				tags: mappedTask.tags || [],
@@ -289,7 +289,7 @@ export function extractTaskInfo(
 				status: mappedTask.status || (defaultStatus || "open"),
 				priority: mappedTask.priority || "normal",
 				due: mappedTask.due,
-				scheduled: mappedTask.scheduled,
+				next_scheduled: mappedTask.next_scheduled,
 				path,
 				archived: mappedTask.archived || false,
 				tags: mappedTask.tags || [],
@@ -409,8 +409,8 @@ export function isDueByRRule(task: TaskInfo, date: Date): boolean {
 				}
 			} else {
 				// Fallback to original logic for backward compatibility
-				if (task.scheduled) {
-					dtstart = createUTCDateForRRule(task.scheduled);
+				if (task.next_scheduled) {
+					dtstart = createUTCDateForRRule(task.next_scheduled);
 				} else if (task.dateCreated) {
 					dtstart = createUTCDateForRRule(task.dateCreated);
 				} else {
@@ -533,8 +533,8 @@ export function generateRecurringInstances(task: TaskInfo, startDate: Date, endD
 				}
 			} else {
 				// Fallback to original logic for backward compatibility
-				if (task.scheduled) {
-					dtstart = createUTCDateForRRule(task.scheduled);
+				if (task.next_scheduled) {
+					dtstart = createUTCDateForRRule(task.next_scheduled);
 				} else if (task.dateCreated) {
 					dtstart = createUTCDateForRRule(task.dateCreated);
 				} else {
@@ -796,7 +796,7 @@ function getNextCompletionBasedOccurrence(task: TaskInfo): Date | null {
 export function updateToNextScheduledOccurrence(
 	task: TaskInfo,
 	maintainDueOffset = true
-): { scheduled: string | null; due: string | null } {
+): { next_scheduled: string | null; due: string | null } {
 	const nextOccurrence = getNextUncompletedOccurrence(task);
 	let nextScheduleStr: string | null = null;
 	let nextDueStr: string | null = null;
@@ -806,7 +806,7 @@ export function updateToNextScheduledOccurrence(
 		// Calculate the offset between original scheduled and due dates (only if setting is enabled)
 		if (maintainDueOffset) {
 			try {
-				const originalScheduled = task.scheduled ? parseDateToUTC(task.scheduled) : null;
+				const originalScheduled = task.next_scheduled ? parseDateToUTC(task.next_scheduled) : null;
 				const originalDue = task.due ? parseDateToUTC(task.due) : null;
 
 				if (originalScheduled && originalDue) {
@@ -823,8 +823,8 @@ export function updateToNextScheduledOccurrence(
 		}
 
 		// Preserve time component if original scheduled date had time
-		if (task.scheduled && task.scheduled.includes("T")) {
-			const timePart = task.scheduled.split("T")[1];
+		if (task.next_scheduled && task.next_scheduled.includes("T")) {
+			const timePart = task.next_scheduled.split("T")[1];
 			nextScheduleStr = `${formatDateForStorage(nextOccurrence)}T${timePart}`;
 		} else {
 			nextScheduleStr = formatDateForStorage(nextOccurrence);
@@ -838,7 +838,7 @@ export function updateToNextScheduledOccurrence(
 	}
 
 	return {
-		scheduled: nextScheduleStr,
+		next_scheduled: nextScheduleStr,
 		due: nextDueStr,
 	};
 }
@@ -1387,8 +1387,8 @@ export function addDTSTARTToRecurrenceRule(task: TaskInfo): string | null {
 
 	// Determine the source date string using the same fallback logic as isDueByRRule
 	let sourceDateString: string;
-	if (task.scheduled) {
-		sourceDateString = task.scheduled;
+	if (task.next_scheduled) {
+		sourceDateString = task.next_scheduled;
 	} else if (task.dateCreated) {
 		sourceDateString = task.dateCreated;
 	} else {
@@ -1500,8 +1500,8 @@ export function addDTSTARTToRecurrenceRuleWithDraggedTime(
 
 	// Determine the source date string using the same fallback logic as isDueByRRule
 	let sourceDateString: string;
-	if (task.scheduled) {
-		sourceDateString = task.scheduled;
+	if (task.next_scheduled) {
+		sourceDateString = task.next_scheduled;
 	} else if (task.dateCreated) {
 		sourceDateString = task.dateCreated;
 	} else {

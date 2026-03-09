@@ -14,9 +14,9 @@
 - [x] Start time tracking — verify entry appears on today's daily note (with taskLink), NOT on the task file
 - [x] Stop time tracking — verify endTime updated on the daily note
 - [x] Open Task Edit modal — verify the Time section loads and shows entries (lazy-loaded from daily notes)
-- [ ] Create a time block from the calendar for a future date — verify saved to that date's daily note
-- [ ] Delete an entry via the unified modal — verify removed from the daily note
-- [ ] Check the task file — `scheduled` field should be present (denormalized), but `timeEntries` should be absent
+- [x] Create a time block from the calendar for a future date — verify saved to that date's daily note
+- [x] Delete an entry via the unified modal — verify removed from the daily note
+- [x] Check the task file — `scheduled` field should be present (denormalized), but `timeEntries` should be absent
 - [ ] Switch back to "task" mode — verify migration moves entries back to task files
 
 ## Calendar Flow Unification (Workstream B)

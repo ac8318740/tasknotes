@@ -35,7 +35,7 @@ export type CalendarDisplayMode = "month" | "agenda";
 // Task sorting and grouping types
 export type TaskSortKey =
 	| "due"
-	| "scheduled"
+	| "next_scheduled"
 	| "priority"
 	| "status"
 	| "title"
@@ -49,7 +49,7 @@ export type TaskGroupKey =
 	| "context"
 	| "project"
 	| "due"
-	| "scheduled"
+	| "next_scheduled"
 	| "status"
 	| "tags"
 	| "completedDate"
@@ -113,7 +113,7 @@ export type FilterProperty =
 	| "blocking"
 	// Date properties
 	| "due"
-	| "scheduled"
+	| "next_scheduled"
 	| "completedDate"
 	| "dateCreated"
 	| "dateModified"
@@ -256,7 +256,7 @@ export const FILTER_PROPERTIES: PropertyDefinition[] = [
 		valueInputType: "date",
 	},
 	{
-		id: "scheduled",
+		id: "next_scheduled",
 		label: "Scheduled Date",
 		category: "date",
 		supportedOperators: [
@@ -439,8 +439,8 @@ export interface TaskInfo {
 	status: string;
 	priority: string;
 	due?: string;
-	/** Computed: earliest future planned time entry's startTime. Do not write to frontmatter directly. */
-	scheduled?: string; // Date (YYYY-MM-DD) when task is scheduled to be worked on
+	/** Computed: next future planned time entry's startTime (full datetime with timezone). Do not write to frontmatter directly. */
+	next_scheduled?: string;
 	path: string;
 	archived: boolean;
 	tags?: string[];
@@ -517,7 +517,7 @@ export interface Reminder {
 	type: "absolute" | "relative";
 
 	// For relative reminders
-	relatedTo?: "due" | "scheduled"; // The anchor date property
+	relatedTo?: "due" | "next_scheduled"; // The anchor date property
 	offset?: string; // ISO 8601 duration format, e.g., "-PT5M", "-PT1H", "-P2D"
 
 	// For absolute reminders
@@ -570,7 +570,7 @@ export interface TaskFrontmatter {
 	dateModified: string;
 	status: "open" | "in-progress" | "done";
 	due?: string;
-	scheduled?: string;
+	next_scheduled?: string;
 	tags: string[];
 	priority: "low" | "normal" | "high";
 	contexts?: string[];
@@ -689,7 +689,7 @@ export interface FieldMapping {
 	status: string;
 	priority: string;
 	due: string;
-	scheduled: string;
+	nextScheduled: string;
 	contexts: string;
 	projects: string;
 	timeEstimate: string;

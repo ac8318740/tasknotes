@@ -38,7 +38,7 @@ interface MockTaskInfo {
 	contexts?: string[];
 	projects?: string[];
 	due?: string;
-	scheduled?: string;
+	next_scheduled?: string;
 	timeEstimate?: number;
 	archived?: boolean;
 }

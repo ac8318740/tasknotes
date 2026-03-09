@@ -94,7 +94,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const taskScheduledYesterdayNoDue: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/scheduled-past-no-due.md',
                 title: 'Task I can start anytime (scheduled yesterday)',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 due: undefined, // No due date - no time pressure
                 status: ' ',
             });
@@ -107,7 +107,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };
@@ -140,7 +140,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const taskScheduledNextWeekNoDue: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/scheduled-future-no-due.md',
                 title: 'Task I plan to start next week (no deadline)',
-                scheduled: formatDateForStorage(nextWeek),
+                next_scheduled: formatDateForStorage(nextWeek),
                 due: undefined, // No due date
                 status: ' ',
             });
@@ -174,14 +174,14 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
                     path: 'tasks/due-yesterday.md',
                     title: 'Actually overdue task',
                     due: formatDateForStorage(yesterday),
-                    scheduled: undefined,
+                    next_scheduled: undefined,
                     status: ' ',
                 }),
                 // Task 2: Scheduled yesterday, no due date - should NOT be in Overdue (in due date mode)
                 TaskFactory.createTask({
                     path: 'tasks/scheduled-yesterday-no-due.md',
                     title: 'Started but no deadline',
-                    scheduled: formatDateForStorage(yesterday),
+                    next_scheduled: formatDateForStorage(yesterday),
                     due: undefined,
                     status: ' ',
                 }),
@@ -189,7 +189,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
                 TaskFactory.createTask({
                     path: 'tasks/scheduled-yesterday-due-tomorrow.md',
                     title: 'Started but due tomorrow',
-                    scheduled: formatDateForStorage(yesterday),
+                    next_scheduled: formatDateForStorage(yesterday),
                     due: formatDateForStorage(tomorrow),
                     status: ' ',
                 }),
@@ -212,7 +212,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const noDueDateTask: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/no-due-date.md',
                 title: 'Task without deadline',
-                scheduled: undefined,
+                next_scheduled: undefined,
                 due: undefined,
                 status: ' ',
             });
@@ -232,7 +232,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const noDueDateTask: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/no-due-date.md',
                 title: 'Task without deadline',
-                scheduled: undefined,
+                next_scheduled: undefined,
                 due: undefined,
                 status: ' ',
             });
@@ -254,13 +254,13 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
                     path: 'tasks/has-due-date.md',
                     title: 'Task with deadline',
                     due: formatDateForStorage(new Date(Date.UTC(2026, 0, 10))),
-                    scheduled: undefined,
+                    next_scheduled: undefined,
                     status: ' ',
                 }),
                 TaskFactory.createTask({
                     path: 'tasks/no-due-date.md',
                     title: 'Task without deadline',
-                    scheduled: formatDateForStorage(new Date(Date.UTC(2026, 0, 5))),
+                    next_scheduled: formatDateForStorage(new Date(Date.UTC(2026, 0, 5))),
                     due: undefined,
                     status: ' ',
                 }),
@@ -289,14 +289,14 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
                 TaskFactory.createTask({
                     path: 'tasks/scheduled-jan10.md',
                     title: 'Scheduled for Jan 10',
-                    scheduled: formatDateForStorage(jan10),
+                    next_scheduled: formatDateForStorage(jan10),
                     due: formatDateForStorage(jan15), // Due date is different
                     status: ' ',
                 }),
                 TaskFactory.createTask({
                     path: 'tasks/scheduled-jan15.md',
                     title: 'Scheduled for Jan 15',
-                    scheduled: formatDateForStorage(jan15),
+                    next_scheduled: formatDateForStorage(jan15),
                     due: undefined,
                     status: ' ',
                 }),
@@ -323,7 +323,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const pastScheduledTask: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/past-scheduled.md',
                 title: 'I could have started this yesterday',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 due: undefined,
                 status: ' ',
             });
@@ -349,7 +349,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const pastScheduledTask: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/past-scheduled.md',
                 title: 'Task with past scheduled date',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 due: undefined,
                 status: ' ',
             });
@@ -392,7 +392,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const taskWithBothDates: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/both-dates.md',
                 title: 'Scheduled yesterday, due next week',
-                scheduled: formatDateForStorage(scheduledYesterday),
+                next_scheduled: formatDateForStorage(scheduledYesterday),
                 due: formatDateForStorage(dueNextWeek),
                 status: ' ',
             });
@@ -413,7 +413,7 @@ describe('Issue #885: Agenda view date mode toggle feature', () => {
             const taskWithNoDates: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/no-dates.md',
                 title: 'Task with no dates',
-                scheduled: undefined,
+                next_scheduled: undefined,
                 due: undefined,
                 status: ' ',
             });

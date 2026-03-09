@@ -87,7 +87,7 @@ export class UnscheduledTasksSelectorModal extends FuzzySuggestModal<TaskInfo> {
 				(task: TaskInfo) =>
 					!task.archived &&
 					!this.plugin.statusManager.isCompletedStatus(task.status) &&
-					!task.scheduled
+					!task.next_scheduled
 			);
 		} catch (error) {
 			console.error("Error loading unscheduled tasks:", error);

@@ -47,7 +47,7 @@ describe('Issue #919 - ICS VEVENT STATUS values are invalid', () => {
     const createTask = (status: string): TaskInfo => ({
         title: 'Test task',
         path: 'tasks/test.md',
-        scheduled: '2025-01-14T10:00:00',
+        next_scheduled: '2025-01-14T10:00:00',
         status: status,
         tags: [],
         projects: [],

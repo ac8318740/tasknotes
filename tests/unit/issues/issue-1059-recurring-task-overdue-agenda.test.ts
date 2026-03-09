@@ -14,7 +14,7 @@
  * Example from the issue:
  * - Today: 2025-11-03
  * - Task has recurrence: DTSTART:20251101;FREQ=MONTHLY;BYMONTHDAY=1
- * - Task has scheduled: 2025-11-04 (tomorrow)
+ * - Task has next_scheduled: 2025-11-04 (tomorrow)
  * - Task status: open
  * - Expected: Task should appear in Overdue section because the recurrence DTSTART (Nov 1) has passed
  * - Actual: Task doesn't appear in current week's agenda at all
@@ -110,7 +110,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			path: "tasks/monthly-task.md",
 			content: "- [ ] Monthly recurring task",
 			title: "Monthly recurring task",
-			scheduled: "2025-11-04", // Tomorrow
+			next_scheduled: "2025-11-04", // Tomorrow
 			status: " ", // Open (not completed)
 			recurrence: "DTSTART:20251101;FREQ=MONTHLY;BYMONTHDAY=1",
 			complete_instances: [], // No completions
@@ -126,7 +126,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			id: "root",
 			conjunction: "and",
 			children: [],
-			sortKey: "scheduled",
+			sortKey: "next_scheduled",
 			sortDirection: "asc",
 			groupKey: "none",
 		};
@@ -152,7 +152,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			path: "tasks/monthly-task.md",
 			content: "- [ ] Monthly recurring task",
 			title: "Monthly recurring task",
-			scheduled: "2025-11-04", // Tomorrow - future scheduled date
+			next_scheduled: "2025-11-04", // Tomorrow - future scheduled date
 			status: " ",
 			recurrence: "DTSTART:20251101;FREQ=MONTHLY;BYMONTHDAY=1", // Nov 1 instance is overdue
 			complete_instances: [],
@@ -166,7 +166,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			id: "root",
 			conjunction: "and",
 			children: [],
-			sortKey: "scheduled",
+			sortKey: "next_scheduled",
 			sortDirection: "asc",
 			groupKey: "none",
 		};
@@ -194,7 +194,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			path: "tasks/weekly-task.md",
 			content: "- [ ] Weekly recurring task",
 			title: "Weekly recurring task",
-			scheduled: "2025-11-04", // Scheduled for tomorrow
+			next_scheduled: "2025-11-04", // Scheduled for tomorrow
 			status: " ",
 			recurrence: "DTSTART:20251027;FREQ=WEEKLY;BYDAY=MO", // Every Monday, started Oct 27
 			complete_instances: [], // Oct 27 instance not completed
@@ -208,7 +208,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			id: "root",
 			conjunction: "and",
 			children: [],
-			sortKey: "scheduled",
+			sortKey: "next_scheduled",
 			sortDirection: "asc",
 			groupKey: "none",
 		};
@@ -231,7 +231,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			path: "tasks/monthly-task-completed.md",
 			content: "- [x] Monthly recurring task",
 			title: "Monthly recurring task",
-			scheduled: "2025-11-04",
+			next_scheduled: "2025-11-04",
 			status: " ", // Still open for future instances
 			recurrence: "DTSTART:20251101;FREQ=MONTHLY;BYMONTHDAY=1",
 			complete_instances: ["2025-11-01"], // Nov 1 instance IS completed
@@ -245,7 +245,7 @@ describe("Issue #1059 - Recurring task with past RRULE not appearing in Overdue 
 			id: "root",
 			conjunction: "and",
 			children: [],
-			sortKey: "scheduled",
+			sortKey: "next_scheduled",
 			sortDirection: "asc",
 			groupKey: "none",
 		};

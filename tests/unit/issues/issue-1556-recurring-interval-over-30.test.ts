@@ -34,7 +34,7 @@ describe("Issue #1556: Recurring task with INTERVAL > 30 should reschedule", () 
 			path: "tasks/test.md",
 			recurrence: "DTSTART:20260101;FREQ=DAILY;INTERVAL=60",
 			recurrence_anchor: "scheduled",
-			scheduled: "2026-01-01",
+			next_scheduled: "2026-01-01",
 			complete_instances: ["2026-01-01"],
 		};
 

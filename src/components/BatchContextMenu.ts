@@ -76,7 +76,7 @@ export class BatchContextMenu {
 			item.setIcon("calendar-clock");
 
 			const submenu = (item as any).setSubmenu();
-			this.addDateOptions(submenu, "scheduled");
+			this.addDateOptions(submenu, "next_scheduled");
 		});
 
 		this.menu.addSeparator();
@@ -188,7 +188,7 @@ export class BatchContextMenu {
 		});
 	}
 
-	private addDateOptions(submenu: Menu, dateType: "due" | "scheduled"): void {
+	private addDateOptions(submenu: Menu, dateType: "due" | "next_scheduled"): void {
 		const dateContextMenu = new DateContextMenu({
 			currentValue: undefined,
 			onSelect: () => {},

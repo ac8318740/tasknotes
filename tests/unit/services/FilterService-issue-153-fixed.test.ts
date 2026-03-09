@@ -46,7 +46,7 @@ describe('FilterService - Issue 153 Fixed', () => {
                 priority: 'normal',
                 path: '/test/task-7-days.md',
                 archived: false,
-                scheduled: '2025-01-08',
+                next_scheduled: '2025-01-08',
                 tags: ['task']
             };
 
@@ -72,7 +72,7 @@ describe('FilterService - Issue 153 Fixed', () => {
             // The task should be found
             expect(result).toHaveLength(1);
             expect(result[0].title).toBe('Task scheduled 7 days ago');
-            expect(result[0].scheduled).toBe('2025-01-08');
+            expect(result[0].next_scheduled).toBe('2025-01-08');
         });
 
         it('should find tasks scheduled yesterday', async () => {
@@ -82,7 +82,7 @@ describe('FilterService - Issue 153 Fixed', () => {
                 priority: 'normal',
                 path: '/test/task-yesterday.md',
                 archived: false,
-                scheduled: '2025-01-14',
+                next_scheduled: '2025-01-14',
                 tags: ['task']
             };
 
@@ -118,7 +118,7 @@ describe('FilterService - Issue 153 Fixed', () => {
                     priority: 'normal',
                     path: '/test/task-7.md',
                     archived: false,
-                    scheduled: '2025-01-08',
+                    next_scheduled: '2025-01-08',
                     tags: ['task']
                 },
                 {
@@ -127,7 +127,7 @@ describe('FilterService - Issue 153 Fixed', () => {
                     priority: 'normal',
                     path: '/test/task-14.md',
                     archived: false,
-                    scheduled: '2025-01-01',
+                    next_scheduled: '2025-01-01',
                     tags: ['task']
                 },
                 {
@@ -136,7 +136,7 @@ describe('FilterService - Issue 153 Fixed', () => {
                     priority: 'normal',
                     path: '/test/task-21.md',
                     archived: false,
-                    scheduled: '2024-12-25',
+                    next_scheduled: '2024-12-25',
                     tags: ['task']
                 }
             ];

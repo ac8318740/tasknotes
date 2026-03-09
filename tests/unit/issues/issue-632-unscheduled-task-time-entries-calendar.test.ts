@@ -66,7 +66,7 @@ function createUnscheduledTaskWithTimeEntries(
  */
 function createScheduledTaskWithTimeEntries(
 	title: string,
-	scheduled: string,
+	next_scheduled: string,
 	timeEntries: TimeEntry[]
 ): TaskInfo {
 	return {
@@ -105,7 +105,7 @@ describe('Issue #632: Display Tracked Time for Unscheduled Tasks', () => {
 			);
 
 			// Verify the task has no scheduled or due date
-			expect(unscheduledTask.scheduled).toBeUndefined();
+			expect(unscheduledTask.next_scheduled).toBeUndefined();
 			expect(unscheduledTask.due).toBeUndefined();
 
 			// Verify the task does have time entries with valid start/end times
@@ -187,11 +187,11 @@ describe('Issue #632: Display Tracked Time for Unscheduled Tasks', () => {
 			expect(scheduledTask.timeEntries).toHaveLength(1);
 
 			// The scheduled task has a date anchor
-			expect(scheduledTask.scheduled).toBe('2025-01-20');
+			expect(scheduledTask.next_scheduled).toBe('2025-01-20');
 
 			// The unscheduled task has no date anchor but its time entries
 			// have specific timestamps that should place them on the calendar
-			expect(unscheduledTask.scheduled).toBeUndefined();
+			expect(unscheduledTask.next_scheduled).toBeUndefined();
 			expect(unscheduledTask.timeEntries![0].startTime).toBe('2025-01-20T10:00:00.000Z');
 
 			// After the feature is implemented:

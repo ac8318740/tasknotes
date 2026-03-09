@@ -343,7 +343,7 @@ export class TaskManager extends Events {
 		const taskPaths: string[] = [];
 		const files = this.app.vault.getMarkdownFiles();
 
-		const scheduledField = this.fieldMapper?.toUserField("scheduled") || "scheduled";
+		const scheduledField = this.fieldMapper?.toUserField("nextScheduled") || "scheduled";
 		const dueField = this.fieldMapper?.toUserField("due") || "due";
 
 		for (const file of files) {
@@ -612,7 +612,8 @@ export class TaskManager extends Events {
 			if (this.isTaskFile(metadata.frontmatter)) continue;
 
 			// Check if note is associated with this date
-			const noteDate = metadata.frontmatter.date || metadata.frontmatter.scheduled;
+			const scheduledField = this.fieldMapper?.toUserField("nextScheduled") || "scheduled";
+			const noteDate = metadata.frontmatter.date || metadata.frontmatter[scheduledField];
 			if (noteDate === dateStr) {
 				notes.push({
 					path: file.path,
@@ -788,11 +789,11 @@ export class TaskManager extends Events {
 		const calendarData: any = {};
 
 		for (const task of tasks) {
-			if (task.scheduled) {
-				if (!calendarData[task.scheduled]) {
-					calendarData[task.scheduled] = [];
+			if (task.next_scheduled) {
+				if (!calendarData[task.next_scheduled]) {
+					calendarData[task.next_scheduled] = [];
 				}
-				calendarData[task.scheduled].push(task);
+				calendarData[task.next_scheduled].push(task);
 			}
 			if (task.due) {
 				if (!calendarData[task.due]) {

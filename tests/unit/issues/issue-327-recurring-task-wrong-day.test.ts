@@ -54,7 +54,7 @@ describe('Issue #327: Recurring Task Updates Wrong Day from Agenda View', () => 
         const recurringTask: TaskInfo = TaskFactory.createRecurringTask('RRULE:FREQ=DAILY', {
             path: 'tasks/recurring-task.md',
             title: 'Daily recurring task',
-            scheduled: '2024-01-15', // Monday
+            next_scheduled: '2024-01-15', // Monday
             complete_instances: [] // No completions yet
         });
 
@@ -72,7 +72,7 @@ describe('Issue #327: Recurring Task Updates Wrong Day from Agenda View', () => 
                 const frontmatter = {
                     status: 'open',
                     title: 'Daily recurring task',
-                    scheduled: '2024-01-15',
+                    next_scheduled: '2024-01-15',
                     recurrence: 'RRULE:FREQ=DAILY',
                     complete_instances: []
                 };
@@ -228,7 +228,7 @@ describe('Issue #327: Recurring Task Updates Wrong Day from Agenda View', () => 
         const recurringTask: TaskInfo = TaskFactory.createRecurringTask('RRULE:FREQ=DAILY', {
             path: 'tasks/recurring-task.md',
             title: 'Daily recurring task',
-            scheduled: '2024-01-15',
+            next_scheduled: '2024-01-15',
             complete_instances: ['2024-01-17'] // Wednesday already marked complete
         });
 
@@ -242,7 +242,7 @@ describe('Issue #327: Recurring Task Updates Wrong Day from Agenda View', () => 
                 const frontmatter = {
                     status: 'open',
                     title: 'Daily recurring task',
-                    scheduled: '2024-01-15',
+                    next_scheduled: '2024-01-15',
                     recurrence: 'RRULE:FREQ=DAILY',
                     complete_instances: ['2024-01-17']
                 };
@@ -286,7 +286,7 @@ describe('Issue #327: Recurring Task Updates Wrong Day from Agenda View', () => 
         const recurringTask: TaskInfo = TaskFactory.createRecurringTask('RRULE:FREQ=DAILY', {
             path: 'tasks/recurring-task.md',
             title: 'Daily recurring task',
-            scheduled: '2024-01-15',
+            next_scheduled: '2024-01-15',
             complete_instances: ['2024-01-16', '2024-01-17', '2024-01-18'] // Multiple days complete
         });
 
@@ -300,7 +300,7 @@ describe('Issue #327: Recurring Task Updates Wrong Day from Agenda View', () => 
                 const frontmatter = {
                     status: 'open',
                     title: 'Daily recurring task',
-                    scheduled: '2024-01-15',
+                    next_scheduled: '2024-01-15',
                     recurrence: 'RRULE:FREQ=DAILY',
                     complete_instances: ['2024-01-16', '2024-01-17', '2024-01-18']
                 };

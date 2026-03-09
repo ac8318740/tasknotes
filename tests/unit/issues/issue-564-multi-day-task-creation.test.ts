@@ -24,7 +24,7 @@ describe('Issue #564: Multi-day task creation in month/year view', () => {
         const isDragOperation = !allDay && durationMinutes > slotDurationMinutes;
 
         const prePopulatedValues: any = {
-            scheduled: scheduledDate
+            next_scheduled: scheduledDate
         };
 
         // Apply the fix: calculate duration for multi-day all-day selections
@@ -55,7 +55,7 @@ describe('Issue #564: Multi-day task creation in month/year view', () => {
         const result = simulateTaskCreation(start, end, true);
 
         // Single day all-day task should not have time estimate set (use default)
-        expect(result.scheduled).toBe('2025-01-15');
+        expect(result.next_scheduled).toBe('2025-01-15');
         expect(result.timeEstimate).toBeUndefined();
     });
 
@@ -67,7 +67,7 @@ describe('Issue #564: Multi-day task creation in month/year view', () => {
         const result = simulateTaskCreation(start, end, true);
 
         // 3 days = 3 * 24 * 60 = 4320 minutes
-        expect(result.scheduled).toBe('2025-01-15');
+        expect(result.next_scheduled).toBe('2025-01-15');
         expect(result.timeEstimate).toBe(4320);
     });
 
@@ -79,7 +79,7 @@ describe('Issue #564: Multi-day task creation in month/year view', () => {
         const result = simulateTaskCreation(start, end, true);
 
         // 7 days = 7 * 24 * 60 = 10080 minutes
-        expect(result.scheduled).toBe('2025-01-15');
+        expect(result.next_scheduled).toBe('2025-01-15');
         expect(result.timeEstimate).toBe(10080);
     });
 
@@ -91,7 +91,7 @@ describe('Issue #564: Multi-day task creation in month/year view', () => {
         const result = simulateTaskCreation(start, end, false);
 
         // 2 hours = 120 minutes
-        expect(result.scheduled).toBe('2025-01-15T09:00');
+        expect(result.next_scheduled).toBe('2025-01-15T09:00');
         expect(result.timeEstimate).toBe(120);
     });
 
@@ -103,7 +103,7 @@ describe('Issue #564: Multi-day task creation in month/year view', () => {
         const result = simulateTaskCreation(start, end, false);
 
         // Short selection should not set time estimate (use default)
-        expect(result.scheduled).toBe('2025-01-15T09:00');
+        expect(result.next_scheduled).toBe('2025-01-15T09:00');
         expect(result.timeEstimate).toBeUndefined();
     });
 });

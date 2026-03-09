@@ -162,7 +162,7 @@ describe('Task Creation Workflow Integration', () => {
           priority: taskData.priority,
           status: taskData.status,
           due: taskData.dueDate,
-          scheduled: taskData.scheduledDate,
+          next_scheduled: taskData.scheduledDate,
           contexts: taskData.contexts,
           tags: expect.arrayContaining(['task', ...taskData.tags]),
           timeEstimate: taskData.timeEstimate,

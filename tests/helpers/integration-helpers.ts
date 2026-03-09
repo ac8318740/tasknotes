@@ -141,7 +141,7 @@ export class TestEnvironment {
       status: taskData.status,
       priority: taskData.priority,
       due: taskData.due,
-      scheduled: taskData.scheduled,
+      next_scheduled: taskData.next_scheduled,
       contexts: taskData.contexts,
       timeEstimate: taskData.timeEstimate,
       path: `${folderPath}/${filename}.md`
@@ -511,7 +511,7 @@ export class WorkflowTester {
             calendarApi.addEvent({
               id: `task-${task.path}`,
               title: task.title,
-              start: options.taskData.scheduled || options.taskData.due,
+              start: options.taskData.next_scheduled || options.taskData.due,
               allDay: false
             });
           }
@@ -550,7 +550,7 @@ export class WorkflowTester {
         const calendarApi = leaf.view.getCalendarApi();
         
         // If expecting event removal (dates cleared), simulate removing the event
-        if (options.expectEventRemoval && updates.scheduled === undefined && updates.due === undefined) {
+        if (options.expectEventRemoval && updates.next_scheduled === undefined && updates.due === undefined) {
           const eventId = `task-${task.path}`;
           const event = calendarApi.getEventById?.(eventId);
           if (event && event.remove) {
@@ -1044,7 +1044,7 @@ export class WorkflowTester {
         status: options.expectedStatus || parsed.status || 'open',
         priority: options.expectedPriority || parsed.priority || 'normal',
         due: options.expectedDue || options.expectedDueDate || parsed.due,
-        scheduled: options.expectedScheduled || options.expectedScheduledDate,
+        next_scheduled: options.expectedScheduled || options.expectedScheduledDate,
         tags: [...(parsed.tags || []), 'task', ...(options.expectedTags || [])],
         contexts: options.expectedContexts || parsed.contexts || [],
         recurrence: options.expectedRecurrence,
@@ -1225,7 +1225,7 @@ export class WorkflowTester {
         status: taskData.status || 'open',
         date: new Date(),
         dueDate: taskData.due || taskData.dueDate,
-        scheduledDate: taskData.scheduled || taskData.scheduledDate
+        scheduledDate: taskData.next_scheduled || taskData.scheduledDate
       }, this.environment.mockPlugin.settings);
       
       // Spy on generateTaskBodyFromTemplate if template is configured
@@ -1239,7 +1239,7 @@ export class WorkflowTester {
           status: taskData.status,
           details: taskData.details,
           dueDate: taskData.due || taskData.dueDate,
-          scheduledDate: taskData.scheduled || taskData.scheduledDate,
+          scheduledDate: taskData.next_scheduled || taskData.scheduledDate,
           contexts: taskData.contexts,
           tags: taskData.tags
         });
@@ -1254,7 +1254,7 @@ export class WorkflowTester {
         status: taskData.status || 'open',
         priority: taskData.priority || 'normal',
         due: taskData.due || taskData.dueDate,
-        scheduled: taskData.scheduled || taskData.scheduledDate,
+        next_scheduled: taskData.next_scheduled || taskData.scheduledDate,
         contexts: taskData.contexts || [],
         tags: taskData.tags ? [...taskData.tags, 'task'] : ['task'],
         details: taskData.details,

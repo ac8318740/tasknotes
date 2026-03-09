@@ -15,7 +15,7 @@ describe("Issue #1177: Bases recurring completion uses correct instance date", (
 		status: "open",
 		path: "tasks/recurring.md",
 		recurrence: "RRULE:FREQ=DAILY",
-		scheduled: "2025-02-10",
+		next_scheduled: "2025-02-10",
 	});
 
 	it("passes the scheduled date (UTC-anchored) when completing from Bases TaskListView", async () => {
@@ -30,7 +30,7 @@ describe("Issue #1177: Bases recurring completion uses correct instance date", (
 		expect(plugin.toggleRecurringTaskComplete).toHaveBeenCalledTimes(1);
 		const [, passedDate] = plugin.toggleRecurringTaskComplete.mock.calls[0];
 		const dateStr = formatDateForStorage(passedDate as Date);
-		expect(dateStr).toBe(formatDateForStorage(parseDateToUTC(task.scheduled!)));
+		expect(dateStr).toBe(formatDateForStorage(parseDateToUTC(task.next_scheduled!)));
 	});
 
 	it("passes the scheduled date (UTC-anchored) when completing from Bases KanbanView", async () => {
@@ -43,6 +43,6 @@ describe("Issue #1177: Bases recurring completion uses correct instance date", (
 		expect(plugin.toggleRecurringTaskComplete).toHaveBeenCalledTimes(1);
 		const [, passedDate] = plugin.toggleRecurringTaskComplete.mock.calls[0];
 		const dateStr = formatDateForStorage(passedDate as Date);
-		expect(dateStr).toBe(formatDateForStorage(parseDateToUTC(task.scheduled!)));
+		expect(dateStr).toBe(formatDateForStorage(parseDateToUTC(task.next_scheduled!)));
 	});
 });

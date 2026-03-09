@@ -319,12 +319,12 @@ export class CalendarExportService {
 		let startISO: string | null = null;
 		let endISO: string | null = null;
 
-		if (task.scheduled) {
+		if (task.next_scheduled) {
 			try {
-				const scheduledDate = this.parseTaskDate(task.scheduled);
+				const scheduledDate = this.parseTaskDate(task.next_scheduled);
 				startISO = scheduledDate.toISOString();
 			} catch (e) {
-				console.warn("Invalid scheduled date:", task.scheduled);
+				console.warn("Invalid scheduled date:", task.next_scheduled);
 			}
 		}
 

@@ -384,8 +384,8 @@ export abstract class BasesViewBase extends Component {
 			if (mockFrontmatter[fm.toUserField("due")]) {
 				prePopulatedValues.due = String(mockFrontmatter[fm.toUserField("due")]);
 			}
-			if (mockFrontmatter[fm.toUserField("scheduled")]) {
-				prePopulatedValues.scheduled = String(mockFrontmatter[fm.toUserField("scheduled")]);
+			if (mockFrontmatter[fm.toUserField("nextScheduled")]) {
+				prePopulatedValues.next_scheduled = String(mockFrontmatter[fm.toUserField("nextScheduled")]);
 			}
 			if (mockFrontmatter[fm.toUserField("contexts")]) {
 				const contexts = mockFrontmatter[fm.toUserField("contexts")];
@@ -441,7 +441,7 @@ export abstract class BasesViewBase extends Component {
 				fm.toUserField("status"),
 				fm.toUserField("priority"),
 				fm.toUserField("due"),
-				fm.toUserField("scheduled"),
+				fm.toUserField("nextScheduled"),
 				fm.toUserField("contexts"),
 				fm.toUserField("projects"),
 				"tags", // Not in FieldMapping

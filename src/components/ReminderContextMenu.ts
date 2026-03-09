@@ -33,7 +33,7 @@ export class ReminderContextMenu {
 		);
 		this.addQuickRemindersSection(
 			menu,
-			"scheduled",
+			"next_scheduled",
 			this.plugin.i18n.translate("components.reminderContextMenu.remindBeforeScheduled")
 		);
 
@@ -66,8 +66,8 @@ export class ReminderContextMenu {
 		menu.show(event)
 	}
 
-	private addQuickRemindersSection(menu: Menu, anchor: "due" | "scheduled", title: string): void {
-		const anchorDate = anchor === "due" ? this.task.due : this.task.scheduled;
+	private addQuickRemindersSection(menu: Menu, anchor: "due" | "next_scheduled", title: string): void {
+		const anchorDate = anchor === "due" ? this.task.due : this.task.next_scheduled;
 
 		if (!anchorDate) {
 			// If no anchor date, show disabled option
@@ -85,7 +85,7 @@ export class ReminderContextMenu {
 		})
 	}
 
-	private addQuickReminderSubmenu(subMenu: Menu, anchor: "due" | "scheduled"): void {
+	private addQuickReminderSubmenu(subMenu: Menu, anchor: "due" | "next_scheduled"): void {
 		const quickOptions = [
 			{
 				label: this.plugin.i18n.translate(
@@ -129,7 +129,7 @@ export class ReminderContextMenu {
 	}
 
 	private async addQuickReminder(
-		anchor: "due" | "scheduled",
+		anchor: "due" | "next_scheduled",
 		offset: string,
 		description: string
 	): Promise<void> {

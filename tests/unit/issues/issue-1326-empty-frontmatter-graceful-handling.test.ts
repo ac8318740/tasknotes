@@ -183,7 +183,7 @@ describe.skip('Issue #1326 - Empty front-matter properties graceful handling', (
         it('should handle empty scheduled date gracefully', () => {
             const frontmatter = {
                 title: 'Test Task',
-                scheduled: ''
+                next_scheduled: ''
             };
 
             const taskInfo = fieldMapper.mapFromFrontmatter(
@@ -192,7 +192,7 @@ describe.skip('Issue #1326 - Empty front-matter properties graceful handling', (
             );
 
             // Empty scheduled date should be treated as no scheduled date
-            expect(taskInfo.scheduled).toBeUndefined();
+            expect(taskInfo.next_scheduled).toBeUndefined();
         });
 
         it('should handle empty priority gracefully', () => {

@@ -87,9 +87,9 @@ export class SystemController extends BaseController {
 				}
 			}
 			if (parsedData.scheduledDate) {
-				taskData.scheduled = parsedData.scheduledDate;
+				taskData.next_scheduled = parsedData.scheduledDate;
 				if (parsedData.scheduledTime) {
-					taskData.scheduled = `${parsedData.scheduledDate} ${parsedData.scheduledTime}`;
+					taskData.next_scheduled = `${parsedData.scheduledDate} ${parsedData.scheduledTime}`;
 				}
 			}
 
@@ -145,9 +145,9 @@ export class SystemController extends BaseController {
 				}
 			}
 			if (parsedData.scheduledDate) {
-				taskData.scheduled = parsedData.scheduledDate;
+				taskData.next_scheduled = parsedData.scheduledDate;
 				if (parsedData.scheduledTime) {
-					taskData.scheduled = `${parsedData.scheduledDate} ${parsedData.scheduledTime}`;
+					taskData.next_scheduled = `${parsedData.scheduledDate} ${parsedData.scheduledTime}`;
 				}
 			}
 

@@ -13,7 +13,7 @@ export class ReminderModal extends Modal {
 
 	// Form state
 	private selectedType: "absolute" | "relative" = "relative";
-	private relativeAnchor: "due" | "scheduled" = "due";
+	private relativeAnchor: "due" | "next_scheduled" = "due";
 	private relativeOffset = 15;
 	private relativeUnit: "minutes" | "hours" | "days" = "minutes";
 	private relativeDirection: "before" | "after" = "before";
@@ -148,8 +148,8 @@ export class ReminderModal extends Modal {
 			parts.push(`Due: ${formatDateForDisplay(this.task.due)}`);
 		}
 
-		if (this.task.scheduled) {
-			parts.push(`Scheduled: ${formatDateForDisplay(this.task.scheduled)}`);
+		if (this.task.next_scheduled) {
+			parts.push(`Scheduled: ${formatDateForDisplay(this.task.next_scheduled)}`);
 		}
 
 		return parts.length > 0 ? parts.join(" • ") : null;
@@ -268,7 +268,7 @@ export class ReminderModal extends Modal {
 
 	private renderQuickActions(section: HTMLElement): void {
 		// Only show quick actions if task has due/scheduled dates
-		const hasDates = this.task.due || this.task.scheduled;
+		const hasDates = this.task.due || this.task.next_scheduled;
 		if (!hasDates) return;
 
 		const quickActions = section.createDiv({ cls: "reminder-modal__quick-actions" });
@@ -283,7 +283,7 @@ export class ReminderModal extends Modal {
 		];
 
 		commonReminders.forEach(({ label, fullLabel, offset, icon }) => {
-			const anchor = this.task.due ? "due" : "scheduled";
+			const anchor = this.task.due ? "due" : "next_scheduled";
 
 			const quickBtn = buttonsContainer.createEl("button", {
 				cls: "reminder-modal__quick-btn",
@@ -307,7 +307,7 @@ export class ReminderModal extends Modal {
 	}
 
 	private async addQuickReminder(
-		anchor: "due" | "scheduled",
+		anchor: "due" | "next_scheduled",
 		offset: string,
 		description: string
 	): Promise<void> {
@@ -412,8 +412,8 @@ export class ReminderModal extends Modal {
 			if (this.task.due) {
 				options.due = `Due date (${formatDateForDisplay(this.task.due)})`;
 			}
-			if (this.task.scheduled) {
-				options.scheduled = `Scheduled date (${formatDateForDisplay(this.task.scheduled)})`;
+			if (this.task.next_scheduled) {
+				options.next_scheduled = `Scheduled date (${formatDateForDisplay(this.task.next_scheduled)})`;
 			}
 
 			if (Object.keys(options).length === 0) {
@@ -427,7 +427,7 @@ export class ReminderModal extends Modal {
 			}
 
 			dropdown.onChange((value) => {
-				this.relativeAnchor = value as "due" | "scheduled";
+				this.relativeAnchor = value as "due" | "next_scheduled";
 			});
 		});
 
@@ -535,7 +535,7 @@ export class ReminderModal extends Modal {
 
 	private createReminder(
 		type: "absolute" | "relative",
-		anchor: "due" | "scheduled",
+		anchor: "due" | "next_scheduled",
 		offset: number,
 		unit: "minutes" | "hours" | "days",
 		direction: "before" | "after",
@@ -547,7 +547,7 @@ export class ReminderModal extends Modal {
 
 		if (type === "relative") {
 			// Check if anchor date exists
-			const anchorDate = anchor === "due" ? this.task.due : this.task.scheduled;
+			const anchorDate = anchor === "due" ? this.task.due : this.task.next_scheduled;
 			if (!anchorDate) {
 				new Notice(`Cannot create reminder: Task has no ${anchor} date`);
 				return null;
@@ -607,7 +607,7 @@ export class ReminderModal extends Modal {
 		if (reminder.type === "absolute") {
 			return `At ${formatDateForDisplay(reminder.absoluteTime || "")}`;
 		} else {
-			const anchor = reminder.relatedTo === "due" ? this.task.due : this.task.scheduled;
+			const anchor = reminder.relatedTo === "due" ? this.task.due : this.task.next_scheduled;
 			if (!anchor) {
 				return `Relative to ${reminder.relatedTo} date (not set)`;
 			}

@@ -242,7 +242,7 @@ export class TaskCardNoteDecorationsPlugin implements PluginValue {
 					this.cachedTask?.status !== newTask?.status ||
 					this.cachedTask?.priority !== newTask?.priority ||
 					this.cachedTask?.due !== newTask?.due ||
-					this.cachedTask?.scheduled !== newTask?.scheduled ||
+					this.cachedTask?.next_scheduled !== newTask?.next_scheduled ||
 					this.cachedTask?.path !== newTask?.path ||
 					this.cachedTask?.archived !== newTask?.archived ||
 					this.cachedTask?.timeEstimate !== newTask?.timeEstimate ||

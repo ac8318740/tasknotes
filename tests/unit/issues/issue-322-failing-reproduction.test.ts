@@ -38,7 +38,7 @@ describe('Issue #322: Failing reproduction test', () => {
             id: 'tuesday-bug-test',
             title: 'Weekly Tuesday Task - Bug Test',
             recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-            scheduled: '2024-07-30', // Known Tuesday from bug report
+            next_scheduled: '2024-07-30', // Known Tuesday from bug report
             dateCreated: '2024-07-30T00:00:00Z',
             complete_instances: []
         });
@@ -54,7 +54,7 @@ describe('Issue #322: Failing reproduction test', () => {
         
         console.log('Testing with Eastern Time (UTC-4/UTC-5)');
         console.log('Display date:', displayDate.toISOString());
-        console.log('Task scheduled for:', tuesdayTask.scheduled);
+        console.log('Task scheduled for:', tuesdayTask.next_scheduled);
 
         // Generate recurring instances (this is where the bug would occur)
         const recurringDates = generateRecurringInstances(tuesdayTask, bufferStart, bufferEnd);
@@ -111,7 +111,7 @@ describe('Issue #322: Failing reproduction test', () => {
             id: 'timezone-shift-test',
             title: 'Timezone Shift Test',
             recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-            scheduled: '2024-07-30T23:00:00-04:00', // Late Tuesday evening EST
+            next_scheduled: '2024-07-30T23:00:00-04:00', // Late Tuesday evening EST
             dateCreated: '2024-07-30T23:00:00-04:00',
             complete_instances: []
         });
@@ -122,7 +122,7 @@ describe('Issue #322: Failing reproduction test', () => {
         
         const recurringDates = generateRecurringInstances(tuesdayTask, testStart, testEnd);
         
-        console.log('Scheduled time with timezone:', tuesdayTask.scheduled);
+        console.log('Scheduled time with timezone:', tuesdayTask.next_scheduled);
         console.log('Generated dates:');
         recurringDates.forEach(date => {
             const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getUTCDay()];
@@ -153,31 +153,31 @@ describe('Issue #322: Failing reproduction test', () => {
         const testCases = [
             {
                 name: 'Local EST time',
-                scheduled: '2024-07-30T20:00:00-04:00', // 8 PM EST = Midnight UTC Wednesday
+                next_scheduled: '2024-07-30T20:00:00-04:00', // 8 PM EST = Midnight UTC Wednesday
                 expected: 'Tuesday'
             },
             {
                 name: 'UTC time',
-                scheduled: '2024-07-30T00:00:00Z', // Midnight UTC Tuesday
+                next_scheduled: '2024-07-30T00:00:00Z', // Midnight UTC Tuesday
                 expected: 'Tuesday'
             },
             {
                 name: 'Date only',
-                scheduled: '2024-07-30', // Date without time
+                next_scheduled: '2024-07-30', // Date without time
                 expected: 'Tuesday'
             }
         ];
 
         testCases.forEach(testCase => {
             console.log(`\\nTesting: ${testCase.name}`);
-            console.log(`Scheduled: ${testCase.scheduled}`);
+            console.log(`Scheduled: ${testCase.next_scheduled}`);
             
             const task: TaskInfo = TaskFactory.createTask({
                 id: `rrule-test-${testCase.name}`,
                 title: `RRule Test - ${testCase.name}`,
                 recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-                scheduled: testCase.scheduled,
-                dateCreated: testCase.scheduled,
+                next_scheduled: testCase.next_scheduled,
+                dateCreated: testCase.next_scheduled,
                 complete_instances: []
             });
 

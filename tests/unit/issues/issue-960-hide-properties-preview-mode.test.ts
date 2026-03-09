@@ -51,7 +51,7 @@ describe.skip('Issue #960: Hide Properties in Preview/Reading Mode', () => {
     'status',
     'priority',
     'due',
-    'scheduled',
+    'nextScheduled',
     'contexts',
     'projects',
     'timeEstimate',

@@ -97,14 +97,14 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				isTask: true,
 				title: 'Task with Scheduled Only',
 				priority: 'normal',
-				scheduled: '2025-01-05',
+				next_scheduled: '2025-01-05',
 			});
 			await createTaskFile(app, 'Tasks/task-both-dates.md', {
 				isTask: true,
 				title: 'Task with Both Dates',
 				priority: 'normal',
 				due: '2025-01-10',
-				scheduled: '2025-01-20',
+				next_scheduled: '2025-01-20',
 			});
 
 			app.metadataCache.setCache('Tasks/task-due-only.md', {
@@ -115,7 +115,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					isTask: true,
 					title: 'Task with Scheduled Only',
 					priority: 'normal',
-					scheduled: '2025-01-05',
+					next_scheduled: '2025-01-05',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-both-dates.md', {
@@ -124,7 +124,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					title: 'Task with Both Dates',
 					priority: 'normal',
 					due: '2025-01-10',
-					scheduled: '2025-01-20',
+					next_scheduled: '2025-01-20',
 				},
 			});
 
@@ -165,21 +165,21 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				title: 'Task 1',
 				priority: 'normal',
 				due: '2025-01-15',
-				scheduled: '2025-01-05',
+				next_scheduled: '2025-01-05',
 			});
 			await createTaskFile(app, 'Tasks/task-2.md', {
 				isTask: true,
 				title: 'Task 2',
 				priority: 'normal',
 				due: '2025-01-08',
-				scheduled: '2025-01-20',
+				next_scheduled: '2025-01-20',
 			});
 			await createTaskFile(app, 'Tasks/task-3.md', {
 				isTask: true,
 				title: 'Task 3',
 				priority: 'normal',
 				due: '2025-01-12',
-				scheduled: '2025-01-10',
+				next_scheduled: '2025-01-10',
 			});
 
 			app.metadataCache.setCache('Tasks/task-1.md', {
@@ -188,7 +188,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					title: 'Task 1',
 					priority: 'normal',
 					due: '2025-01-15',
-					scheduled: '2025-01-05',
+					next_scheduled: '2025-01-05',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-2.md', {
@@ -197,7 +197,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					title: 'Task 2',
 					priority: 'normal',
 					due: '2025-01-08',
-					scheduled: '2025-01-20',
+					next_scheduled: '2025-01-20',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-3.md', {
@@ -206,7 +206,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					title: 'Task 3',
 					priority: 'normal',
 					due: '2025-01-12',
-					scheduled: '2025-01-10',
+					next_scheduled: '2025-01-10',
 				},
 			});
 
@@ -244,7 +244,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				isTask: true,
 				title: 'Task with Scheduled',
 				priority: 'normal',
-				scheduled: '2025-01-10',
+				next_scheduled: '2025-01-10',
 			});
 
 			app.metadataCache.setCache('Tasks/task-no-dates.md', {
@@ -258,7 +258,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					isTask: true,
 					title: 'Task with Scheduled',
 					priority: 'normal',
-					scheduled: '2025-01-10',
+					next_scheduled: '2025-01-10',
 				},
 			});
 
@@ -300,14 +300,14 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				isTask: true,
 				title: 'Todo Scheduled Only',
 				status: 'todo',
-				scheduled: '2025-01-10',
+				next_scheduled: '2025-01-10',
 			});
 			await createTaskFile(app, 'Tasks/inprogress-both.md', {
 				isTask: true,
 				title: 'In Progress Both',
 				status: 'in-progress',
 				due: '2025-01-15',
-				scheduled: '2025-01-05',
+				next_scheduled: '2025-01-05',
 			});
 			await createTaskFile(app, 'Tasks/inprogress-due-only.md', {
 				isTask: true,
@@ -320,7 +320,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				frontmatter: { isTask: true, title: 'Todo Due Only', status: 'todo', due: '2025-01-20' },
 			});
 			app.metadataCache.setCache('Tasks/todo-scheduled-only.md', {
-				frontmatter: { isTask: true, title: 'Todo Scheduled Only', status: 'todo', scheduled: '2025-01-10' },
+				frontmatter: { isTask: true, title: 'Todo Scheduled Only', status: 'todo', next_scheduled: '2025-01-10' },
 			});
 			app.metadataCache.setCache('Tasks/inprogress-both.md', {
 				frontmatter: {
@@ -328,7 +328,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					title: 'In Progress Both',
 					status: 'in-progress',
 					due: '2025-01-15',
-					scheduled: '2025-01-05',
+					next_scheduled: '2025-01-05',
 				},
 			});
 			app.metadataCache.setCache('Tasks/inprogress-due-only.md', {
@@ -371,7 +371,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				isTask: true,
 				title: 'Mid Task',
 				priority: 'normal',
-				scheduled: '2025-01-15',
+				next_scheduled: '2025-01-15',
 			});
 			await createTaskFile(app, 'Tasks/task-late.md', {
 				isTask: true,
@@ -384,7 +384,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				frontmatter: { isTask: true, title: 'Early Task', priority: 'normal', due: '2025-01-05' },
 			});
 			app.metadataCache.setCache('Tasks/task-mid.md', {
-				frontmatter: { isTask: true, title: 'Mid Task', priority: 'normal', scheduled: '2025-01-15' },
+				frontmatter: { isTask: true, title: 'Mid Task', priority: 'normal', next_scheduled: '2025-01-15' },
 			});
 			app.metadataCache.setCache('Tasks/task-late.md', {
 				frontmatter: { isTask: true, title: 'Late Task', priority: 'normal', due: '2025-01-25' },
@@ -416,7 +416,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				title: 'Same Date Task',
 				priority: 'normal',
 				due: '2025-01-10',
-				scheduled: '2025-01-10',
+				next_scheduled: '2025-01-10',
 			});
 			await createTaskFile(app, 'Tasks/task-different.md', {
 				isTask: true,
@@ -431,7 +431,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					title: 'Same Date Task',
 					priority: 'normal',
 					due: '2025-01-10',
-					scheduled: '2025-01-10',
+					next_scheduled: '2025-01-10',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-different.md', {
@@ -460,7 +460,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 				isTask: true,
 				title: 'Morning Task',
 				priority: 'normal',
-				scheduled: '2025-01-10T09:00',
+				next_scheduled: '2025-01-10T09:00',
 			});
 			await createTaskFile(app, 'Tasks/task-afternoon.md', {
 				isTask: true,
@@ -480,7 +480,7 @@ describe.skip('Issue #928: Consider both Due date and Scheduled date together fo
 					isTask: true,
 					title: 'Morning Task',
 					priority: 'normal',
-					scheduled: '2025-01-10T09:00',
+					next_scheduled: '2025-01-10T09:00',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-afternoon.md', {

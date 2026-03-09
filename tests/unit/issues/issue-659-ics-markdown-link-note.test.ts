@@ -73,7 +73,7 @@ describe("Issue #659 - Link to the note in markdown after export to ICS", () => 
 			const task: TaskInfo = {
 				title: "Meeting Notes",
 				path: "tasks/meetings/standup.md",
-				scheduled: "2025-01-20T09:00:00",
+				next_scheduled: "2025-01-20T09:00:00",
 				status: "todo",
 				tags: [],
 				projects: [],
@@ -96,7 +96,7 @@ describe("Issue #659 - Link to the note in markdown after export to ICS", () => 
 			const task: TaskInfo = {
 				title: "Task with Special Path",
 				path: "Daily Notes/2025/01 January/Meeting Notes.md",
-				scheduled: "2025-01-20T10:00:00",
+				next_scheduled: "2025-01-20T10:00:00",
 				status: "todo",
 				tags: [],
 				projects: [],
@@ -121,7 +121,7 @@ describe("Issue #659 - Link to the note in markdown after export to ICS", () => 
 				{
 					title: "Task 1",
 					path: "tasks/task-1.md",
-					scheduled: "2025-01-20T09:00:00",
+					next_scheduled: "2025-01-20T09:00:00",
 					status: "todo",
 					tags: [],
 					projects: [],
@@ -130,7 +130,7 @@ describe("Issue #659 - Link to the note in markdown after export to ICS", () => 
 				{
 					title: "Task 2",
 					path: "tasks/task-2.md",
-					scheduled: "2025-01-20T10:00:00",
+					next_scheduled: "2025-01-20T10:00:00",
 					status: "todo",
 					tags: [],
 					projects: [],
@@ -193,7 +193,7 @@ describe("Issue #659 - Link to the note in markdown after export to ICS", () => 
 			const task: TaskInfo = {
 				title: "Test Task",
 				path: "tasks/test.md",
-				scheduled: "2025-01-20T09:00:00",
+				next_scheduled: "2025-01-20T09:00:00",
 				status: "todo",
 				tags: [],
 				projects: [],
@@ -219,7 +219,7 @@ describe("Issue #659 - Link to the note in markdown after export to ICS", () => 
 			const task: TaskInfo = {
 				title: "Test Task",
 				path: "tasks/test.md",
-				scheduled: "2025-01-20T09:00:00",
+				next_scheduled: "2025-01-20T09:00:00",
 				status: "todo",
 				tags: [],
 				projects: [],
@@ -247,7 +247,7 @@ describe("Issue #659 - Link to the note in markdown after export to ICS", () => 
 			const task: TaskInfo = {
 				title: "Task",
 				path: "notes/project;special,chars.md", // Path with ICS-sensitive chars
-				scheduled: "2025-01-20T09:00:00",
+				next_scheduled: "2025-01-20T09:00:00",
 				status: "todo",
 				tags: [],
 				projects: [],

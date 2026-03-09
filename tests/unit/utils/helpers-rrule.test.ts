@@ -72,7 +72,7 @@ describe('RRule Helper Functions', () => {
     it('should handle rrule string recurrence with scheduled date', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2024-01-10'
+        next_scheduled: '2024-01-10'
       });
 
       const mockRRuleInstance = {
@@ -115,7 +115,7 @@ describe('RRule Helper Functions', () => {
     it('should return false for rrule tasks without anchor date', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: undefined,
+        next_scheduled: undefined,
         dateCreated: undefined
       });
 
@@ -126,7 +126,7 @@ describe('RRule Helper Functions', () => {
     it('should return false when no occurrences found', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2024-01-10'
+        next_scheduled: '2024-01-10'
       });
 
       const mockRRuleInstance = {
@@ -142,7 +142,7 @@ describe('RRule Helper Functions', () => {
     it('should fall back to legacy handler on rrule errors', () => {
       const task = TaskFactory.createTask({
         recurrence: 'INVALID_RRULE',
-        scheduled: '2024-01-10'
+        next_scheduled: '2024-01-10'
       });
 
       mockRRule.parseString = jest.fn(() => {
@@ -170,7 +170,7 @@ describe('RRule Helper Functions', () => {
     it('should use correct date range for occurrence check', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2024-01-10'
+        next_scheduled: '2024-01-10'
       });
 
       const mockRRuleInstance = {
@@ -203,7 +203,7 @@ describe('RRule Helper Functions', () => {
     it('should generate instances using rrule with scheduled anchor', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2024-01-10'
+        next_scheduled: '2024-01-10'
       });
 
       const expectedInstances = [
@@ -265,7 +265,7 @@ describe('RRule Helper Functions', () => {
         ...TaskFactory.createTask({
           recurrence: 'FREQ=DAILY'
         }),
-        scheduled: undefined,
+        next_scheduled: undefined,
         dateCreated: undefined
       };
 
@@ -279,7 +279,7 @@ describe('RRule Helper Functions', () => {
     it('should fall back to legacy method on rrule errors', () => {
       const task = TaskFactory.createTask({
         recurrence: 'INVALID_RRULE',
-        scheduled: '2024-01-10'
+        next_scheduled: '2024-01-10'
       });
 
       mockRRule.parseString = jest.fn(() => {
@@ -312,7 +312,7 @@ describe('RRule Helper Functions', () => {
     it('should handle empty date ranges', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2024-01-10'
+        next_scheduled: '2024-01-10'
       });
 
       const mockRRuleInstance = {
@@ -332,7 +332,7 @@ describe('RRule Helper Functions', () => {
       it('should use UTC dtstart for scheduled date to avoid timezone shifts', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=MONTHLY;BYDAY=-1FR',
-          scheduled: '2025-06-26' // Thursday, should anchor to UTC midnight
+          next_scheduled: '2025-06-26' // Thursday, should anchor to UTC midnight
         });
 
         const mockRRuleInstance = {
@@ -357,7 +357,7 @@ describe('RRule Helper Functions', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=WEEKLY;BYDAY=FR',
           dateCreated: '2025-06-25T10:30:00.000Z', // Should extract date part for UTC
-          scheduled: undefined
+          next_scheduled: undefined
         });
 
         const mockRRuleInstance = {
@@ -380,7 +380,7 @@ describe('RRule Helper Functions', () => {
       it('should generate consistent results with isDueByRRule for same task', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=MONTHLY;BYDAY=-1FR',
-          scheduled: '2025-06-26'
+          next_scheduled: '2025-06-26'
         });
 
         // Setup mock for generateRecurringInstances
@@ -421,7 +421,7 @@ describe('RRule Helper Functions', () => {
       it('should handle datetime strings by extracting date part for dtstart', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=DAILY',
-          scheduled: '2025-06-26T15:30:00' // Should use date part only
+          next_scheduled: '2025-06-26T15:30:00' // Should use date part only
         });
 
         const mockRRuleInstance = {
@@ -500,7 +500,7 @@ describe('RRule Helper Functions', () => {
     it('should prevent off-by-one errors in generateRecurringInstances', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2025-01-15'
+        next_scheduled: '2025-01-15'
       });
 
       // Mock UTC dates at midnight (simulating our fixed implementation)
@@ -537,7 +537,7 @@ describe('RRule Helper Functions', () => {
     it('should handle weekly recurrence without day-of-week shifts', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=WEEKLY;BYDAY=MO',
-        scheduled: '2025-01-13' // Monday
+        next_scheduled: '2025-01-13' // Monday
       });
 
       // Mock returns only Mondays in UTC
@@ -569,7 +569,7 @@ describe('RRule Helper Functions', () => {
     it('should handle month boundary recurring events correctly', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2025-01-31'
+        next_scheduled: '2025-01-31'
       });
 
       // Mock dates crossing month boundary
@@ -600,7 +600,7 @@ describe('RRule Helper Functions', () => {
     it('should use createUTCDateForRRule for dtstart to prevent timezone issues', () => {
       const task = TaskFactory.createTask({
         recurrence: 'FREQ=DAILY',
-        scheduled: '2025-01-15T14:30:00' // With time component
+        next_scheduled: '2025-01-15T14:30:00' // With time component
       });
 
       const mockRRuleInstance = {
@@ -624,7 +624,7 @@ describe('RRule Helper Functions', () => {
         const task = TaskFactory.createTask({
           title: 'Monthly Last Friday Task',
           recurrence: 'FREQ=MONTHLY;BYDAY=-1FR;COUNT=15',
-          scheduled: '2025-06-26' // Thursday, should generate last Friday of month
+          next_scheduled: '2025-06-26' // Thursday, should generate last Friday of month
         });
 
         // Mock RRule to return last Friday of June 2025 (June 27th)
@@ -656,7 +656,7 @@ describe('RRule Helper Functions', () => {
       it('should use UTC dates for dtstart to avoid timezone shifts', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=WEEKLY;BYDAY=FR',
-          scheduled: '2025-06-26' // Thursday scheduled
+          next_scheduled: '2025-06-26' // Thursday scheduled
         });
 
         const mockRRuleInstance = {
@@ -680,7 +680,7 @@ describe('RRule Helper Functions', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=DAILY',
           dateCreated: '2025-06-25T10:30:00.000Z', // No scheduled date
-          scheduled: undefined
+          next_scheduled: undefined
         });
 
         const mockRRuleInstance = {
@@ -702,7 +702,7 @@ describe('RRule Helper Functions', () => {
       it('should return false when no anchor date available', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=DAILY',
-          scheduled: undefined,
+          next_scheduled: undefined,
           dateCreated: undefined
         });
 
@@ -716,7 +716,7 @@ describe('RRule Helper Functions', () => {
       it('should handle timezone-aware target date calculation', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=DAILY',
-          scheduled: '2025-06-26'
+          next_scheduled: '2025-06-26'
         });
 
         const mockRRuleInstance = {
@@ -740,7 +740,7 @@ describe('RRule Helper Functions', () => {
       it('should handle RRULE parsing errors gracefully', () => {
         const task = TaskFactory.createTask({
           recurrence: 'INVALID_RRULE_STRING',
-          scheduled: '2025-06-26'
+          next_scheduled: '2025-06-26'
         });
 
         mockRRule.parseString = jest.fn(() => {
@@ -760,7 +760,7 @@ describe('RRule Helper Functions', () => {
         // Test around DST transition dates
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=WEEKLY;BYDAY=SU',
-          scheduled: '2025-03-09' // Day before DST in 2025
+          next_scheduled: '2025-03-09' // Day before DST in 2025
         });
 
         const mockRRuleInstance = {
@@ -779,7 +779,7 @@ describe('RRule Helper Functions', () => {
       it('should handle year boundary crossings', () => {
         const task = TaskFactory.createTask({
           recurrence: 'FREQ=MONTHLY;BYMONTHDAY=31',
-          scheduled: '2024-12-31'
+          next_scheduled: '2024-12-31'
         });
 
         const mockRRuleInstance = {

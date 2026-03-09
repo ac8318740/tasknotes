@@ -43,7 +43,7 @@ describe('Issue #384: Scheduled grouping misclassifies today as past', () => {
             title: 'Task scheduled for today',
             status: 'todo',
             priority: 'normal',
-            scheduled: '2025-01-15',
+            next_scheduled: '2025-01-15',
             path: '/tasks/today.md',
             archived: false
         };
@@ -86,9 +86,9 @@ describe('Issue #384: Scheduled grouping misclassifies today as past', () => {
             id: 'root',
             conjunction: 'and',
             children: [],
-            sortKey: 'scheduled',
+            sortKey: 'next_scheduled',
             sortDirection: 'asc',
-            groupKey: 'scheduled'
+            groupKey: 'next_scheduled'
         };
 
         const groups = await filterService.getGroupedTasks(query);

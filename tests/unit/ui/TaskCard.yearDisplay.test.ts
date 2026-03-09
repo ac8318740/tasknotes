@@ -79,7 +79,7 @@ describe.skip('TaskCard Year Display (#1431)', () => {
 					status: 'status',
 					priority: 'priority',
 					due: 'due',
-					scheduled: 'scheduled',
+					nextScheduled: 'next_scheduled',
 					title: 'title',
 					tags: 'tags',
 					contexts: 'contexts',
@@ -167,7 +167,7 @@ describe.skip('TaskCard Year Display (#1431)', () => {
 	});
 
 	// Properties to show for date display tests
-	const visibleProperties = ['due', 'scheduled'];
+	const visibleProperties = ['due', 'next_scheduled'];
 
 	describe('Due date year display', () => {
 		it('should NOT display year for due dates in the current year', () => {
@@ -243,7 +243,7 @@ describe.skip('TaskCard Year Display (#1431)', () => {
 			// Current year is 2025, scheduled date is Mar 15, 2025
 			const task = TaskFactory.createTask({
 				title: 'Task with current year scheduled date',
-				scheduled: '2025-03-15',
+				next_scheduled: '2025-03-15',
 				status: 'open'
 			});
 
@@ -261,7 +261,7 @@ describe.skip('TaskCard Year Display (#1431)', () => {
 			// Current year is 2025, scheduled date is Mar 15, 2026
 			const task = TaskFactory.createTask({
 				title: 'Task with future year scheduled date',
-				scheduled: '2026-03-15',
+				next_scheduled: '2026-03-15',
 				status: 'open'
 			});
 
@@ -277,7 +277,7 @@ describe.skip('TaskCard Year Display (#1431)', () => {
 			// Current year is 2025, scheduled date is Mar 15, 2024
 			const task = TaskFactory.createTask({
 				title: 'Task with past year scheduled date',
-				scheduled: '2024-03-15',
+				next_scheduled: '2024-03-15',
 				status: 'open'
 			});
 
@@ -293,7 +293,7 @@ describe.skip('TaskCard Year Display (#1431)', () => {
 			// Current year is 2025, scheduled date is Mar 15, 2026 at 09:00
 			const task = TaskFactory.createTask({
 				title: 'Task with future datetime scheduled',
-				scheduled: '2026-03-15T09:00:00',
+				next_scheduled: '2026-03-15T09:00:00',
 				status: 'open'
 			});
 
@@ -312,7 +312,7 @@ describe.skip('TaskCard Year Display (#1431)', () => {
 			const task = TaskFactory.createTask({
 				title: 'Task with multi-year dates',
 				due: '2027-06-01',      // Future year
-				scheduled: '2025-05-15', // Current year
+				next_scheduled: '2025-05-15', // Current year
 				status: 'open'
 			});
 

@@ -16,19 +16,19 @@ describe('Issue #322: Regression Prevention', () => {
         const testCases = [
             {
                 name: 'July 2024 case (from GitHub issue)',
-                scheduled: '2024-07-30', // The Tuesday from the original bug report
+                next_scheduled: '2024-07-30', // The Tuesday from the original bug report
                 testStart: '2024-07-01T00:00:00.000Z',
                 testEnd: '2024-07-31T23:59:59.999Z'
             },
             {
                 name: 'January 2025 case',
-                scheduled: '2025-01-07', // First Tuesday of 2025
+                next_scheduled: '2025-01-07', // First Tuesday of 2025
                 testStart: '2025-01-01T00:00:00.000Z', 
                 testEnd: '2025-01-31T23:59:59.999Z'
             },
             {
                 name: 'December 2024 case (year boundary)',
-                scheduled: '2024-12-31', // Tuesday December 31, 2024
+                next_scheduled: '2024-12-31', // Tuesday December 31, 2024
                 testStart: '2024-12-01T00:00:00.000Z',
                 testEnd: '2024-12-31T23:59:59.999Z'
             }
@@ -41,8 +41,8 @@ describe('Issue #322: Regression Prevention', () => {
                 id: `regression-test-${testCase.name.replace(/\\s+/g, '-')}`,
                 title: `Tuesday Task - ${testCase.name}`,
                 recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-                scheduled: testCase.scheduled,
-                dateCreated: testCase.scheduled + 'T00:00:00Z',
+                next_scheduled: testCase.next_scheduled,
+                dateCreated: testCase.next_scheduled + 'T00:00:00Z',
                 complete_instances: []
             });
 
@@ -52,7 +52,7 @@ describe('Issue #322: Regression Prevention', () => {
                 new Date(testCase.testEnd)
             );
 
-            console.log(`  Scheduled: ${testCase.scheduled}`);
+            console.log(`  Scheduled: ${testCase.next_scheduled}`);
             console.log(`  Generated ${recurringDates.length} recurring dates:`);
             
             // Check each generated date
@@ -118,7 +118,7 @@ describe('Issue #322: Regression Prevention', () => {
             id: 'timezone-resistance-test',
             title: 'Tuesday Task - Timezone Test',
             recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-            scheduled: '2024-07-30', // Tuesday
+            next_scheduled: '2024-07-30', // Tuesday
             dateCreated: '2024-07-30T00:00:00Z',
             complete_instances: []
         });
@@ -156,7 +156,7 @@ describe('Issue #322: Regression Prevention', () => {
             id: 'navigation-test',
             title: 'Navigation Test Task',
             recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-            scheduled: '2024-07-30',
+            next_scheduled: '2024-07-30',
             dateCreated: '2024-07-30T00:00:00Z',
             complete_instances: []
         });

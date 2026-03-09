@@ -66,7 +66,7 @@ interface MockTaskInfo {
 	status?: string;
 	priority?: string;
 	due?: string;
-	scheduled?: string;
+	next_scheduled?: string;
 	recurrence?: string; // RRULE string
 	recurrence_anchor?: "scheduled" | "completion";
 	recurrence_mode?: "log_instances" | "create_notes"; // Proposed new field
@@ -108,7 +108,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				recurrence: "DTSTART:20250301;RRULE:FREQ=DAILY",
 				recurrence_anchor: "scheduled",
 				recurrence_mode: "create_notes", // New mode
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 				tags: ["fitness", "routine"],
 			};
 
@@ -122,7 +122,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				path: "tasks/daily-workout-2025-03-10.md",
 				title: "Daily Workout - 2025-03-10",
 				status: "done",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 				instanceDate: "2025-03-10",
 				parentRecurringTask: "tasks/daily-workout.md",
 				tags: ["fitness", "routine"], // Inherited from parent
@@ -141,7 +141,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Daily Standup",
 				status: "open",
 				recurrence: "DTSTART:20250301;RRULE:FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 				complete_instances: ["2025-03-03", "2025-03-04", "2025-03-05"],
 				// recurrence_mode not set - defaults to 'log_instances'
 			};
@@ -149,7 +149,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 			// Expected behavior (current): Add date to complete_instances array
 			const expectedAfterCompletion: MockTaskInfo = {
 				...parentTask,
-				scheduled: "2025-03-11", // Next weekday
+				next_scheduled: "2025-03-11", // Next weekday
 				complete_instances: ["2025-03-03", "2025-03-04", "2025-03-05", "2025-03-10"],
 			};
 
@@ -164,7 +164,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Daily Review",
 				recurrence: "RRULE:FREQ=DAILY",
 				recurrence_mode: "log_instances",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			const createNoteModeTask: MockTaskInfo = {
@@ -172,7 +172,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Workout",
 				recurrence: "RRULE:FREQ=DAILY",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			// Both modes should be supported on a per-task basis
@@ -188,7 +188,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				path: "tasks/workout-2025-03-10.md",
 				title: "Workout - 2025-03-10",
 				status: "done",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 				instanceDate: "2025-03-10",
 				parentRecurringTask: "tasks/workout.md",
 				// Custom training properties
@@ -214,7 +214,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Leg Day",
 				recurrence: "RRULE:FREQ=WEEKLY;BYDAY=MO,TH",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 				tags: ["fitness", "legs"],
 				projects: ["Health2025"],
 				priority: "high",
@@ -272,18 +272,18 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				status: "open",
 				recurrence: "DTSTART:20250301;RRULE:FREQ=DAILY",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			// After completing on 2025-03-10
 			const parentAfter: MockTaskInfo = {
 				...parentBefore,
-				scheduled: "2025-03-11", // Updated to next occurrence
+				next_scheduled: "2025-03-11", // Updated to next occurrence
 				// Note: complete_instances is NOT updated in create_notes mode
 				// because the instance is tracked via the created note
 			};
 
-			expect(parentAfter.scheduled).toBe("2025-03-11");
+			expect(parentAfter.next_scheduled).toBe("2025-03-11");
 		});
 
 		it.skip("reproduces issue #1115 - should track created instances via links in parent", async () => {
@@ -293,7 +293,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Workout",
 				recurrence: "RRULE:FREQ=DAILY",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-11", // Next occurrence
+				next_scheduled: "2025-03-11", // Next occurrence
 				// Optional: track created instances
 				// This could be implemented various ways:
 				// - Outgoing links in note body
@@ -331,7 +331,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				recurrence: "DTSTART:20250303;RRULE:FREQ=WEEKLY",
 				recurrence_anchor: "completion",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			// Complete on 2025-03-10 (3 days after scheduled)
@@ -343,11 +343,11 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 			const expectedParentAfter: MockTaskInfo = {
 				...parentTask,
 				recurrence: "DTSTART:20250310;RRULE:FREQ=WEEKLY", // DTSTART updated
-				scheduled: "2025-03-17", // Next week from completion
+				next_scheduled: "2025-03-17", // Next week from completion
 			};
 
 			expect(parentTask.recurrence_anchor).toBe("completion");
-			expect(expectedParentAfter.scheduled).toBe("2025-03-17");
+			expect(expectedParentAfter.next_scheduled).toBe("2025-03-17");
 		});
 	});
 
@@ -367,7 +367,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Workout",
 				recurrence: "RRULE:FREQ=DAILY",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			// Template: "{{title}} - {{date}}" -> "Workout - 2025-03-10"
@@ -454,7 +454,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				recurrence: "RRULE:FREQ=DAILY",
 				recurrence_mode: "log_instances",
 				complete_instances: ["2025-03-01", "2025-03-02", "2025-03-03"],
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			// User changes to 'create_notes' mode
@@ -480,7 +480,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Workout",
 				recurrence: "RRULE:FREQ=DAILY",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			// When completing this task, UI should indicate:
@@ -517,7 +517,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 					path: "tasks/workout-2025-03-08.md",
 					title: "Workout - 2025-03-08",
 					status: "done",
-					scheduled: "2025-03-08",
+					next_scheduled: "2025-03-08",
 					instanceDate: "2025-03-08",
 					parentRecurringTask: "tasks/workout.md",
 				},
@@ -525,7 +525,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 					path: "tasks/workout-2025-03-09.md",
 					title: "Workout - 2025-03-09",
 					status: "done",
-					scheduled: "2025-03-09",
+					next_scheduled: "2025-03-09",
 					instanceDate: "2025-03-09",
 					parentRecurringTask: "tasks/workout.md",
 				},
@@ -583,7 +583,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 				title: "Workout",
 				recurrence: "RRULE:FREQ=DAILY",
 				recurrence_mode: "create_notes",
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 				skipped_instances: ["2025-03-08"], // Previously skipped
 			};
 
@@ -594,7 +594,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 
 			const afterSkip: MockTaskInfo = {
 				...parentTask,
-				scheduled: "2025-03-11",
+				next_scheduled: "2025-03-11",
 				skipped_instances: ["2025-03-08", "2025-03-10"],
 			};
 
@@ -615,7 +615,7 @@ describe("Issue #1115 - Option for recurring tasks creating new notes", () => {
 					"2025-03-05",
 					"2025-03-06",
 				],
-				scheduled: "2025-03-10",
+				next_scheduled: "2025-03-10",
 			};
 
 			// Options when switching to create_notes:
@@ -645,7 +645,7 @@ describe("Issue #1115 - User Story Scenarios", () => {
 			title: "Squats",
 			recurrence: "RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR",
 			recurrence_mode: "create_notes",
-			scheduled: "2025-03-10",
+			next_scheduled: "2025-03-10",
 			tags: ["fitness", "legs"],
 			// Default/target values
 			target_weight: 100,
@@ -704,7 +704,7 @@ describe("Issue #1115 - User Story Scenarios", () => {
 			title: "Weekly Review",
 			recurrence: "RRULE:FREQ=WEEKLY;BYDAY=FR",
 			recurrence_mode: "create_notes",
-			scheduled: "2025-03-14",
+			next_scheduled: "2025-03-14",
 		};
 
 		const reviewInstance: MockTaskInfo = {
@@ -734,7 +734,7 @@ describe("Issue #1115 - User Story Scenarios", () => {
 			title: "Daily Journal",
 			recurrence: "RRULE:FREQ=DAILY",
 			recurrence_mode: "create_notes",
-			scheduled: "2025-03-10",
+			next_scheduled: "2025-03-10",
 		};
 
 		const journalEntry: MockTaskInfo = {

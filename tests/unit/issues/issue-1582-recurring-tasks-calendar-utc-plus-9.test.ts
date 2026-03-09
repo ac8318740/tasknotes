@@ -56,7 +56,7 @@ describe('Issue #1582: Recurring Tasks for after Sunday 15:30 do not appear on C
 			const dailyTask = TaskFactory.createRecurringTask('FREQ=DAILY', {
 				id: 'daily-task-utc-plus-9',
 				title: 'Daily Recurring Task',
-				scheduled: '2025-01-20', // Monday
+				next_scheduled: '2025-01-20', // Monday
 			});
 
 			// Simulate the calendar view fetching events for a week
@@ -111,7 +111,7 @@ describe('Issue #1582: Recurring Tasks for after Sunday 15:30 do not appear on C
 			const dailyTask = TaskFactory.createRecurringTask('FREQ=DAILY', {
 				id: 'daily-task-boundary',
 				title: 'Daily Task Boundary Test',
-				scheduled: '2025-01-20',
+				next_scheduled: '2025-01-20',
 			});
 
 			// Create a Date object that would represent Sunday 15:30 UTC+9
@@ -175,7 +175,7 @@ describe('Issue #1582: Recurring Tasks for after Sunday 15:30 do not appear on C
 			const dailyTask = TaskFactory.createRecurringTask('FREQ=DAILY', {
 				id: 'daily-timezone-bug',
 				title: 'Daily Timezone Bug Test',
-				scheduled: '2025-01-01',
+				next_scheduled: '2025-01-01',
 			});
 
 			// Simulate calendar view boundaries for a week as passed by FullCalendar
@@ -272,7 +272,7 @@ describe('Issue #1582: Recurring Tasks for after Sunday 15:30 do not appear on C
 			const sundayTask = TaskFactory.createRecurringTask('FREQ=WEEKLY;BYDAY=SU', {
 				id: 'weekly-sunday-task',
 				title: 'Weekly Sunday Task',
-				scheduled: '2025-01-19', // Sunday
+				next_scheduled: '2025-01-19', // Sunday
 			});
 
 			// Calendar view for January 2025 (contains 4-5 Sundays)

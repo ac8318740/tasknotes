@@ -254,7 +254,7 @@ describe('Issue #614: Eisenhower Matrix View', () => {
 			//
 			// This test documents that the current formula system does not
 			// natively provide the two-axis separation needed.
-			const urgencyScoreFormula = 'if(!due && !scheduled, formula.priorityWeight, formula.priorityWeight + max(0, 10 - formula.daysUntilNext))';
+			const urgencyScoreFormula = 'if(!due && !next_scheduled, formula.priorityWeight, formula.priorityWeight + max(0, 10 - formula.daysUntilNext))';
 
 			// The formula produces a single number, not two separate axes
 			expect(urgencyScoreFormula).toContain('priorityWeight');

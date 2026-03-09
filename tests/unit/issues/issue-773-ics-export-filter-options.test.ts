@@ -31,7 +31,7 @@ describe('Issue #773 - Add options to filter tasks for ICS export', () => {
         {
             title: 'Active task with due date',
             path: 'tasks/active-due.md',
-            scheduled: '2025-01-14T10:00:00',
+            next_scheduled: '2025-01-14T10:00:00',
             due: '2025-01-20T17:00:00',
             status: 'todo',
             archived: false,
@@ -42,7 +42,7 @@ describe('Issue #773 - Add options to filter tasks for ICS export', () => {
         {
             title: 'Completed task',
             path: 'tasks/completed.md',
-            scheduled: '2025-01-10T10:00:00',
+            next_scheduled: '2025-01-10T10:00:00',
             due: '2025-01-12T17:00:00',
             status: 'done',
             archived: false,
@@ -53,7 +53,7 @@ describe('Issue #773 - Add options to filter tasks for ICS export', () => {
         {
             title: 'Archived task',
             path: 'tasks/archived.md',
-            scheduled: '2024-12-01T10:00:00',
+            next_scheduled: '2024-12-01T10:00:00',
             due: '2024-12-15T17:00:00',
             status: 'done',
             archived: true,
@@ -64,7 +64,7 @@ describe('Issue #773 - Add options to filter tasks for ICS export', () => {
         {
             title: 'Task without due date',
             path: 'tasks/no-due.md',
-            scheduled: '2025-01-14T14:00:00',
+            next_scheduled: '2025-01-14T14:00:00',
             // No due date
             status: 'todo',
             archived: false,

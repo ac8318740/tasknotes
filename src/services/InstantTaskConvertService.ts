@@ -667,7 +667,7 @@ export class InstantTaskConvertService {
 			status: status,
 			priority: priority,
 			due: dueDate,
-			scheduled: scheduledDate,
+			next_scheduled: scheduledDate,
 			contexts: contextsArray.length > 0 ? contextsArray : undefined,
 			projects: uniqueProjects.length > 0 ? uniqueProjects : undefined,
 			tags: tagsArray,

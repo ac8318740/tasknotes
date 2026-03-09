@@ -87,8 +87,8 @@ export class HierarchicalGroupingService {
 					const d = (task.due ?? "").trim();
 					return d ? [d.split("T")[0]] : ["No Due Date"];
 				}
-				case "scheduled": {
-					const s = (task.scheduled ?? "").trim();
+				case "next_scheduled": {
+					const s = (task.next_scheduled ?? "").trim();
 					return s ? [s.split("T")[0]] : ["No Scheduled Date"];
 				}
 				default: {

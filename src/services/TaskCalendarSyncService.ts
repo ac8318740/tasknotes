@@ -129,12 +129,12 @@ export class TaskCalendarSyncService {
 
 		// Check if task has the required date(s) based on sync trigger setting
 		switch (settings.syncTrigger) {
-			case "scheduled":
-				return !!task.scheduled;
+			case "next_scheduled":
+				return !!task.next_scheduled;
 			case "due":
 				return !!task.due;
 			case "both":
-				return !!task.scheduled || !!task.due;
+				return !!task.next_scheduled || !!task.due;
 			default:
 				return false;
 		}
@@ -215,7 +215,7 @@ export class TaskCalendarSyncService {
 			.replace(/\{\{status\}\}/g, statusConfig?.label || task.status || "")
 			.replace(/\{\{priority\}\}/g, priorityConfig?.label || task.priority || "")
 			.replace(/\{\{due\}\}/g, task.due || "")
-			.replace(/\{\{scheduled\}\}/g, task.scheduled || "")
+			.replace(/\{\{scheduled\}\}/g, task.next_scheduled || "")
 			.trim();
 	}
 
@@ -243,8 +243,8 @@ export class TaskCalendarSyncService {
 		if (task.due) {
 			parts.push(t("due", { value: task.due }));
 		}
-		if (task.scheduled) {
-			parts.push(t("scheduled", { value: task.scheduled }));
+		if (task.next_scheduled) {
+			parts.push(t("scheduled", { value: task.next_scheduled }));
 		}
 
 		// Add time estimate
@@ -296,13 +296,13 @@ export class TaskCalendarSyncService {
 		const settings = this.plugin.settings.googleCalendarExport;
 
 		switch (settings.syncTrigger) {
-			case "scheduled":
-				return task.scheduled;
+			case "next_scheduled":
+				return task.next_scheduled;
 			case "due":
 				return task.due;
 			case "both":
-				// Prefer scheduled, fall back to due
-				return task.scheduled || task.due;
+				// Prefer next_scheduled, fall back to due
+				return task.next_scheduled || task.due;
 			default:
 				return undefined;
 		}
@@ -409,13 +409,13 @@ export class TaskCalendarSyncService {
 	 * 
 	 * @param task - The task with reminders
 	 * @param eventStartTime - The event start time (ISO string or date string)
-	 * @param eventDateSource - Which date field was used for the event ('due' or 'scheduled')
+	 * @param eventDateSource - Which date field was used for the event ('due' or 'next_scheduled')
 	 * @returns Array of { method: string; minutes: number } or null if no valid reminders
 	 */
 	private convertTaskRemindersToGoogleFormat(
 		task: TaskInfo,
 		eventStartTime: string,
-		eventDateSource: 'due' | 'scheduled'
+		eventDateSource: 'due' | 'next_scheduled'
 	): Array<{ method: string; minutes: number }> | null {
 		if (!task.reminders || !Array.isArray(task.reminders) || task.reminders.length === 0) {
 			return null;
@@ -585,9 +585,9 @@ export class TaskCalendarSyncService {
 		}
 
 		// Determine which date field was used for the event (for reminder conversion)
-		let eventDateSource: 'due' | 'scheduled';
-		if (settings.syncTrigger === 'scheduled' || (settings.syncTrigger === 'both' && task.scheduled)) {
-			eventDateSource = 'scheduled';
+		let eventDateSource: 'due' | 'next_scheduled';
+		if (settings.syncTrigger === 'next_scheduled' || (settings.syncTrigger === 'both' && task.next_scheduled)) {
+			eventDateSource = 'next_scheduled';
 		} else {
 			eventDateSource = 'due';
 		}

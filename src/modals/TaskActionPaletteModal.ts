@@ -129,7 +129,7 @@ export class TaskActionPaletteModal extends FuzzySuggestModal<TaskAction> {
 						const newEntry: UnifiedTimeEntry = {
 							id: generateTimeEntryId(),
 							type: "planned",
-							startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+							startTime: task.next_scheduled || new Date().toISOString().substring(0, 10),
 						};
 						showUnifiedTimeInfoModal(newEntry, task, this.plugin, undefined, { isNew: true });
 					}
@@ -155,9 +155,9 @@ export class TaskActionPaletteModal extends FuzzySuggestModal<TaskAction> {
 				icon: "calendar-x",
 				category: "dates",
 				keywords: ["clear", "remove", "scheduled", "date"],
-				isApplicable: (task) => !!task.scheduled,
+				isApplicable: (task) => !!task.next_scheduled,
 				execute: async (task) => {
-					await this.plugin.updateTaskProperty(task, "scheduled", undefined);
+					await this.plugin.updateTaskProperty(task, "next_scheduled", undefined);
 					new Notice("Scheduled date cleared");
 				},
 			}

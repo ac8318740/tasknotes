@@ -22,12 +22,12 @@ describe('Issue #322: Tuesday recurring tasks showing on Monday', () => {
             id: 'tuesday-weekly-task',
             title: 'Weekly Tuesday Task',
             recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-            scheduled: '2024-07-30', // Tuesday, July 30, 2024 (using date from GitHub example)
+            next_scheduled: '2024-07-30', // Tuesday, July 30, 2024 (using date from GitHub example)
             dateCreated: '2024-07-30T00:00:00Z',
             complete_instances: []
         });
 
-        console.log('Task scheduled for:', tuesdayTask.scheduled);
+        console.log('Task scheduled for:', tuesdayTask.next_scheduled);
         console.log('Task recurrence:', tuesdayTask.recurrence);
         
         // Test the month containing July 29 (the date mentioned in the bug report)
@@ -108,7 +108,7 @@ describe('Issue #322: Tuesday recurring tasks showing on Monday', () => {
             id: 'timezone-test-task',
             title: 'Timezone Test Task',
             recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-            scheduled: '2024-07-30', // Tuesday
+            next_scheduled: '2024-07-30', // Tuesday
             dateCreated: '2024-07-30T00:00:00Z',
             complete_instances: []
         });

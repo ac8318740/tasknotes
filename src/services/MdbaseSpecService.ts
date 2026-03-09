@@ -135,7 +135,7 @@ export class MdbaseSpecService {
 		});
 
 		this.addRoleField(lines, "due", { type: "date" });
-		this.addRoleField(lines, "scheduled", { type: "date" });
+		this.addRoleField(lines, "nextScheduled", { type: "date" });
 		this.addRoleField(lines, "contexts", {
 			type: "list",
 			items: { type: "string" },
@@ -188,7 +188,7 @@ export class MdbaseSpecService {
 					description: { type: "string" },
 					relatedTo: {
 						type: "enum",
-						values: ["due", "scheduled"],
+						values: ["due", "next_scheduled"],
 						description: "Field the reminder is relative to (e.g. 'due').",
 					},
 					offset: {
@@ -448,9 +448,9 @@ export class MdbaseSpecService {
 			priority: fm.toUserField("priority"),
 			status: fm.toUserField("status"),
 			dueDate: fm.toUserField("due"),
-			scheduledDate: fm.toUserField("scheduled"),
+			scheduledDate: fm.toUserField("nextScheduled"),
 			due: fm.toUserField("due"),
-			scheduled: fm.toUserField("scheduled"),
+			scheduled: fm.toUserField("nextScheduled"),
 		};
 	}
 }

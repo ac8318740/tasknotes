@@ -81,7 +81,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Weekly review",
 				status: " ",
 				path: "tasks/weekly-review.md",
-				scheduled: scheduledStr, // Jan 9 - overdue!
+				next_scheduled: scheduledStr, // Jan 9 - overdue!
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [],
 				skipped_instances: [],
@@ -131,7 +131,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Daily task",
 				status: " ",
 				path: "tasks/daily.md",
-				scheduled: jan10Str, // Should move to Jan 10 (next uncompleted)
+				next_scheduled: jan10Str, // Should move to Jan 10 (next uncompleted)
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [jan9Str], // Jan 9 completed
 				skipped_instances: [],
@@ -159,7 +159,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Daily task",
 				status: " ",
 				path: "tasks/daily.md",
-				scheduled: scheduledStr, // Jan 9 - overdue
+				next_scheduled: scheduledStr, // Jan 9 - overdue
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [],
 				skipped_instances: [],
@@ -176,8 +176,8 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				const todayUTC = createUTCDateFromLocalCalendarDate(todayLocal);
 
 				// Check if task has a scheduled date in the past
-				if (task.scheduled) {
-					const taskScheduled = parseDateToUTC(task.scheduled);
+				if (task.next_scheduled) {
+					const taskScheduled = parseDateToUTC(task.next_scheduled);
 					if (taskScheduled < todayUTC) {
 						// Task is overdue - complete the scheduled (past) date
 						return taskScheduled;
@@ -209,7 +209,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Daily standup",
 				status: " ", // Initially open
 				path: "tasks/daily-standup.md",
-				scheduled: jan9Str,
+				next_scheduled: jan9Str,
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [],
 				skipped_instances: [],
@@ -287,7 +287,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Daily exercise",
 				status: " ",
 				path: "tasks/daily-exercise.md",
-				scheduled: jan9Str,
+				next_scheduled: jan9Str,
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [],
 				skipped_instances: [],
@@ -324,7 +324,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Daily review",
 				status: " ",
 				path: "tasks/daily-review.md",
-				scheduled: jan9Str,
+				next_scheduled: jan9Str,
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [],
 				skipped_instances: [],
@@ -337,14 +337,14 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 			const afterContextMenuCompletion: TaskInfo = {
 				...recurringTask,
 				complete_instances: [jan9Str],
-				scheduled: "2025-01-10", // Should move to next uncompleted
+				next_scheduled: "2025-01-10", // Should move to next uncompleted
 			};
 
 			// Verify Jan 9 is in complete_instances
 			expect(afterContextMenuCompletion.complete_instances).toContain(jan9Str);
 
 			// Verify scheduled moved correctly
-			expect(afterContextMenuCompletion.scheduled).toBe("2025-01-10");
+			expect(afterContextMenuCompletion.next_scheduled).toBe("2025-01-10");
 		});
 
 		it.skip("reproduces issue #1594 - left-click opens note but loses date context", () => {
@@ -371,7 +371,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 			// Reproduces issue #1594
 			// The fix in toggleRecurringTaskComplete should:
 			// 1. Check if no explicit date is provided
-			// 2. Check if task.scheduled is in the past (overdue)
+			// 2. Check if task.next_scheduled is in the past (overdue)
 			// 3. If overdue, use the scheduled date as the completion target
 			// 4. This ensures the overdue instance is completed, not today's date
 
@@ -384,7 +384,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Daily task",
 				status: " ",
 				path: "tasks/daily.md",
-				scheduled: jan9Str, // 3 days overdue
+				next_scheduled: jan9Str, // 3 days overdue
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [],
 				skipped_instances: [],
@@ -395,12 +395,12 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 			const afterFix: TaskInfo = {
 				...overdueTask,
 				complete_instances: [jan9Str], // Completed Jan 9, not Jan 12
-				scheduled: jan10Str, // Next occurrence is Jan 10
+				next_scheduled: jan10Str, // Next occurrence is Jan 10
 			};
 
 			expect(afterFix.complete_instances).toContain(jan9Str);
 			expect(afterFix.complete_instances).not.toContain(formatDateForStorage(today));
-			expect(afterFix.scheduled).toBe(jan10Str);
+			expect(afterFix.next_scheduled).toBe(jan10Str);
 		});
 
 		it.skip("reproduces issue #1594 - fix should handle note view Done action for recurring tasks", () => {
@@ -417,7 +417,7 @@ describe("Issue #1594: Completing an overdue repeating task from the note", () =
 				title: "Daily standup",
 				status: " ",
 				path: "tasks/daily-standup.md",
-				scheduled: jan9Str,
+				next_scheduled: jan9Str,
 				recurrence: "DTSTART:20250101;FREQ=DAILY",
 				complete_instances: [],
 				skipped_instances: [],
@@ -458,7 +458,7 @@ describe("Issue #1594: Edge cases and related scenarios", () => {
 			title: "Daily exercise",
 			status: " ",
 			path: "tasks/daily-exercise.md",
-			scheduled: jan9Str, // 3 days overdue on Jan 12
+			next_scheduled: jan9Str, // 3 days overdue on Jan 12
 			recurrence: "DTSTART:20250101;FREQ=DAILY",
 			complete_instances: [],
 			skipped_instances: [],
@@ -468,34 +468,34 @@ describe("Issue #1594: Edge cases and related scenarios", () => {
 		task = {
 			...task,
 			complete_instances: [jan9Str],
-			scheduled: jan10Str,
+			next_scheduled: jan10Str,
 		};
-		expect(task.scheduled).toBe(jan10Str);
+		expect(task.next_scheduled).toBe(jan10Str);
 
 		// Second completion: Jan 10 -> Jan 11
 		task = {
 			...task,
 			complete_instances: [jan9Str, jan10Str],
-			scheduled: jan11Str,
+			next_scheduled: jan11Str,
 		};
-		expect(task.scheduled).toBe(jan11Str);
+		expect(task.next_scheduled).toBe(jan11Str);
 
 		// Third completion: Jan 11 -> Jan 12 (today)
 		task = {
 			...task,
 			complete_instances: [jan9Str, jan10Str, jan11Str],
-			scheduled: jan12Str,
+			next_scheduled: jan12Str,
 		};
-		expect(task.scheduled).toBe(jan12Str);
+		expect(task.next_scheduled).toBe(jan12Str);
 
 		// Now task is current, not overdue
 		// Fourth completion: Jan 12 -> Jan 13
 		task = {
 			...task,
 			complete_instances: [jan9Str, jan10Str, jan11Str, jan12Str],
-			scheduled: "2025-01-13",
+			next_scheduled: "2025-01-13",
 		};
-		expect(task.scheduled).toBe("2025-01-13");
+		expect(task.next_scheduled).toBe("2025-01-13");
 	});
 
 	it.skip("reproduces issue #1594 - weekly recurring task overdue by 1 week", () => {
@@ -510,7 +510,7 @@ describe("Issue #1594: Edge cases and related scenarios", () => {
 			title: "Weekly review",
 			status: " ",
 			path: "tasks/weekly-review.md",
-			scheduled: jan5Str, // 1 week overdue
+			next_scheduled: jan5Str, // 1 week overdue
 			recurrence: "DTSTART:20250105;FREQ=WEEKLY;BYDAY=SU",
 			complete_instances: [],
 			skipped_instances: [],
@@ -523,7 +523,7 @@ describe("Issue #1594: Edge cases and related scenarios", () => {
 		const correctTask: TaskInfo = {
 			...weeklyTask,
 			complete_instances: [jan5Str],
-			scheduled: jan12Str, // Should be this Sunday, not next Sunday
+			next_scheduled: jan12Str, // Should be this Sunday, not next Sunday
 		};
 
 		const nextOccurrence = getNextUncompletedOccurrence(correctTask);
@@ -542,7 +542,7 @@ describe("Issue #1594: Edge cases and related scenarios", () => {
 			title: "Daily task",
 			status: " ",
 			path: "tasks/daily.md",
-			scheduled: jan12Str, // Today - not overdue
+			next_scheduled: jan12Str, // Today - not overdue
 			recurrence: "DTSTART:20250101;FREQ=DAILY",
 			complete_instances: [],
 			skipped_instances: [],
@@ -552,10 +552,10 @@ describe("Issue #1594: Edge cases and related scenarios", () => {
 		const afterCompletion: TaskInfo = {
 			...currentTask,
 			complete_instances: [jan12Str],
-			scheduled: jan13Str,
+			next_scheduled: jan13Str,
 		};
 
 		expect(afterCompletion.complete_instances).toContain(jan12Str);
-		expect(afterCompletion.scheduled).toBe(jan13Str);
+		expect(afterCompletion.next_scheduled).toBe(jan13Str);
 	});
 });

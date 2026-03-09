@@ -277,8 +277,8 @@ export class BasesFilterConverter {
 			case "due":
 				frontmatterKey = fm.toUserField("due");
 				break;
-			case "scheduled":
-				frontmatterKey = fm.toUserField("scheduled");
+			case "next_scheduled":
+				frontmatterKey = fm.toUserField("nextScheduled");
 				break;
 			case "contexts":
 				frontmatterKey = fm.toUserField("contexts");
@@ -586,7 +586,7 @@ export class BasesFilterConverter {
 		// Handle known TaskNotes sort keys
 		switch (sortKey) {
 			case "due": return fm.toUserField("due");
-			case "scheduled": return fm.toUserField("scheduled");
+			case "next_scheduled": return fm.toUserField("nextScheduled");
 			case "priority": return fm.toUserField("priority");
 			case "status": return fm.toUserField("status");
 			case "title": return fm.toUserField("title");

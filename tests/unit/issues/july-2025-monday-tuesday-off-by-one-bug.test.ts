@@ -30,7 +30,7 @@ describe('July 2025 Monday/Tuesday Off-by-One Bug', () => {
         id: 'july-tuesday-bug-test',
         title: 'Weekly Tuesday Task',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-07-01', // Start of July 2025 (Tuesday)
+        next_scheduled: '2025-07-01', // Start of July 2025 (Tuesday)
         complete_instances: []
       });
 
@@ -97,7 +97,7 @@ describe('July 2025 Monday/Tuesday Off-by-One Bug', () => {
         id: 'july-isduebyrrule-test',
         title: 'Tuesday Task for isDueByRRule Test',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-07-01', // Tuesday, July 1st, 2025
+        next_scheduled: '2025-07-01', // Tuesday, July 1st, 2025
         complete_instances: []
       });
 
@@ -133,22 +133,22 @@ describe('July 2025 Monday/Tuesday Off-by-One Bug', () => {
       const testCases = [
         {
           name: 'Scheduled on Tuesday July 1st',
-          scheduled: '2025-07-01', // Tuesday
+          next_scheduled: '2025-07-01', // Tuesday
           description: 'Anchor on actual Tuesday'
         },
         {
           name: 'Scheduled on Monday June 30th', 
-          scheduled: '2025-06-30', // Monday (day before July)
+          next_scheduled: '2025-06-30', // Monday (day before July)
           description: 'Anchor on Monday before July'
         },
         {
           name: 'Scheduled on Wednesday July 2nd',
-          scheduled: '2025-07-02', // Wednesday  
+          next_scheduled: '2025-07-02', // Wednesday  
           description: 'Anchor on Wednesday after July 1st'
         }
       ];
       
-      testCases.forEach(({ name, scheduled, description }) => {
+      testCases.forEach(({ name, next_scheduled: scheduled, description }) => {
         console.log(`\n=== ${name} ===`);
         console.log(`Description: ${description}`);
         
@@ -156,7 +156,7 @@ describe('July 2025 Monday/Tuesday Off-by-One Bug', () => {
           id: `anchor-test-${scheduled}`,
           title: `Tuesday Task - ${name}`,
           recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-          scheduled: scheduled,
+          next_scheduled: scheduled,
           complete_instances: []
         });
         
@@ -190,7 +190,7 @@ describe('July 2025 Monday/Tuesday Off-by-One Bug', () => {
         id: 'timezone-investigation',
         title: 'Timezone Investigation Task',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-07-01',
+        next_scheduled: '2025-07-01',
         complete_instances: []
       });
       

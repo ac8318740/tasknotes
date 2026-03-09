@@ -583,12 +583,12 @@ describe('Task Management Workflow Integration', () => {
     it('should handle view-specific update optimizations', async () => {
       const task = TaskFactory.createTask({
         title: 'Optimization test',
-        scheduled: '2025-01-15'
+        next_scheduled: '2025-01-15'
       });
 
       const result = await workflowTester.testViewSpecificUpdates({
         task,
-        updates: { scheduled: '2025-01-20' },
+        updates: { next_scheduled: '2025-01-20' },
         expectCalendarRefresh: true,
         expectListRefresh: false // Optimization: list doesn't need refresh for date change
       });

@@ -147,7 +147,7 @@ describe('Off-by-One Completion Date Bug', () => {
         id: 'tuesday-task',
         title: 'Weekly Tuesday Task',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-01-21', // Tuesday, January 21, 2025
+        next_scheduled: '2025-01-21', // Tuesday, January 21, 2025
         complete_instances: []
       });
 
@@ -190,7 +190,7 @@ describe('Off-by-One Completion Date Bug', () => {
         id: 'daily-task',
         title: 'Daily Task',
         recurrence: 'FREQ=DAILY',
-        scheduled: '2025-01-21',
+        next_scheduled: '2025-01-21',
         complete_instances: []
       });
 
@@ -232,7 +232,7 @@ describe('Off-by-One Completion Date Bug', () => {
         id: 'daily-task-2',
         title: 'Daily Task 2',
         recurrence: 'FREQ=DAILY',
-        scheduled: '2025-01-21',
+        next_scheduled: '2025-01-21',
         complete_instances: []
       });
 
@@ -269,7 +269,7 @@ describe('Off-by-One Completion Date Bug', () => {
         id: 'daily-task-3',
         title: 'Daily Task 3',
         recurrence: 'FREQ=DAILY',
-        scheduled: '2025-01-21',
+        next_scheduled: '2025-01-21',
         complete_instances: []
       });
 
@@ -307,7 +307,7 @@ describe('Off-by-One Completion Date Bug', () => {
         id: 'daily-task-fix',
         title: 'Daily Task Fix Test',
         recurrence: 'FREQ=DAILY',
-        scheduled: '2025-01-21',
+        next_scheduled: '2025-01-21',
         complete_instances: []
       });
 

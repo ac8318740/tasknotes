@@ -18,7 +18,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             : format(start, "yyyy-MM-dd'T'HH:mm");
 
         const prePopulatedValues: any = {
-            scheduled: scheduledDate
+            next_scheduled: scheduledDate
         };
 
         // BUG: calendar-view.ts doesn't calculate timeEstimate for multi-day selections
@@ -42,7 +42,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
         const isDragOperation = !allDay && durationMinutes > slotDurationMinutes;
 
         const prePopulatedValues: any = {
-            scheduled: scheduledDate
+            next_scheduled: scheduledDate
         };
 
         // FIX: Calculate duration for multi-day all-day selections
@@ -74,7 +74,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreation(start, end, true);
 
             // BUG: timeEstimate is not set, so it will be undefined
-            expect(result.scheduled).toBe('2025-01-15');
+            expect(result.next_scheduled).toBe('2025-01-15');
             expect(result.timeEstimate).toBeUndefined(); // This demonstrates the bug
             // Should be: expect(result.timeEstimate).toBe(2880); // 2 days = 2880 minutes
         });
@@ -87,7 +87,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreation(start, end, true);
 
             // BUG: timeEstimate is not set
-            expect(result.scheduled).toBe('2025-01-15');
+            expect(result.next_scheduled).toBe('2025-01-15');
             expect(result.timeEstimate).toBeUndefined(); // This demonstrates the bug
             // Should be: expect(result.timeEstimate).toBe(10080); // 7 days = 10080 minutes
         });
@@ -100,7 +100,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreation(start, end, true);
 
             // BUG: timeEstimate is not set, leading to unexpected behavior
-            expect(result.scheduled).toBe('2025-03-10');
+            expect(result.next_scheduled).toBe('2025-03-10');
             expect(result.timeEstimate).toBeUndefined(); // This demonstrates the bug
             // Should be: expect(result.timeEstimate).toBe(7200); // 5 days = 7200 minutes
         });
@@ -114,7 +114,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreationFixed(start, end, true);
 
             // 2 days = 2 * 24 * 60 = 2880 minutes
-            expect(result.scheduled).toBe('2025-01-15');
+            expect(result.next_scheduled).toBe('2025-01-15');
             expect(result.timeEstimate).toBe(2880);
         });
 
@@ -125,7 +125,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreationFixed(start, end, true);
 
             // 7 days = 7 * 24 * 60 = 10080 minutes
-            expect(result.scheduled).toBe('2025-01-15');
+            expect(result.next_scheduled).toBe('2025-01-15');
             expect(result.timeEstimate).toBe(10080);
         });
 
@@ -136,7 +136,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreationFixed(start, end, true);
 
             // Single day all-day task should not have time estimate set (use default)
-            expect(result.scheduled).toBe('2025-01-15');
+            expect(result.next_scheduled).toBe('2025-01-15');
             expect(result.timeEstimate).toBeUndefined();
         });
 
@@ -149,7 +149,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreationFixed(start, end, false);
 
             // 2 hours = 120 minutes
-            expect(result.scheduled).toBe('2025-01-15T09:00');
+            expect(result.next_scheduled).toBe('2025-01-15T09:00');
             expect(result.timeEstimate).toBe(120);
         });
 
@@ -162,7 +162,7 @@ describe('Issue #859: Multi-day task creation in Bases calendar view', () => {
             const result = simulateBasesCalendarTaskCreationFixed(start, end, false);
 
             // Short selection should not set time estimate (use default)
-            expect(result.scheduled).toBe('2025-01-15T09:00');
+            expect(result.next_scheduled).toBe('2025-01-15T09:00');
             expect(result.timeEstimate).toBeUndefined();
         });
     });

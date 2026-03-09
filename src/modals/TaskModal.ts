@@ -1381,7 +1381,7 @@ export abstract class TaskModal extends Modal {
 			status: this.status,
 			priority: this.priority,
 			due: this.dueDate,
-			scheduled: this.scheduledDate,
+			next_scheduled: this.scheduledDate,
 			path: "", // Will be set when saving
 			archived: false,
 			reminders: this.reminders,

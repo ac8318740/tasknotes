@@ -356,8 +356,8 @@ describe("MdbaseSpecService", () => {
 			expect(block).toContain("type: date");
 		});
 
-		it("should define scheduled as date", () => {
-			const block = getFieldBlock(fm, "scheduled");
+		it("should define next_scheduled as date", () => {
+			const block = getFieldBlock(fm, "next_scheduled");
 			expect(block).toContain("type: date");
 		});
 
@@ -450,7 +450,7 @@ describe("MdbaseSpecService", () => {
 			expect(block).toContain("id:");
 			expect(block).toContain("values: [absolute, relative]");
 			expect(block).toContain("relatedTo:");
-			expect(block).toContain("values: [due, scheduled]");
+			expect(block).toContain("values: [due, next_scheduled]");
 			expect(block).toContain("offset:");
 			expect(block).toContain("absoluteTime:");
 			expect(block).toContain("type: datetime");
@@ -497,7 +497,7 @@ describe("MdbaseSpecService", () => {
 				status: "task_status",
 				priority: "task_priority",
 				due: "due_date",
-				scheduled: "scheduled_date",
+				nextScheduled: "scheduled_date",
 				contexts: "areas",
 				projects: "related_projects",
 			};

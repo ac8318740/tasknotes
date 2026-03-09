@@ -194,14 +194,14 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 				title: 'Task Due Earlier',
 				priority: 'normal',
 				due: '2025-01-05',
-				scheduled: '2025-01-20',
+				next_scheduled: '2025-01-20',
 			});
 			await createTaskFile(app, 'Tasks/task-scheduled-earlier.md', {
 				isTask: true,
 				title: 'Task Scheduled Earlier',
 				priority: 'normal',
 				due: '2025-01-10',
-				scheduled: '2025-01-01',
+				next_scheduled: '2025-01-01',
 			});
 
 			app.metadataCache.setCache('Tasks/task-due-earlier.md', {
@@ -210,7 +210,7 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 					title: 'Task Due Earlier',
 					priority: 'normal',
 					due: '2025-01-05',
-					scheduled: '2025-01-20',
+					next_scheduled: '2025-01-20',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-scheduled-earlier.md', {
@@ -219,7 +219,7 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 					title: 'Task Scheduled Earlier',
 					priority: 'normal',
 					due: '2025-01-10',
-					scheduled: '2025-01-01',
+					next_scheduled: '2025-01-01',
 				},
 			});
 
@@ -250,14 +250,14 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 				title: 'Alpha Task',
 				priority: 'high',
 				due: '2025-01-02',
-				scheduled: '2025-01-15',
+				next_scheduled: '2025-01-15',
 			});
 			await createTaskFile(app, 'Tasks/task-a2.md', {
 				isTask: true,
 				title: 'Alpha Task',
 				priority: 'high',
 				due: '2025-01-10',
-				scheduled: '2025-01-01',
+				next_scheduled: '2025-01-01',
 			});
 
 			app.metadataCache.setCache('Tasks/task-a1.md', {
@@ -266,7 +266,7 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 					title: 'Alpha Task',
 					priority: 'high',
 					due: '2025-01-02',
-					scheduled: '2025-01-15',
+					next_scheduled: '2025-01-15',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-a2.md', {
@@ -275,7 +275,7 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 					title: 'Alpha Task',
 					priority: 'high',
 					due: '2025-01-10',
-					scheduled: '2025-01-01',
+					next_scheduled: '2025-01-01',
 				},
 			});
 
@@ -306,14 +306,14 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 				title: 'Task A',
 				priority: 'normal',
 				due: '2025-01-05',
-				scheduled: '2025-01-01',
+				next_scheduled: '2025-01-01',
 			});
 			await createTaskFile(app, 'Tasks/task-due-jan10.md', {
 				isTask: true,
 				title: 'Task B',
 				priority: 'normal',
 				due: '2025-01-10',
-				scheduled: '2025-01-01',
+				next_scheduled: '2025-01-01',
 			});
 
 			app.metadataCache.setCache('Tasks/task-due-jan5.md', {
@@ -322,7 +322,7 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 					title: 'Task A',
 					priority: 'normal',
 					due: '2025-01-05',
-					scheduled: '2025-01-01',
+					next_scheduled: '2025-01-01',
 				},
 			});
 			app.metadataCache.setCache('Tasks/task-due-jan10.md', {
@@ -331,7 +331,7 @@ describe.skip('Issue #935: Sort Order for Priorities, Due and Scheduled', () => 
 					title: 'Task B',
 					priority: 'normal',
 					due: '2025-01-10',
-					scheduled: '2025-01-01',
+					next_scheduled: '2025-01-01',
 				},
 			});
 

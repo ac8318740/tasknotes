@@ -80,7 +80,7 @@ export function shouldRefreshForDateBasedView(
 	);
 	return (
 		originalTask.due !== updatedTask.due ||
-		originalTask.scheduled !== updatedTask.scheduled ||
+		originalTask.next_scheduled !== updatedTask.next_scheduled ||
 		originalTask.status !== updatedTask.status ||
 		originalTask.completedDate !== updatedTask.completedDate ||
 		originalTask.recurrence !== updatedTask.recurrence ||
@@ -134,7 +134,7 @@ export async function selectiveUpdateForListView(
 					// Get visible properties from the view instead of extracting from DOM
 					const visibleProperties = (view as any).getCurrentVisibleProperties?.() || [
 						"due",
-						"scheduled",
+						"next_scheduled",
 						"projects",
 						"contexts",
 						"tags",

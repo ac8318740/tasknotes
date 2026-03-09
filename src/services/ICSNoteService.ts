@@ -39,8 +39,8 @@ export class ICSNoteService {
 
 			// Convert ICS event to task creation data
 			const scheduledValue =
-				overrides?.scheduled !== undefined
-					? overrides.scheduled
+				overrides?.next_scheduled !== undefined
+					? overrides.next_scheduled
 					: this.computeScheduledFromICSEvent(icsEvent);
 
 			const taskData: TaskCreationData = {
@@ -55,7 +55,7 @@ export class ICSNoteService {
 				// Safe date handling per guidelines:
 				// - all-day: YYYY-MM-DD (UTC-anchored calendar day)
 				// - timed: YYYY-MM-DDTHH:mm (local)
-				scheduled: scheduledValue,
+				next_scheduled: scheduledValue,
 				contexts:
 					overrides?.contexts || (icsEvent.location ? [icsEvent.location] : undefined),
 				projects: overrides?.projects,

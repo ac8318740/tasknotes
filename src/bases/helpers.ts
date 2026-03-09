@@ -81,7 +81,7 @@ function createTaskInfoFromProperties(
 		"priority",
 		"archived",
 		"due",
-		"scheduled",
+		"next_scheduled",
 		"contexts",
 		"projects",
 		"tags",
@@ -136,7 +136,7 @@ function createTaskInfoFromProperties(
 		path: basesItem.path || "",
 		archived: props.archived || false,
 		due: props.due,
-		scheduled: props.scheduled,
+		next_scheduled: props.next_scheduled,
 		contexts: Array.isArray(props.contexts)
 			? props.contexts
 			: props.contexts

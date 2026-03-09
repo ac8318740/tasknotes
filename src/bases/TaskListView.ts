@@ -1426,8 +1426,8 @@ export class TaskListView extends BasesViewBase {
 				await showTaskContextMenu(event, task.path, this.plugin, this.getTaskActionDate(task));
 				return;
 			case "edit-date": {
-				const dateType = target.dataset.tnDateType as "due" | "scheduled" | undefined;
-				if (dateType === "scheduled") {
+				const dateType = target.dataset.tnDateType as "due" | "next_scheduled" | undefined;
+				if (dateType === "next_scheduled") {
 					// Open UnifiedTimeInfoModal for scheduled dates
 					const plannedEntries = (task.timeEntries || [])
 						.filter((entry: UnifiedTimeEntry) => entry.type === "planned")
@@ -1447,7 +1447,7 @@ export class TaskListView extends BasesViewBase {
 						const newEntry: UnifiedTimeEntry = {
 							id: generateTimeEntryId(),
 							type: "planned",
-							startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+							startTime: task.next_scheduled || new Date().toISOString().substring(0, 10),
 						};
 						showUnifiedTimeInfoModal(newEntry, task, this.plugin, () => {
 							this.plugin.notifyDataChanged();
@@ -1495,7 +1495,7 @@ export class TaskListView extends BasesViewBase {
 	 * Prefers the task's scheduled (or due) date to avoid marking the wrong instance.
 	 */
 	private getTaskActionDate(task: TaskInfo): Date {
-		const dateStr = getDatePart(task.scheduled || task.due || "");
+		const dateStr = getDatePart(task.next_scheduled || task.due || "");
 		if (dateStr) {
 			return parseDateToUTC(dateStr);
 		}
@@ -1523,7 +1523,7 @@ export class TaskListView extends BasesViewBase {
 		const menu = new RecurrenceContextMenu({
 			currentValue: typeof task.recurrence === "string" ? task.recurrence : undefined,
 			currentAnchor: task.recurrence_anchor || 'scheduled',
-			scheduledDate: task.scheduled,
+			scheduledDate: task.next_scheduled,
 			onSelect: async (newRecurrence: string | null, anchor?: 'scheduled' | 'completion') => {
 				try {
 					await this.plugin.updateTaskProperty(
@@ -1567,11 +1567,11 @@ export class TaskListView extends BasesViewBase {
 
 	private async openDateContextMenu(
 		task: TaskInfo,
-		dateType: "due" | "scheduled" | undefined,
+		dateType: "due" | "next_scheduled" | undefined,
 		event: MouseEvent
 	): Promise<void> {
 		if (!dateType) return;
-		const currentValue = dateType === "due" ? task.due : task.scheduled;
+		const currentValue = dateType === "due" ? task.due : task.next_scheduled;
 		const menu = new DateContextMenu({
 			currentValue: getDatePart(currentValue || ""),
 			currentTime: getTimePart(currentValue || ""),
@@ -1875,7 +1875,7 @@ export class TaskListView extends BasesViewBase {
 
 	private buildTaskSignature(task: TaskInfo): string {
 		// Fast signature using only fields that affect rendering
-		return `${task.path}|${task.title}|${task.status}|${task.priority}|${task.due}|${task.scheduled}|${task.recurrence}|${task.archived}|${task.complete_instances?.join(',')}|${task.reminders?.length}|${task.blocking?.length}|${task.blockedBy?.length}`;
+		return `${task.path}|${task.title}|${task.status}|${task.priority}|${task.due}|${task.next_scheduled}|${task.recurrence}|${task.archived}|${task.complete_instances?.join(',')}|${task.reminders?.length}|${task.blocking?.length}|${task.blockedBy?.length}`;
 	}
 }
 

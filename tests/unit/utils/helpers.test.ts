@@ -456,7 +456,7 @@ describe('Helpers', () => {
             status: 'status',
             priority: 'priority',
             due: 'due',
-            scheduled: 'scheduled',
+            nextScheduled: 'next_scheduled',
             contexts: 'contexts',
             timeEstimate: 'timeEstimate',
             completedDate: 'completedDate',

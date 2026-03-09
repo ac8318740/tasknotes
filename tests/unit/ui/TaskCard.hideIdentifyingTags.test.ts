@@ -39,7 +39,7 @@ describe.skip('TaskCard - Hide Identifying Tags Feature', () => {
           status: 'status',
           priority: 'priority',
           due: 'due',
-          scheduled: 'scheduled',
+          nextScheduled: 'next_scheduled',
           title: 'title',
           tags: 'tags',
           contexts: 'contexts',

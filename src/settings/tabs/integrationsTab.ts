@@ -594,13 +594,13 @@ export function renderIntegrationsTab(
 					name: translate("settings.integrations.googleCalendarExport.syncTrigger.name"),
 					desc: translate("settings.integrations.googleCalendarExport.syncTrigger.description"),
 					options: [
-						{ value: "scheduled", label: translate("settings.integrations.googleCalendarExport.syncTrigger.options.scheduled") },
+						{ value: "next_scheduled", label: translate("settings.integrations.googleCalendarExport.syncTrigger.options.scheduled") },
 						{ value: "due", label: translate("settings.integrations.googleCalendarExport.syncTrigger.options.due") },
 						{ value: "both", label: translate("settings.integrations.googleCalendarExport.syncTrigger.options.both") },
 					],
 					getValue: () => plugin.settings.googleCalendarExport.syncTrigger,
 					setValue: async (value: string) => {
-						plugin.settings.googleCalendarExport.syncTrigger = value as "scheduled" | "due" | "both";
+						plugin.settings.googleCalendarExport.syncTrigger = value as "next_scheduled" | "due" | "both";
 						save();
 					},
 				})

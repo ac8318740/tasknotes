@@ -32,7 +32,7 @@ describe('TaskService Completion (Issue #160)', () => {
       id: 'friday-task',
       title: 'Weekly Friday Task',
       recurrence: 'FREQ=WEEKLY;BYDAY=FR',
-      scheduled: '2024-01-12', // Friday
+      next_scheduled: '2024-01-12', // Friday
       complete_instances: []
     });
 
@@ -211,7 +211,7 @@ describe('TaskService Completion (Issue #160)', () => {
           id: `task-${date}`,
           title: `Task for ${name}`,
           recurrence: `FREQ=WEEKLY;BYDAY=${dayName}`,
-          scheduled: date,
+          next_scheduled: date,
           complete_instances: []
         });
 

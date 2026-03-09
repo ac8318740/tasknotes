@@ -107,13 +107,13 @@ describe('Issue #609: Spurious tag creation in property mode', () => {
 				projects: ['[[Project Collations for elsewhere]]'],
 				dateModified: '2025-09-08T21:22:00.994+01:00',
 				due: '2025-09-07',
-				scheduled: '2025-09-07',
+				next_scheduled: '2025-09-07',
 				recurrence: 'DTSTART:20250907;FREQ=WEEKLY;INTERVAL=2;BYDAY=SU',
 				reminders: [
 					{
 						id: 'rem_1757258251019',
 						type: 'relative',
-						relatedTo: 'scheduled',
+						relatedTo: 'next_scheduled',
 						offset: '-PT5M',
 						description: '5 minutes before',
 					},
@@ -219,13 +219,13 @@ describe('Issue #609: Spurious tag creation in property mode', () => {
 					{
 						id: 'rem_1757258251019',
 						type: 'relative',
-						relatedTo: 'scheduled',
+						relatedTo: 'next_scheduled',
 						offset: '-PT5M',
 						description: '5 minutes before',
 					},
 				],
 				due: '2025-09-07',
-				scheduled: '2025-09-07',
+				next_scheduled: '2025-09-07',
 				recurrence: 'DTSTART:20250907;FREQ=WEEKLY;INTERVAL=2;BYDAY=SU',
 			};
 
@@ -294,7 +294,7 @@ describe('Issue #609: Spurious tag creation in property mode', () => {
 				dateModified: '2025-09-08T21:22:00.994+01:00',
 				type: 'task',
 				due: '2025-09-07',
-				scheduled: '2025-09-07',
+				next_scheduled: '2025-09-07',
 				recurrence: 'DTSTART:20250907;FREQ=WEEKLY;INTERVAL=2;BYDAY=SU',
 			};
 

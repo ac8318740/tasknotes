@@ -64,7 +64,7 @@ describe('FilterService - Issue 153 Fix Verification', () => {
                 priority: 'normal',
                 path: '/test/task-7-days-ago.md',
                 archived: false,
-                scheduled: '2025-01-08', // Exactly 7 days before 2025-01-15
+                next_scheduled: '2025-01-08', // Exactly 7 days before 2025-01-15
                 tags: ['task']
             };
 
@@ -105,7 +105,7 @@ describe('FilterService - Issue 153 Fix Verification', () => {
                 priority: 'normal',
                 path: '/test/task-yesterday.md',
                 archived: false,
-                scheduled: '2025-01-14', // Yesterday relative to 2025-01-15
+                next_scheduled: '2025-01-14', // Yesterday relative to 2025-01-15
                 tags: ['task']
             };
 
@@ -145,7 +145,7 @@ describe('FilterService - Issue 153 Fix Verification', () => {
                     priority: 'normal',
                     path: '/test/monday-task.md',
                     archived: false,
-                    scheduled: '2025-01-13', // Monday
+                    next_scheduled: '2025-01-13', // Monday
                     tags: ['task']
                 },
                 {
@@ -154,7 +154,7 @@ describe('FilterService - Issue 153 Fix Verification', () => {
                     priority: 'normal',
                     path: '/test/wednesday-task.md',
                     archived: false,
-                    scheduled: '2025-01-15', // Wednesday (today)
+                    next_scheduled: '2025-01-15', // Wednesday (today)
                     tags: ['task']
                 },
                 {
@@ -163,7 +163,7 @@ describe('FilterService - Issue 153 Fix Verification', () => {
                     priority: 'normal',
                     path: '/test/friday-task.md',
                     archived: false,
-                    scheduled: '2025-01-17', // Friday
+                    next_scheduled: '2025-01-17', // Friday
                     tags: ['task']
                 }
             ];
@@ -211,7 +211,7 @@ describe('FilterService - Issue 153 Fix Verification', () => {
                 priority: 'normal',
                 path: '/test/dst-task.md',
                 archived: false,
-                scheduled: '2025-03-09',
+                next_scheduled: '2025-03-09',
                 tags: ['task']
             };
 
@@ -252,7 +252,7 @@ describe('FilterService - Issue 153 Fix Verification', () => {
                 priority: 'normal',
                 path: '/test/task.md',
                 archived: false,
-                scheduled: '2025-01-15',
+                next_scheduled: '2025-01-15',
                 tags: ['task']
             };
 

@@ -58,7 +58,7 @@ const createMockPlugin = (settings: any) => ({
 			status: 'status',
 			priority: 'priority',
 			due: 'due',
-			scheduled: 'scheduled',
+			nextScheduled: 'next_scheduled',
 			recurrence: 'recurrence',
 			completeInstances: 'complete_instances',
 			blockedBy: 'blockedBy',

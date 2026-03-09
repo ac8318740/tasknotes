@@ -48,7 +48,7 @@ describe('processFolderTemplate', () => {
 			contexts: ['@work', '@office'],
 			projects: ['ProjectA', 'ProjectB'],
 			due: '2025-10-10',
-			scheduled: '2025-10-05',
+			next_scheduled: '2025-10-05',
 		};
 
 		it('should process {{context}} template with first context', () => {

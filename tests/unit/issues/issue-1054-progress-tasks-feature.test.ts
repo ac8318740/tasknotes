@@ -73,7 +73,7 @@ function createProgressTask(overrides: Partial<ProgressTaskInfo> = {}): Progress
 		archived: false,
 		taskType: 'progress',
 		recurrence: 'DTSTART:20260101;FREQ=WEEKLY;BYDAY=MO', // Weekly on Monday
-		scheduled: '2026-01-05',
+		next_scheduled: '2026-01-05',
 		timeEstimate: 180, // 3 hours goal per week
 		timeEntries: [],
 		progressInstances: [],
@@ -319,7 +319,7 @@ describe('Issue #1054 - Progress Tasks Feature Request', () => {
 
 			const progressTask = createProgressTask({
 				recurrence: 'DTSTART:20260101;FREQ=WEEKLY;BYDAY=MO',
-				scheduled: '2025-12-29', // Last Monday
+				next_scheduled: '2025-12-29', // Last Monday
 				timeEntries: [
 					{
 						startTime: '2025-12-29T09:00:00Z',
@@ -523,7 +523,7 @@ describe('Issue #1054 - Progress Tasks Feature Request', () => {
 			 * status: "in-progress"
 			 * taskType: "progress"
 			 * recurrence: "DTSTART:20260101;FREQ=WEEKLY;BYDAY=MO"
-			 * scheduled: "2026-01-05"
+			 * next_scheduled: "2026-01-05"
 			 * timeEstimate: 180
 			 * timeEntries:
 			 *   - startTime: "2026-01-05T09:00:00Z"
@@ -541,7 +541,7 @@ describe('Issue #1054 - Progress Tasks Feature Request', () => {
 				status: 'in-progress',
 				taskType: 'progress',
 				recurrence: 'DTSTART:20260101;FREQ=WEEKLY;BYDAY=MO',
-				scheduled: '2026-01-05',
+				next_scheduled: '2026-01-05',
 				timeEstimate: 180,
 				timeEntries: [
 					{

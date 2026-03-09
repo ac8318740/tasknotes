@@ -52,7 +52,7 @@ describe('Issue #1045: Daily tasks linked in notes only update status after rest
                 title: 'Daily standup',
                 status: 'open',
                 path: 'tasks/daily-standup.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: [mondayStr], // Completed on Monday
             };
@@ -115,7 +115,7 @@ describe('Issue #1045: Daily tasks linked in notes only update status after rest
                 title: 'Daily review',
                 status: 'open',
                 path: 'tasks/daily-review.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: [yesterdayStr], // Only completed yesterday
             };
@@ -207,7 +207,7 @@ describe('Issue #1045: Daily tasks linked in notes only update status after rest
                 title: 'Daily task in daily note',
                 status: 'open',
                 path: 'tasks/daily-linked.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: [yesterdayStr],
             };
@@ -234,7 +234,7 @@ describe('Issue #1045: Daily tasks linked in notes only update status after rest
                 title: 'Weekend task',
                 status: 'open',
                 path: 'tasks/weekend.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: [fridayStr], // Completed on Friday
             };
@@ -284,7 +284,7 @@ describe('Issue #1045: Daily tasks linked in notes only update status after rest
                 title: 'Weekly review',
                 status: 'open',
                 path: 'tasks/weekly-review.md',
-                scheduled: '2025-01-06',
+                next_scheduled: '2025-01-06',
                 recurrence: 'RRULE:FREQ=WEEKLY;BYDAY=MO',
                 complete_instances: [lastMondayStr], // Completed last Monday
             };

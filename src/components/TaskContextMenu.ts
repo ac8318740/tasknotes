@@ -191,7 +191,7 @@ export class TaskContextMenu {
 					const newEntry: UnifiedTimeEntry = {
 						id: generateTimeEntryId(),
 						type: "planned",
-						startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+						startTime: task.next_scheduled || new Date().toISOString().substring(0, 10),
 					};
 					showUnifiedTimeInfoModal(newEntry, task, plugin, () => {
 						this.options.onUpdate?.();
@@ -219,7 +219,7 @@ export class TaskContextMenu {
 				submenu,
 				task,
 				plugin,
-				"scheduled",
+				"next_scheduled",
 				this.t("contextMenus.task.remindBeforeScheduled")
 			);
 
@@ -1372,7 +1372,7 @@ export class TaskContextMenu {
 				const recurrenceMenu = new RecurrenceContextMenu({
 					currentValue: typeof currentValue === "string" ? currentValue : undefined,
 					currentAnchor: this.options.task.recurrence_anchor || 'scheduled',
-					scheduledDate: this.options.task.scheduled,
+					scheduledDate: this.options.task.next_scheduled,
 					onSelect: onSelect,
 					app: plugin.app,
 					plugin: plugin,
@@ -1420,10 +1420,10 @@ export class TaskContextMenu {
 		submenu: any,
 		task: TaskInfo,
 		plugin: TaskNotesPlugin,
-		anchor: "due" | "scheduled",
+		anchor: "due" | "next_scheduled",
 		title: string
 	): void {
-		const anchorDate = anchor === "due" ? task.due : task.scheduled;
+		const anchorDate = anchor === "due" ? task.due : task.next_scheduled;
 
 		if (!anchorDate) {
 			// If no anchor date, show disabled option
@@ -1465,7 +1465,7 @@ export class TaskContextMenu {
 	private async addQuickReminder(
 		task: TaskInfo,
 		plugin: TaskNotesPlugin,
-		anchor: "due" | "scheduled",
+		anchor: "due" | "next_scheduled",
 		offset: string,
 		description: string
 	): Promise<void> {

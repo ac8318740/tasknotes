@@ -300,7 +300,7 @@ export async function handleRecurringTaskDrop(
 	const allDay = dropInfo.event.allDay;
 
 	if (isNextScheduledOccurrence) {
-		// Dragging Next Scheduled Occurrence: Updates only task.scheduled (manual reschedule)
+		// Dragging Next Scheduled Occurrence: Updates only task.next_scheduled (manual reschedule)
 		let newDateString: string;
 		if (allDay) {
 			newDateString = format(newStart, "yyyy-MM-dd");
@@ -309,14 +309,14 @@ export async function handleRecurringTaskDrop(
 		}
 
 		// Update the scheduled field directly (manual reschedule of next occurrence)
-		await plugin.taskService.updateProperty(taskInfo, "scheduled", newDateString);
+		await plugin.taskService.updateProperty(taskInfo, "next_scheduled", newDateString);
 		new Notice("Rescheduled next occurrence. This does not change the recurrence pattern.");
 	} else if (isPatternInstance) {
-		// Dragging Pattern Instances: Updates DTSTART in RRULE and recalculates task.scheduled
+		// Dragging Pattern Instances: Updates DTSTART in RRULE and recalculates task.next_scheduled
 		await handlePatternInstanceDrop(taskInfo, newStart, allDay, plugin);
 	} else if (isRecurringInstance) {
 		// Legacy support: Handle old-style recurring instances (time changes only)
-		const originalDate = getDatePart(taskInfo.scheduled!);
+		const originalDate = getDatePart(taskInfo.next_scheduled!);
 		let updatedScheduled: string;
 
 		if (allDay) {
@@ -330,7 +330,7 @@ export async function handleRecurringTaskDrop(
 			);
 		}
 
-		await plugin.taskService.updateProperty(taskInfo, "scheduled", updatedScheduled);
+		await plugin.taskService.updateProperty(taskInfo, "next_scheduled", updatedScheduled);
 	}
 }
 
@@ -390,10 +390,10 @@ export function calculateAllDayEndDate(startDate: string, timeEstimate?: number)
  * @deprecated Used only for backward compatibility with pre-migration tasks without time entries
  */
 export function createScheduledEvent(task: TaskInfo, plugin: TaskNotesPlugin): CalendarEvent | null {
-	if (!task.scheduled) return null;
+	if (!task.next_scheduled) return null;
 
-	const hasTime = hasTimeComponent(task.scheduled);
-	const startDate = task.scheduled;
+	const hasTime = hasTimeComponent(task.next_scheduled);
+	const startDate = task.next_scheduled;
 
 	let endDate: string | undefined;
 	if (hasTime && task.timeEstimate) {
@@ -475,10 +475,10 @@ export function createDueEvent(task: TaskInfo, plugin: TaskNotesPlugin): Calenda
  * @deprecated Used only for backward compatibility with pre-migration tasks without time entries
  */
 export function createScheduledToDueSpanEvent(task: TaskInfo, plugin: TaskNotesPlugin): CalendarEvent | null {
-	if (!task.scheduled || !task.due) return null;
+	if (!task.next_scheduled || !task.due) return null;
 
 	// Parse dates to compare them
-	const scheduledDate = parseDateToLocal(task.scheduled);
+	const scheduledDate = parseDateToLocal(task.next_scheduled);
 	const dueDate = parseDateToLocal(task.due);
 
 	// Skip if due is before or same as scheduled (no span to show)
@@ -657,8 +657,8 @@ export function getRecurringTime(task: TaskInfo): string {
 		}
 	}
 
-	if (task.scheduled) {
-		const timePart = getTimePart(task.scheduled);
+	if (task.next_scheduled) {
+		const timePart = getTimePart(task.next_scheduled);
 		if (timePart) return timePart;
 	}
 
@@ -794,17 +794,17 @@ export function generateRecurringTaskInstances(
 	endDate: Date,
 	plugin: TaskNotesPlugin
 ): CalendarEvent[] {
-	if (!task.recurrence || !task.scheduled) {
+	if (!task.recurrence || !task.next_scheduled) {
 		return [];
 	}
 
 	const instances: CalendarEvent[] = [];
-	const hasOriginalTime = hasTimeComponent(task.scheduled);
+	const hasOriginalTime = hasTimeComponent(task.next_scheduled);
 	const templateTime = getRecurringTime(task);
-	const nextScheduledDate = getDatePart(task.scheduled);
+	const nextScheduledDate = getDatePart(task.next_scheduled);
 
 	// 1. Create next scheduled occurrence event
-	const scheduledTime = hasOriginalTime ? getTimePart(task.scheduled) : null;
+	const scheduledTime = hasOriginalTime ? getTimePart(task.next_scheduled) : null;
 	const scheduledEventStart = scheduledTime
 		? `${nextScheduledDate}T${scheduledTime}`
 		: nextScheduledDate;
@@ -1112,7 +1112,7 @@ export async function generateCalendarEvents(
 				// skip the legacy recurring event generation — time entries handle display
 				if (!hasPlannedEntries) {
 					// Fallback for pre-migration recurring tasks without time entries
-					if (!task.scheduled) continue;
+					if (!task.next_scheduled) continue;
 
 					if (showRecurring && visibleStart && visibleEnd) {
 						const recurringEvents = generateRecurringTaskInstances(
@@ -1131,11 +1131,11 @@ export async function generateCalendarEvents(
 				if (!hasPlannedEntries) {
 					// Check if we should show a span event (replaces individual scheduled/due for this task)
 					let showedSpan = false;
-					if (showScheduledToDueSpan && task.scheduled && task.due) {
+					if (showScheduledToDueSpan && task.next_scheduled && task.due) {
 						const spanEvent = createScheduledToDueSpanEvent(task, plugin);
 						if (spanEvent) {
 							// Check if span is in visible range (use scheduled date for range check)
-							if (isDateInVisibleRange(task.scheduled, visibleStart, visibleEnd) ||
+							if (isDateInVisibleRange(task.next_scheduled, visibleStart, visibleEnd) ||
 								isDateInVisibleRange(task.due, visibleStart, visibleEnd)) {
 								events.push(spanEvent);
 								showedSpan = true;
@@ -1145,8 +1145,8 @@ export async function generateCalendarEvents(
 
 					// Only show individual scheduled/due events if we didn't show a span
 					if (!showedSpan) {
-						if (showScheduled && task.scheduled) {
-							if (isDateInVisibleRange(task.scheduled, visibleStart, visibleEnd, task.timeEstimate)) {
+						if (showScheduled && task.next_scheduled) {
+							if (isDateInVisibleRange(task.next_scheduled, visibleStart, visibleEnd, task.timeEstimate)) {
 								const scheduledEvent = createScheduledEvent(task, plugin);
 								if (scheduledEvent) events.push(scheduledEvent);
 							}
@@ -1573,14 +1573,14 @@ export async function handleDateTitleClick(date: Date, plugin: TaskNotesPlugin):
  * @param end - Selection end date
  * @param allDay - Whether this is an all-day selection
  * @param slotDurationMinutes - Calendar slot duration in minutes (for detecting drags vs clicks)
- * @returns Pre-populated values object with scheduled date and optional timeEstimate
+ * @returns Pre-populated values object with next_scheduled date and optional timeEstimate
  */
 export function calculateTaskCreationValues(
 	start: Date,
 	end: Date,
 	allDay: boolean,
 	slotDurationMinutes: number
-): { scheduled: string; timeEstimate?: number } {
+): { next_scheduled: string; timeEstimate?: number } {
 	// Pre-populate with selected date/time
 	const scheduledDate = allDay
 		? format(start, "yyyy-MM-dd")
@@ -1592,8 +1592,8 @@ export function calculateTaskCreationValues(
 	// If duration is greater than slot duration, it's an intentional drag
 	const isDragOperation = !allDay && durationMinutes > slotDurationMinutes;
 
-	const prePopulatedValues: { scheduled: string; timeEstimate?: number } = {
-		scheduled: scheduledDate,
+	const prePopulatedValues: { next_scheduled: string; timeEstimate?: number } = {
+		next_scheduled: scheduledDate,
 	};
 
 	// Only override time estimate if it's an intentional drag operation

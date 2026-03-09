@@ -80,7 +80,7 @@ export class TaskEditModal extends TaskModal {
 		// Initialize form fields with current task data
 		this.title = this.task.title;
 		this.dueDate = this.task.due || "";
-		this.scheduledDate = this.task.scheduled || "";
+		this.scheduledDate = this.task.next_scheduled || "";
 		this.priority = this.task.priority;
 		this.status = this.task.status;
 		this.contexts = this.task.contexts ? this.task.contexts.join(", ") : "";
@@ -208,7 +208,7 @@ export class TaskEditModal extends TaskModal {
 			...this.task,
 			title: this.title,
 			due: this.dueDate,
-			scheduled: this.scheduledDate,
+			next_scheduled: this.scheduledDate,
 			reminders: this.reminders,
 		};
 
@@ -974,7 +974,7 @@ export class TaskEditModal extends TaskModal {
 			changes.due = this.dueDate || undefined;
 		}
 
-		if (this.scheduledDate !== (this.task.scheduled || "")) {
+		if (this.scheduledDate !== (this.task.next_scheduled || "")) {
 			// Convert scheduled date change to a time entry update
 			// The FieldMapper computes scheduled from time entries, so we create/update a planned entry
 			const entries: UnifiedTimeEntry[] = this.task.timeEntries
@@ -1004,8 +1004,8 @@ export class TaskEditModal extends TaskModal {
 				entries.push(...filtered);
 			}
 			changes.timeEntries = entries;
-			// Also set scheduled so updateTask knows about the change for recurrence handling
-			changes.scheduled = this.scheduledDate || undefined;
+			// Also set next_scheduled so updateTask knows about the change for recurrence handling
+			changes.next_scheduled = this.scheduledDate || undefined;
 		}
 
 		if (this.priority !== this.task.priority) {
@@ -1195,8 +1195,8 @@ export class TaskEditModal extends TaskModal {
 					tempTask,
 					this.plugin.settings.maintainDueDateOffsetInRecurring
 				);
-				if (nextDates.scheduled) {
-					changes.scheduled = nextDates.scheduled;
+				if (nextDates.next_scheduled) {
+					changes.next_scheduled = nextDates.next_scheduled;
 				}
 				if (nextDates.due) {
 					changes.due = nextDates.due;

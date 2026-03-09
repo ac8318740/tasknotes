@@ -46,7 +46,7 @@ describe("Issue #1576 - Display Progress Bar on task cards", () => {
 			app,
 			fieldMapper: {
 				lookupMappingKey: jest.fn((propertyId: string) => {
-					const mapped = new Set(["status", "priority", "due", "scheduled", "contexts", "projects"]);
+					const mapped = new Set(["status", "priority", "due", "next_scheduled", "contexts", "projects"]);
 					return mapped.has(propertyId) ? propertyId : null;
 				}),
 				isPropertyForField: jest.fn((propertyId: string, field: string) => propertyId === field),
@@ -55,7 +55,7 @@ describe("Issue #1576 - Display Progress Bar on task cards", () => {
 					status: "status",
 					priority: "priority",
 					due: "due",
-					scheduled: "scheduled",
+					nextScheduled: "next_scheduled",
 					contexts: "contexts",
 					projects: "projects",
 				})),

@@ -101,7 +101,7 @@ export class TaskStatsService {
 	}
 
 	private isTaskInRange(task: TaskInfo, start: Date, end: Date): boolean {
-		const taskDate = task.due || task.scheduled;
+		const taskDate = task.due || task.next_scheduled;
 		if (!taskDate) {
 			return false;
 		}

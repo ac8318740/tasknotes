@@ -98,7 +98,7 @@ describe('Calendar and View Synchronization Integration', () => {
     it('should refresh calendar when tasks are created with dates', async () => {
       const taskData = {
         title: 'Calendar task',
-        scheduled: '2025-01-20',
+        next_scheduled: '2025-01-20',
         due: '2025-01-22T14:00'
       };
 
@@ -131,7 +131,7 @@ describe('Calendar and View Synchronization Integration', () => {
     it('should update calendar when task dates are modified', async () => {
       const originalTask = TaskFactory.createTask({
         title: 'Calendar update task',
-        scheduled: '2025-01-15',
+        next_scheduled: '2025-01-15',
         due: '2025-01-17'
       });
 
@@ -153,7 +153,7 @@ describe('Calendar and View Synchronization Integration', () => {
       ]);
 
       const dateUpdates = {
-        scheduled: '2025-01-18',
+        next_scheduled: '2025-01-18',
         due: '2025-01-20T16:00'
       };
 
@@ -172,7 +172,7 @@ describe('Calendar and View Synchronization Integration', () => {
     it('should remove calendar events when task dates are cleared', async () => {
       const taskWithDates = TaskFactory.createTask({
         title: 'Task with dates to clear',
-        scheduled: '2025-01-15',
+        next_scheduled: '2025-01-15',
         due: '2025-01-17'
       });
 
@@ -193,7 +193,7 @@ describe('Calendar and View Synchronization Integration', () => {
       ]);
 
       const clearUpdates = {
-        scheduled: undefined,
+        next_scheduled: undefined,
         due: undefined
       };
 
@@ -213,7 +213,7 @@ describe('Calendar and View Synchronization Integration', () => {
     it('should display recurring task instances correctly', async () => {
       const recurringTask = TaskFactory.createRecurringTask('FREQ=DAILY', {
         title: 'Daily standup',
-        scheduled: '2025-01-15T09:00',
+        next_scheduled: '2025-01-15T09:00',
         complete_instances: ['2025-01-14'] // Yesterday completed
       });
 
@@ -432,7 +432,7 @@ describe('Calendar and View Synchronization Integration', () => {
     it('should synchronize data across multiple view types', async () => {
       const task = TaskFactory.createTask({
         title: 'Multi-view sync task',
-        scheduled: '2025-01-15',
+        next_scheduled: '2025-01-15',
         priority: 'high'
       });
 
@@ -473,7 +473,7 @@ describe('Calendar and View Synchronization Integration', () => {
     it('should handle view-specific optimizations', async () => {
       const task = TaskFactory.createTask({
         title: 'Optimization test task',
-        scheduled: '2025-01-15'
+        next_scheduled: '2025-01-15'
       });
 
       const mockListView = { 
@@ -647,7 +647,7 @@ describe('Calendar and View Synchronization Integration', () => {
         
         return TaskFactory.createTask({
           title: `Task ${i + 1}`,
-          scheduled: date.toISOString().split('T')[0],
+          next_scheduled: date.toISOString().split('T')[0],
           due: date.toISOString().split('T')[0]
         });
       });
@@ -711,7 +711,7 @@ describe('Calendar and View Synchronization Integration', () => {
       // Simulate rapid consecutive updates
       const rapidUpdates = Array.from({ length: 20 }, (_, i) => ({
         title: `Rapid update ${i + 1}`,
-        scheduled: '2025-01-15'
+        next_scheduled: '2025-01-15'
       }));
 
       const startTime = Date.now();

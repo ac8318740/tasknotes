@@ -55,7 +55,7 @@ describe('TaskEditModal Calendar Off-by-One Bug', () => {
         id: 'tuesday-recurring-task',
         title: 'Weekly Tuesday Meeting',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-01-21', // Tuesday, January 21, 2025
+        next_scheduled: '2025-01-21', // Tuesday, January 21, 2025
         complete_instances: []
       });
 
@@ -179,7 +179,7 @@ describe('TaskEditModal Calendar Off-by-One Bug', () => {
         id: 'boundary-task', 
         title: 'Boundary Test Task',
         recurrence: 'FREQ=WEEKLY;BYDAY=SU', // Sunday
-        scheduled: '2025-01-05', // Sunday, January 5, 2025
+        next_scheduled: '2025-01-05', // Sunday, January 5, 2025
         complete_instances: []
       });
 
@@ -220,7 +220,7 @@ describe('TaskEditModal Calendar Off-by-One Bug', () => {
         id: 'github-issue-task',
         title: 'Task from GitHub Issue #237',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU', // Weekly on Tuesday
-        scheduled: '2025-01-21', // Start with Tuesday, January 21
+        next_scheduled: '2025-01-21', // Start with Tuesday, January 21
         complete_instances: []
       });
 

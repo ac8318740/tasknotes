@@ -31,27 +31,27 @@ describe('FieldMapper - Unified Time Entries', () => {
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            // Should be the earlier future entry's date (date-only, substring 0-10)
-            expect(result.scheduled).toBe(futureDate1.toISOString().substring(0, 10));
+            // Should be the earlier future entry's full startTime
+            expect(result.next_scheduled).toBe(futureDate1.toISOString());
         });
 
-        it('should use frontmatter scheduled when no future planned entries exist', () => {
+        it('should return undefined when only past planned entries exist (no past fallback)', () => {
             const pastDate = new Date(Date.now() - 86400000); // yesterday
 
             const frontmatter = {
                 title: 'Test Task',
                 status: 'open',
                 priority: 'normal',
-                scheduled: '2025-01-15',
+                next_scheduled: '2025-01-15',
                 timeEntries: [
-                    // Past entry with type "planned" — still counts as planned but is in the past
+                    // Past entry with type "planned" — planned but in the past
                     { id: 'te-1', type: 'planned', startTime: pastDate.toISOString(), endTime: pastDate.toISOString() },
                 ],
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            // Past planned entry's date should be used (earliest planned, even if past)
-            expect(result.scheduled).toBe(pastDate.toISOString().substring(0, 10));
+            // No future planned entries — next_scheduled is undefined (no past fallback)
+            expect(result.next_scheduled).toBeUndefined();
         });
 
         it('should clear scheduled when entries have no type: "planned"', () => {
@@ -59,7 +59,7 @@ describe('FieldMapper - Unified Time Entries', () => {
                 title: 'Test Task',
                 status: 'open',
                 priority: 'normal',
-                scheduled: '2025-01-15',
+                next_scheduled: '2025-01-15',
                 timeEntries: [
                     // Entries without type: "planned" are filtered out
                     { id: 'te-1', startTime: '2099-06-15' },
@@ -68,7 +68,7 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
             // No planned entries — stale scheduled value is cleared
-            expect(result.scheduled).toBeUndefined();
+            expect(result.next_scheduled).toBeUndefined();
         });
 
         it('should handle date-only startTime', () => {
@@ -85,7 +85,7 @@ describe('FieldMapper - Unified Time Entries', () => {
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            expect(result.scheduled).toBe('2099-06-15');
+            expect(result.next_scheduled).toBe('2099-06-15');
         });
 
         it('should not override scheduled when timeEntries is empty', () => {
@@ -93,12 +93,12 @@ describe('FieldMapper - Unified Time Entries', () => {
                 title: 'Test Task',
                 status: 'open',
                 priority: 'normal',
-                scheduled: '2025-03-01',
+                next_scheduled: '2025-03-01',
                 timeEntries: [],
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            expect(result.scheduled).toBe('2025-03-01');
+            expect(result.next_scheduled).toBe('2025-03-01');
         });
 
         it('should pick earliest future planned entry when multiple future entries exist', () => {
@@ -118,7 +118,7 @@ describe('FieldMapper - Unified Time Entries', () => {
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            expect(result.scheduled).toBe(futureDate2.toISOString().substring(0, 10));
+            expect(result.next_scheduled).toBe(futureDate2.toISOString());
         });
 
         it('should ignore entries without type: "planned"', () => {
@@ -128,7 +128,7 @@ describe('FieldMapper - Unified Time Entries', () => {
                 title: 'Test Task',
                 status: 'open',
                 priority: 'normal',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 timeEntries: [
                     // Entries without type: "planned" are filtered out
                     { id: 'te-1', startTime: futureDate.toISOString(), endTime: undefined },
@@ -138,7 +138,7 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
             // No planned entries — stale scheduled value is cleared
-            expect(result.scheduled).toBeUndefined();
+            expect(result.next_scheduled).toBeUndefined();
         });
 
         it('should handle mix of past and future planned entries', () => {
@@ -149,7 +149,7 @@ describe('FieldMapper - Unified Time Entries', () => {
                 title: 'Test Task',
                 status: 'open',
                 priority: 'normal',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 timeEntries: [
                     { id: 'te-1', type: 'planned', startTime: pastDate.toISOString(), endTime: pastDate.toISOString() },
                     { id: 'te-2', type: 'planned', startTime: futureDate.toISOString() },
@@ -158,7 +158,7 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
             // Future planned entry should be used (overrides frontmatter scheduled)
-            expect(result.scheduled).toBe(futureDate.toISOString().substring(0, 10));
+            expect(result.next_scheduled).toBe(futureDate.toISOString());
         });
 
         it('should handle non-array timeEntries gracefully', () => {
@@ -166,13 +166,13 @@ describe('FieldMapper - Unified Time Entries', () => {
                 title: 'Test Task',
                 status: 'open',
                 priority: 'normal',
-                scheduled: '2025-06-01',
+                next_scheduled: '2025-06-01',
                 timeEntries: 'not-an-array',
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
             // Non-array should be converted to empty array, so scheduled stays from frontmatter
-            expect(result.scheduled).toBe('2025-06-01');
+            expect(result.next_scheduled).toBe('2025-06-01');
         });
     });
 
@@ -182,7 +182,7 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             const taskData: Partial<TaskInfo> = {
                 title: 'Test Task',
-                scheduled: futureDate.toISOString().substring(0, 10),
+                next_scheduled: futureDate.toISOString(),
                 timeEntries: [
                     { id: 'te-1', type: 'planned', startTime: futureDate.toISOString() },
                 ],
@@ -190,7 +190,7 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             const result = mapper.mapToFrontmatter(taskData);
             // scheduled should NOT be in frontmatter — it's computed from time entries
-            expect(result[DEFAULT_FIELD_MAPPING.scheduled]).toBeUndefined();
+            expect(result[DEFAULT_FIELD_MAPPING.nextScheduled]).toBeUndefined();
             expect(result.timeEntries).toEqual(taskData.timeEntries);
         });
 
@@ -206,7 +206,7 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             const result = mapper.mapToFrontmatter(taskData);
             expect(result.timeEntries).toEqual(taskData.timeEntries);
-            expect(result[DEFAULT_FIELD_MAPPING.scheduled]).toBeUndefined();
+            expect(result[DEFAULT_FIELD_MAPPING.nextScheduled]).toBeUndefined();
         });
 
         it('should handle empty timeEntries array without error', () => {
@@ -217,7 +217,7 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             const result = mapper.mapToFrontmatter(taskData);
             expect(result.timeEntries).toEqual([]);
-            expect(result[DEFAULT_FIELD_MAPPING.scheduled]).toBeUndefined();
+            expect(result[DEFAULT_FIELD_MAPPING.nextScheduled]).toBeUndefined();
         });
     });
 
@@ -237,11 +237,11 @@ describe('FieldMapper - Unified Time Entries', () => {
 
             // Read from frontmatter — scheduled is computed
             const taskData = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            expect(taskData.scheduled).toBe(iso.substring(0, 10));
+            expect(taskData.next_scheduled).toBe(iso);
 
             // Write back to frontmatter — scheduled is NOT written
             const result = mapper.mapToFrontmatter(taskData);
-            expect(result[DEFAULT_FIELD_MAPPING.scheduled]).toBeUndefined();
+            expect(result[DEFAULT_FIELD_MAPPING.nextScheduled]).toBeUndefined();
             expect(result.timeEntries).toEqual(frontmatter.timeEntries);
         });
     });

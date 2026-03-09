@@ -88,7 +88,7 @@ describe('Issue #327: Complete Integration Test', () => {
     it('should ensure consistency between marking complete and checking completion', () => {
         // Create a recurring task
         const task = TaskFactory.createRecurringTask('RRULE:FREQ=DAILY', {
-            scheduled: '2024-07-01',
+            next_scheduled: '2024-07-01',
             complete_instances: []
         });
         

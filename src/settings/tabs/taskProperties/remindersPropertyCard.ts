@@ -266,14 +266,14 @@ function renderRelativeReminderConfig(
 		[
 			{ value: "due", label: translate("settings.defaults.reminders.relatedTo.due") },
 			{
-				value: "scheduled",
+				value: "next_scheduled",
 				label: translate("settings.defaults.reminders.relatedTo.scheduled"),
 			},
 		],
 		reminder.relatedTo
 	);
 	relatedToSelect.addEventListener("change", () => {
-		updateItem({ relatedTo: relatedToSelect.value as "due" | "scheduled" });
+		updateItem({ relatedTo: relatedToSelect.value as "due" | "next_scheduled" });
 	});
 
 	return [

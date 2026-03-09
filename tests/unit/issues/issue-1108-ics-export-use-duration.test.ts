@@ -44,7 +44,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Plan meeting agenda',
                 path: 'tasks/plan-meeting.md',
-                scheduled: '2025-01-14T10:00:00',
+                next_scheduled: '2025-01-14T10:00:00',
                 timeEstimate: 120, // 120 minutes = 2 hours
                 due: '2025-01-20T17:00:00', // Due date should be IGNORED when using duration
                 status: 'todo',
@@ -84,7 +84,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Quick task',
                 path: 'tasks/quick-task.md',
-                scheduled: '2025-01-14T14:00:00',
+                next_scheduled: '2025-01-14T14:00:00',
                 // No timeEstimate, no due date
                 status: 'todo',
                 tags: [],
@@ -117,7 +117,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Important task with deadline',
                 path: 'tasks/important.md',
-                scheduled: '2025-01-14T09:00:00',
+                next_scheduled: '2025-01-14T09:00:00',
                 timeEstimate: 60, // 1 hour
                 due: '2025-01-31T23:59:00', // Deadline far in future - should NOT be used as DTEND
                 status: 'todo',
@@ -152,7 +152,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Task with due date',
                 path: 'tasks/task.md',
-                scheduled: '2025-01-14T09:00:00',
+                next_scheduled: '2025-01-14T09:00:00',
                 timeEstimate: 60,
                 due: '2025-01-31T23:59:00',
                 status: 'todo',
@@ -176,7 +176,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Task with due date',
                 path: 'tasks/task.md',
-                scheduled: '2025-01-14T09:00:00',
+                next_scheduled: '2025-01-14T09:00:00',
                 timeEstimate: 60,
                 due: '2025-01-31T23:59:00',
                 status: 'todo',
@@ -203,7 +203,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
                 {
                     title: 'Task 1',
                     path: 'tasks/task1.md',
-                    scheduled: '2025-01-14T10:00:00',
+                    next_scheduled: '2025-01-14T10:00:00',
                     timeEstimate: 120, // 2 hours
                     due: '2025-01-20T17:00:00',
                     status: 'todo',
@@ -214,7 +214,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
                 {
                     title: 'Task 2',
                     path: 'tasks/task2.md',
-                    scheduled: '2025-01-15T14:00:00',
+                    next_scheduled: '2025-01-15T14:00:00',
                     timeEstimate: 30, // 30 minutes
                     due: '2025-01-25T12:00:00',
                     status: 'todo',
@@ -245,7 +245,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Test options',
                 path: 'tasks/test.md',
-                scheduled: '2025-01-14T10:00:00',
+                next_scheduled: '2025-01-14T10:00:00',
                 timeEstimate: 90,
                 status: 'todo',
                 tags: [],
@@ -289,7 +289,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Test current behavior',
                 path: 'tasks/test.md',
-                scheduled: '2025-01-14T10:00:00',
+                next_scheduled: '2025-01-14T10:00:00',
                 timeEstimate: 120, // 2 hours - currently IGNORED unless option is enabled
                 due: '2025-01-20T17:00:00',
                 status: 'todo',
@@ -315,7 +315,7 @@ describe('Issue #1108 - ICS Export should use task duration instead of due date'
             const task: TaskInfo = {
                 title: 'Task with duration',
                 path: 'tasks/test.md',
-                scheduled: '2025-01-14T10:00:00',
+                next_scheduled: '2025-01-14T10:00:00',
                 timeEstimate: 90, // 90 minutes
                 status: 'todo',
                 tags: [],

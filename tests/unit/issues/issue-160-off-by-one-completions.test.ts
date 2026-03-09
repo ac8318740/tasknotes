@@ -44,7 +44,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
           id: `test-${day.toLowerCase()}-task`,
           title: `Weekly ${day} Task`,
           recurrence: rrule,
-          scheduled: date,
+          next_scheduled: date,
           complete_instances: []
         });
 
@@ -63,7 +63,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
           id: `test-${day.toLowerCase()}-task`,
           title: `Weekly ${day} Task`,
           recurrence: rrule,
-          scheduled: date,
+          next_scheduled: date,
           complete_instances: []
         });
 
@@ -86,7 +86,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
           id: `test-${day.toLowerCase()}-task`,
           title: `Weekly ${day} Task`,
           recurrence: rrule,
-          scheduled: date,
+          next_scheduled: date,
           complete_instances: []
         });
 
@@ -121,7 +121,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
         id: `test-${day.toLowerCase()}-task`,
         title: `Weekly ${day} Task`,
         recurrence: rrule,
-        scheduled: date,
+        next_scheduled: date,
         complete_instances: []
       });
 
@@ -155,7 +155,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
         id: `test-${day.toLowerCase()}-task`,
         title: `Weekly ${day} Task`,
         recurrence: rrule,
-        scheduled: date,
+        next_scheduled: date,
         complete_instances: [date] // Completion on the correct day
       });
 
@@ -177,7 +177,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
         id: `test-${day.toLowerCase()}-task`,
         title: `Weekly ${day} Task`,
         recurrence: rrule,
-        scheduled: date,
+        next_scheduled: date,
         complete_instances: [nextDateStr] // Completion on the wrong day (off-by-one)
       });
 
@@ -199,7 +199,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
         id: `test-${day.toLowerCase()}-task`,
         title: `Weekly ${day} Task`,
         recurrence: rrule,
-        scheduled: date,
+        next_scheduled: date,
         complete_instances: []
       });
 
@@ -226,7 +226,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
         id: `test-${day.toLowerCase()}-task`,
         title: `Weekly ${day} Task`,
         recurrence: rrule,
-        scheduled: date,
+        next_scheduled: date,
         complete_instances: []
       });
 
@@ -260,7 +260,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
         id: `test-${day.toLowerCase()}-task`,
         title: `Weekly ${day} Task`,
         recurrence: rrule,
-        scheduled: date,
+        next_scheduled: date,
         complete_instances: [date] // Mark as completed on the intended day
       });
       
@@ -285,7 +285,7 @@ describe('Issue #160: Off-by-one issues in completions calendar', () => {
         id: `test-${day.toLowerCase()}-task`,
         title: `Weekly ${day} Task`,
         recurrence: rrule,
-        scheduled: date,
+        next_scheduled: date,
         complete_instances: [date] // Mark as completed on the intended day
       });
 

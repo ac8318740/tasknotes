@@ -12,7 +12,7 @@ function createUTCDateForRRule(dateStr: string): Date {
 
 /**
  * Parse an RRULE string and return an RRule instance.
- * Handles DTSTART extraction, falls back to task.scheduled or task.dateCreated.
+ * Handles DTSTART extraction, falls back to task.next_scheduled or task.dateCreated.
  */
 function parseRRule(task: TaskInfo): RRule | null {
 	if (!task.recurrence || typeof task.recurrence !== "string") return null;
@@ -37,8 +37,8 @@ function parseRRule(task: TaskInfo): RRule | null {
 				const second = parseInt(dtstartStr.slice(13, 15)) || 0;
 				dtstart = new Date(Date.UTC(year, month, day, hour, minute, second, 0));
 			}
-		} else if (task.scheduled) {
-			dtstart = createUTCDateForRRule(task.scheduled.substring(0, 10));
+		} else if (task.next_scheduled) {
+			dtstart = createUTCDateForRRule(task.next_scheduled.substring(0, 10));
 		} else if (task.dateCreated) {
 			dtstart = createUTCDateForRRule(task.dateCreated.substring(0, 10));
 		} else {

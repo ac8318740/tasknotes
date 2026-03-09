@@ -69,7 +69,7 @@ describe('Issue #1606: Completed Recurring Tasks from Today not showing in Base 
                 title: 'Daily standup',
                 status: 'open',
                 path: 'tasks/daily-standup.md',
-                scheduled: '2026-01-01',
+                next_scheduled: '2026-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 // User's YAML: complete_instances: [2026-02-01, 2026-02-09, 2026-02-15]
                 // These unquoted dates might be parsed as Date objects by Obsidian
@@ -229,7 +229,7 @@ describe('Issue #1606: Completed Recurring Tasks from Today not showing in Base 
                 title: 'Daily task',
                 status: 'open',
                 path: 'tasks/daily.md',
-                scheduled: '2026-01-01',
+                next_scheduled: '2026-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: ['2026-02-01', '2026-02-09', '2026-02-15'],
             };

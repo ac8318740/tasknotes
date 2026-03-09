@@ -32,7 +32,7 @@ import { ChronoTestUtils } from "../../__mocks__/chrono-node";
  *   explicit triggers are present.
  * - nlpLanguage (string): Determines which locale's dateTriggers are used.
  *   English triggers are: due: ["due", "deadline", "must be done by", "by"]
- *                         scheduled: ["scheduled for", "start on", "begin on", "work on", "on"]
+ *                         next_scheduled: ["scheduled for", "start on", "begin on", "work on", "on"]
  *
  * EXPECTED BEHAVIOR:
  * Both date triggers should be processed, allowing users to set both scheduled

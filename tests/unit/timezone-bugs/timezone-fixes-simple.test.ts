@@ -76,12 +76,12 @@ describe('Timezone Fixes - Simple Verification', () => {
         // Simulate task with timezone-sensitive datetime
         const originalTask = {
             due: '2024-10-26T02:00:00+02:00', // Berlin time
-            scheduled: '2024-10-27T01:00:00+02:00' // Berlin time next day
+            next_scheduled: '2024-10-27T01:00:00+02:00' // Berlin time next day
         };
 
         const updatedTask = {
             due: '2024-10-26T14:00:00-07:00', // Pacific time same day
-            scheduled: '2024-10-27T10:00:00-07:00' // Pacific time next day
+            next_scheduled: '2024-10-27T10:00:00-07:00' // Pacific time next day
         };
 
         // Using getDatePart (our fix) should correctly identify affected dates
@@ -90,14 +90,14 @@ describe('Timezone Fixes - Simple Verification', () => {
         if (originalTask.due) {
             affectedDates.add(getDatePart(originalTask.due));
         }
-        if (originalTask.scheduled) {
-            affectedDates.add(getDatePart(originalTask.scheduled));
+        if (originalTask.next_scheduled) {
+            affectedDates.add(getDatePart(originalTask.next_scheduled));
         }
         if (updatedTask.due) {
             affectedDates.add(getDatePart(updatedTask.due));
         }
-        if (updatedTask.scheduled) {
-            affectedDates.add(getDatePart(updatedTask.scheduled));
+        if (updatedTask.next_scheduled) {
+            affectedDates.add(getDatePart(updatedTask.next_scheduled));
         }
 
         // Should correctly identify both calendar dates

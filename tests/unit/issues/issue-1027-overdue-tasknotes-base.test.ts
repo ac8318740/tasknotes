@@ -104,14 +104,14 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
                     path: 'tasks/task-1-due-overdue.md',
                     title: 'Task 1: Due date overdue',
                     due: formatDateForStorage(new Date(Date.UTC(2025, 9, 3))), // Oct 3
-                    scheduled: undefined,
+                    next_scheduled: undefined,
                     status: ' ',
                 }),
                 // Task 2: Only scheduled date (overdue) - BUG: won't appear
                 TaskFactory.createTask({
                     path: 'tasks/task-2-scheduled-only.md',
                     title: 'Task 2: Scheduled only (overdue)',
-                    scheduled: formatDateForStorage(new Date(Date.UTC(2025, 9, 4))), // Oct 4
+                    next_scheduled: formatDateForStorage(new Date(Date.UTC(2025, 9, 4))), // Oct 4
                     due: undefined,
                     status: ' ',
                 }),
@@ -120,14 +120,14 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
                     path: 'tasks/task-3-due-yesterday.md',
                     title: 'Task 3: Due yesterday',
                     due: formatDateForStorage(new Date(Date.UTC(2025, 9, 5))), // Oct 5
-                    scheduled: undefined,
+                    next_scheduled: undefined,
                     status: ' ',
                 }),
                 // Task 4: Scheduled overdue, due in future - BUG: won't appear
                 TaskFactory.createTask({
                     path: 'tasks/task-4-scheduled-past-due-future.md',
                     title: 'Task 4: Scheduled overdue, due in future',
-                    scheduled: formatDateForStorage(new Date(Date.UTC(2025, 9, 2))), // Oct 2
+                    next_scheduled: formatDateForStorage(new Date(Date.UTC(2025, 9, 2))), // Oct 2
                     due: formatDateForStorage(new Date(Date.UTC(2025, 9, 10))), // Oct 10
                     status: ' ',
                 }),
@@ -183,7 +183,7 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
                 TaskFactory.createTask({
                     path: 'tasks/daily-task.md',
                     title: 'Daily recurring task',
-                    scheduled: formatDateForStorage(new Date(Date.UTC(2025, 9, 5))), // Oct 5 (yesterday)
+                    next_scheduled: formatDateForStorage(new Date(Date.UTC(2025, 9, 5))), // Oct 5 (yesterday)
                     recurrence: 'RRULE:FREQ=DAILY',
                     due: undefined,
                     status: ' ',
@@ -195,7 +195,7 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
                     title: 'Weekly task with due',
                     due: formatDateForStorage(new Date(Date.UTC(2025, 9, 3))), // Oct 3
                     recurrence: 'RRULE:FREQ=WEEKLY',
-                    scheduled: undefined,
+                    next_scheduled: undefined,
                     status: ' ',
                     completeInstances: [],
                 }),
@@ -211,7 +211,7 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };
@@ -243,7 +243,7 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
             const taskWithOnlyScheduledDate: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/scheduled-only.md',
                 title: 'Task with only scheduled date',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 due: undefined,
                 status: ' ',
             });
@@ -256,7 +256,7 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };
@@ -282,7 +282,7 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
             const task: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/scheduled-past-due-future.md',
                 title: 'Scheduled past, due future',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 due: formatDateForStorage(nextWeek),
                 status: ' ',
             });
@@ -295,7 +295,7 @@ describe('Issue #1027: Overdue TaskNotes base not working', () => {
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };

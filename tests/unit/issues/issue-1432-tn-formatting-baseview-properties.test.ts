@@ -101,14 +101,14 @@ describe.skip('Issue #1432: TN formatting should persist when toggling base view
         toInternalField: jest.fn((field: string) => field),
         lookupMappingKey: jest.fn((propertyId: string) => {
           // Return the internal key if it's a known property
-          const knownProps = ['status', 'priority', 'due', 'scheduled', 'title', 'tags', 'contexts', 'projects'];
+          const knownProps = ['status', 'priority', 'due', 'next_scheduled', 'title', 'tags', 'contexts', 'projects'];
           return knownProps.includes(propertyId) ? propertyId : null;
         }),
         getMapping: jest.fn(() => ({
           status: 'status',
           priority: 'priority',
           due: 'due',
-          scheduled: 'scheduled',
+          nextScheduled: 'next_scheduled',
           title: 'title',
           tags: 'tags',
           contexts: 'contexts',

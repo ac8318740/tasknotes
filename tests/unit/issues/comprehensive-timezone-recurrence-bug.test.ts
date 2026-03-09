@@ -164,7 +164,7 @@ describe('Comprehensive Timezone-Based Recurrence Off-by-One Bug', () => {
               id: `timezone-test-${scenario.offsetHours}-${index}`,
               title: `Tuesday Task - ${scenario.name}`,
               recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-              scheduled: '2025-07-01', // Anchor on a Tuesday
+              next_scheduled: '2025-07-01', // Anchor on a Tuesday
               complete_instances: []
             });
             
@@ -218,7 +218,7 @@ describe('Comprehensive Timezone-Based Recurrence Off-by-One Bug', () => {
         id: 'github-issue-reproduction',
         title: 'Weekly Tuesday Task (GitHub Issue)',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-07-01', // Tuesday
+        next_scheduled: '2025-07-01', // Tuesday
         complete_instances: []
       });
       

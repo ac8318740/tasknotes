@@ -112,7 +112,7 @@ describe('TaskService', () => {
         status: 'in-progress',
         priority: 'high',
         due: '2025-01-15',
-        scheduled: '2025-01-10',
+        next_scheduled: '2025-01-10',
         contexts: ['work', 'urgent'],
         timeEstimate: 120,
         recurrence: 'FREQ=DAILY;INTERVAL=1',
@@ -126,7 +126,7 @@ describe('TaskService', () => {
         status: 'in-progress',
         priority: 'high',
         due: '2025-01-15',
-        scheduled: '2025-01-10',
+        next_scheduled: '2025-01-10',
         contexts: ['work', 'urgent'],
         timeEstimate: 120,
         recurrence: 'DTSTART:20250110T120000Z;FREQ=DAILY;INTERVAL=1'
@@ -995,7 +995,7 @@ describe('TaskService', () => {
     it('should remove undefined fields from frontmatter', async () => {
       const updates = {
         due: undefined,
-        scheduled: undefined,
+        next_scheduled: undefined,
         timeEstimate: undefined
       };
 

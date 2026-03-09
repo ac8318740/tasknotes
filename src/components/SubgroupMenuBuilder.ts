@@ -36,7 +36,7 @@ export class SubgroupMenuBuilder {
 			context: SubgroupMenuBuilder.translate(plugin, "ui.filterBar.group.context", "Context"),
 			project: SubgroupMenuBuilder.translate(plugin, "ui.filterBar.group.project", "Project"),
 			due: SubgroupMenuBuilder.translate(plugin, "ui.filterBar.group.dueDate", "Due Date"),
-			scheduled: SubgroupMenuBuilder.translate(plugin, "ui.filterBar.group.scheduledDate", "Scheduled Date"),
+			next_scheduled: SubgroupMenuBuilder.translate(plugin, "ui.filterBar.group.scheduledDate", "Scheduled Date"),
 			tags: SubgroupMenuBuilder.translate(plugin, "ui.filterBar.group.tags", "Tags"),
 			completedDate: SubgroupMenuBuilder.translate(plugin, "ui.filterBar.group.completedDate", "Completed Date"),
 		} as const;

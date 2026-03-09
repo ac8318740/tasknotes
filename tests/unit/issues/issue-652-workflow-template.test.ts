@@ -72,7 +72,7 @@ jest.mock('../../../src/utils/templateProcessor', () => ({
 interface WorkflowStep {
 	title: string;
 	dateOffset: number; // days relative to anchor date (negative = before, positive = after)
-	dateField?: 'due' | 'scheduled'; // which date field to set (default: 'due')
+	dateField?: 'due' | 'next_scheduled'; // which date field to set (default: 'due')
 	priority?: string;
 	tags?: string[];
 	contexts?: string[];
@@ -165,9 +165,9 @@ describe('Issue #652 - Workflow template', () => {
 		const workflow: WorkflowTemplate = {
 			name: 'Project Kickoff',
 			steps: [
-				{ title: 'Send invitations', dateOffset: -14, dateField: 'scheduled' },
+				{ title: 'Send invitations', dateOffset: -14, dateField: 'next_scheduled' },
 				{ title: 'Kickoff meeting', dateOffset: 0, dateField: 'due' },
-				{ title: 'Write summary', dateOffset: 1, dateField: 'scheduled' }
+				{ title: 'Write summary', dateOffset: 1, dateField: 'next_scheduled' }
 			]
 		};
 
@@ -178,8 +178,8 @@ describe('Issue #652 - Workflow template', () => {
 			const dateValue = (addDaysToDateString as jest.Mock)(anchorDate, step.dateOffset);
 			const taskData: TaskCreationData = { title: step.title };
 
-			if (step.dateField === 'scheduled') {
-				taskData.scheduled = dateValue;
+			if (step.dateField === 'next_scheduled') {
+				taskData.next_scheduled = dateValue;
 			} else {
 				taskData.due = dateValue;
 			}
@@ -191,14 +191,14 @@ describe('Issue #652 - Workflow template', () => {
 		expect(createdTasks).toHaveLength(3);
 
 		// First task should have scheduled date, not due date
-		expect(createdTasks[0].task.taskInfo.scheduled).toBe('2025-05-18');
+		expect(createdTasks[0].task.taskInfo.next_scheduled).toBe('2025-05-18');
 		expect(createdTasks[0].task.taskInfo.due).toBeUndefined();
 
 		// Second task should have due date
 		expect(createdTasks[1].task.taskInfo.due).toBe('2025-06-01');
 
 		// Third task should have scheduled date
-		expect(createdTasks[2].task.taskInfo.scheduled).toBe('2025-06-02');
+		expect(createdTasks[2].task.taskInfo.next_scheduled).toBe('2025-06-02');
 	});
 
 	it.skip('reproduces issue #652 - workflow tasks should optionally be linked via dependencies', async () => {

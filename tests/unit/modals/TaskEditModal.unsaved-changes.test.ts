@@ -102,7 +102,7 @@ describe('TaskEditModal - Unsaved Changes Detection', () => {
       path: 'test-task.md',
       archived: false,
       due: '',
-      scheduled: '',
+      next_scheduled: '',
       contexts: [],
       projects: [],
       tags: ['task'],
@@ -125,7 +125,7 @@ describe('TaskEditModal - Unsaved Changes Detection', () => {
     (modal as any).status = task.status;
     (modal as any).priority = task.priority;
     (modal as any).dueDate = task.due || '';
-    (modal as any).scheduledDate = task.scheduled || '';
+    (modal as any).scheduledDate = task.next_scheduled || '';
     (modal as any).contexts = task.contexts?.join(', ') || '';
     (modal as any).projects = task.projects?.join(', ') || '';
     (modal as any).tags = task.tags?.filter(t => t !== 'task').join(', ') || '';

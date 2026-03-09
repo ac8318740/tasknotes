@@ -156,7 +156,7 @@ export class PropertyVisibilityDropdown {
 					category: "core" as const,
 				},
 				{
-					id: "scheduled",
+					id: "next_scheduled",
 					name: this.plugin.i18n.translate(
 						"components.propertyVisibilityDropdown.properties.scheduledDate"
 					),

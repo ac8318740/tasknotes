@@ -294,7 +294,7 @@ function createRecurrenceClickHandler(
 		const menu = new RecurrenceContextMenu({
 			currentValue: typeof task.recurrence === "string" ? task.recurrence : undefined,
 			currentAnchor: task.recurrence_anchor || "scheduled",
-			scheduledDate: task.scheduled,
+			scheduledDate: task.next_scheduled,
 			onSelect: async (newRecurrence, anchor) => {
 				try {
 					await plugin.updateTaskProperty(task, "recurrence", newRecurrence || undefined);
@@ -428,7 +428,7 @@ function attachDateClickHandler(
 				const newEntry: UnifiedTimeEntry = {
 					id: generateTimeEntryId(),
 					type: "planned",
-					startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+					startTime: task.next_scheduled || new Date().toISOString().substring(0, 10),
 				};
 				showUnifiedTimeInfoModal(newEntry, task, plugin, () => {
 					plugin.notifyDataChanged();
@@ -547,7 +547,7 @@ function calculateChecklistProgress(cache: CachedMetadata | null): ChecklistProg
  */
 const PROPERTY_EXTRACTORS: Record<string, (task: TaskInfo) => any> = {
 	due: (task) => task.due,
-	scheduled: (task) => task.scheduled,
+	next_scheduled: (task) => task.next_scheduled,
 	projects: (task) => task.projects,
 	contexts: (task) => task.contexts,
 	tags: (task) => task.tags,
@@ -638,7 +638,7 @@ function getPropertyValue(task: TaskInfo, propertyId: string, plugin: TaskNotesP
 		// Check if this is a user-configured name for a mapped field
 		const mappingKey = plugin.fieldMapper.lookupMappingKey(propertyId);
 		if (mappingKey) {
-			// Use the mapping key as the extractor key (e.g., "due", "scheduled")
+			// Use the mapping key as the extractor key (e.g., "due", "next_scheduled")
 			if (mappingKey in PROPERTY_EXTRACTORS) {
 				return PROPERTY_EXTRACTORS[mappingKey](task);
 			}
@@ -801,7 +801,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 			renderDueDateProperty(element, value, task, plugin);
 		}
 	},
-	scheduled: (element, value, task, plugin) => {
+	next_scheduled: (element, value, task, plugin) => {
 		if (typeof value === "string") {
 			renderScheduledDateProperty(element, value, task, plugin);
 		}

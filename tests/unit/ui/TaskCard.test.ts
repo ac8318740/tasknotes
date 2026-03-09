@@ -130,7 +130,7 @@ describe('TaskCard Component', () => {
           status: 'status',
           priority: 'priority',
           due: 'due',
-          scheduled: 'scheduled',
+          nextScheduled: 'next_scheduled',
           title: 'title',
           tags: 'tags',
           contexts: 'contexts',
@@ -350,7 +350,7 @@ describe('TaskCard Component', () => {
     it.skip('should create metadata line with various task properties', () => {
       const task = TaskFactory.createTask({
         due: '2025-01-15T14:30:00',
-        scheduled: '2025-01-15',
+        next_scheduled: '2025-01-15',
         contexts: ['work', 'urgent'],
         timeEstimate: 60,
         timeEntries: [{ startTime: '2025-01-15T10:00:00Z', endTime: '2025-01-15T10:30:00Z' }]
@@ -473,7 +473,7 @@ describe('TaskCard Component', () => {
     it('should hide metadata line when no metadata available', () => {
       const task = TaskFactory.createTask({
         due: undefined,
-        scheduled: undefined,
+        next_scheduled: undefined,
         contexts: undefined,
         timeEstimate: undefined,
         timeEntries: undefined

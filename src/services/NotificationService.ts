@@ -159,7 +159,7 @@ export class NotificationService {
 					return null;
 				}
 
-				const anchorDateStr = reminder.relatedTo === "due" ? task.due : task.scheduled;
+				const anchorDateStr = reminder.relatedTo === "due" ? task.due : task.next_scheduled;
 				if (!anchorDateStr) {
 					return null;
 				}
@@ -310,7 +310,7 @@ export class NotificationService {
 		if (reminder.type === "absolute") {
 			return `Reminder: ${task.title}`;
 		} else {
-			const anchor = reminder.relatedTo === "due" ? "due" : "scheduled";
+			const anchor = reminder.relatedTo === "due" ? "due" : "next_scheduled";
 			const offset = this.formatDurationForDisplay(reminder.offset || "");
 
 			if (offset.startsWith("-")) {

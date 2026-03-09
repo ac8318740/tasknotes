@@ -201,7 +201,7 @@ export class TaskService {
 					contexts: taskData.contexts,
 					projects: taskData.projects,
 					due: taskData.due,
-					scheduled: taskData.scheduled,
+					next_scheduled: taskData.next_scheduled,
 			  }
 			: undefined;
 
@@ -268,7 +268,7 @@ export class TaskService {
 				status: status,
 				date: new Date(),
 				dueDate: taskData.due,
-				scheduledDate: taskData.scheduled,
+				scheduledDate: taskData.next_scheduled,
 			};
 
 			const baseFilename = generateTaskFilename(filenameContext, this.plugin.settings);
@@ -334,7 +334,7 @@ export class TaskService {
 				status: status,
 				priority: priority,
 				due: taskData.due || undefined,
-				scheduled: taskData.scheduled || undefined,
+				next_scheduled: taskData.next_scheduled || undefined,
 				contexts: contextsArray.length > 0 ? contextsArray : undefined,
 				projects: projectsArray.length > 0 ? projectsArray : undefined,
 				timeEstimate:
@@ -353,17 +353,17 @@ export class TaskService {
 			};
 
 			// Convert scheduled date to a planned time entry
-			if (completeTaskData.scheduled) {
+			if (completeTaskData.next_scheduled) {
 				const entries: UnifiedTimeEntry[] = completeTaskData.timeEntries
 					? [...completeTaskData.timeEntries]
 					: [];
 				entries.push({
 					id: generateTimeEntryId(),
 					type: "planned",
-					startTime: completeTaskData.scheduled,
+					startTime: completeTaskData.next_scheduled,
 				});
 				completeTaskData.timeEntries = entries;
-				// Don't delete scheduled here — FieldMapper won't write it anyway, and
+				// Don't delete next_scheduled here — FieldMapper won't write it anyway, and
 				// it's still needed for filenameContext and other pre-persist logic
 			}
 
@@ -575,7 +575,7 @@ export class TaskService {
 					tags: Array.isArray(taskData.tags) ? taskData.tags : [],
 					timeEstimate: taskData.timeEstimate || 0,
 					dueDate: taskData.due || "",
-					scheduledDate: taskData.scheduled || "",
+					scheduledDate: taskData.next_scheduled || "",
 					details: taskData.details || "",
 					parentNote: taskData.parentNote || "",
 				};
@@ -624,8 +624,8 @@ export class TaskService {
 		}
 
 		// Apply default scheduled date if not provided
-		if (!result.scheduled && defaults.defaultScheduledDate !== "none") {
-			result.scheduled = calculateDefaultDate(defaults.defaultScheduledDate);
+		if (!result.next_scheduled && defaults.defaultScheduledDate !== "none") {
+			result.next_scheduled = calculateDefaultDate(defaults.defaultScheduledDate);
 		}
 
 		// Apply default contexts if not provided
@@ -775,8 +775,8 @@ export class TaskService {
 					// Update completed date when marking as complete (non-recurring tasks only)
 					// FIX: Use freshTask instead of stale task to check recurrence
 					this.updateCompletedDateInFrontmatter(frontmatter, value, !!freshTask.recurrence);
-				} else if (property === "scheduled") {
-					// scheduled is now managed through time entries, not frontmatter directly
+				} else if (property === "next_scheduled") {
+					// next_scheduled is now managed through time entries, not frontmatter directly
 					// Update or create a planned time entry instead
 					const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
 					const entries: UnifiedTimeEntry[] = Array.isArray(frontmatter[timeEntriesField])
@@ -799,7 +799,7 @@ export class TaskService {
 							});
 						}
 					} else {
-						// Remove non-recurrence planned entries when clearing scheduled
+						// Remove non-recurrence planned entries when clearing next_scheduled
 						const filtered = entries.filter(
 							(e: UnifiedTimeEntry) => !(e.type === "planned" && !e.fromRecurrence)
 						);
@@ -807,7 +807,7 @@ export class TaskService {
 						entries.push(...filtered);
 					}
 					frontmatter[timeEntriesField] = entries;
-					// Do NOT write scheduled field to frontmatter
+					// Do NOT write next_scheduled field to frontmatter
 				} else if (property === "due" && !value) {
 					// Remove empty due dates
 					delete frontmatter[fieldName];
@@ -1469,20 +1469,20 @@ export class TaskService {
 				newPath = parentPath ? `${parentPath}/${newFilename}.md` : `${newFilename}.md`;
 			}
 
-			// Check if recurrence rule changed and update scheduled date if needed
+			// Check if recurrence rule changed and update next_scheduled date if needed
 			let recurrenceUpdates: Partial<TaskInfo> = {};
 			if (
 				updates.recurrence !== undefined &&
 				updates.recurrence !== originalTask.recurrence
 			) {
-				// Recurrence rule changed, calculate new scheduled date
+				// Recurrence rule changed, calculate new next_scheduled date
 				const tempTask: TaskInfo = { ...originalTask, ...updates };
 				const nextDates = updateToNextScheduledOccurrence(
 					tempTask,
 					this.plugin.settings.maintainDueDateOffsetInRecurring
 				);
-				if (nextDates.scheduled) {
-					recurrenceUpdates.scheduled = nextDates.scheduled;
+				if (nextDates.next_scheduled) {
+					recurrenceUpdates.next_scheduled = nextDates.next_scheduled;
 				}
 				if (nextDates.due) {
 					recurrenceUpdates.due = nextDates.due;
@@ -1532,8 +1532,8 @@ export class TaskService {
 
 			// Scenario 3: Scheduled date update for recurring tasks
 			if (
-				updates.scheduled !== undefined &&
-				updates.scheduled !== originalTask.scheduled &&
+				updates.next_scheduled !== undefined &&
+				updates.next_scheduled !== originalTask.next_scheduled &&
 				originalTask.recurrence
 			) {
 				if (
@@ -1627,8 +1627,8 @@ export class TaskService {
 
 				if (updates.hasOwnProperty("due") && updates.due === undefined)
 					delete frontmatter[this.plugin.fieldMapper.toUserField("due")];
-				if (updates.hasOwnProperty("scheduled") && updates.scheduled === undefined)
-					delete frontmatter[this.plugin.fieldMapper.toUserField("scheduled")];
+				if (updates.hasOwnProperty("next_scheduled") && updates.next_scheduled === undefined)
+					delete frontmatter[this.plugin.fieldMapper.toUserField("nextScheduled")];
 				if (updates.hasOwnProperty("contexts") && updates.contexts === undefined)
 					delete frontmatter[this.plugin.fieldMapper.toUserField("contexts")];
 				if (updates.hasOwnProperty("projects")) {
@@ -2105,13 +2105,13 @@ export class TaskService {
 			}
 		}
 
-		// Update scheduled date to next uncompleted occurrence
+		// Update next_scheduled date to next uncompleted occurrence
 		const nextDates = updateToNextScheduledOccurrence(
 			updatedTask,
 			this.plugin.settings.maintainDueDateOffsetInRecurring
 		);
-		if (nextDates.scheduled) {
-			updatedTask.scheduled = nextDates.scheduled;
+		if (nextDates.next_scheduled) {
+			updatedTask.next_scheduled = nextDates.next_scheduled;
 		}
 		if (nextDates.due) {
 			updatedTask.due = nextDates.due;
@@ -2122,7 +2122,7 @@ export class TaskService {
 			const completeInstancesField = this.plugin.fieldMapper.toUserField("completeInstances");
 			const skippedInstancesField = this.plugin.fieldMapper.toUserField("skippedInstances");
 			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
-			const scheduledField = this.plugin.fieldMapper.toUserField("scheduled");
+			const scheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
 			const dueField = this.plugin.fieldMapper.toUserField("due");
 			const recurrenceField = this.plugin.fieldMapper.toUserField("recurrence");
 
@@ -2156,9 +2156,9 @@ export class TaskService {
 				frontmatter[recurrenceField] = updatedTask.recurrence;
 			}
 
-			// Update scheduled date if it changed
-			if (updatedTask.scheduled) {
-				frontmatter[scheduledField] = updatedTask.scheduled;
+			// Update next_scheduled date if it changed
+			if (updatedTask.next_scheduled) {
+				frontmatter[scheduledField] = updatedTask.next_scheduled;
 			}
 
 			// Update due date if it changed
@@ -2200,8 +2200,8 @@ export class TaskService {
 				const expectedChanges: Partial<TaskInfo> = {
 					complete_instances: updatedTask.complete_instances,
 				};
-				if (updatedTask.scheduled !== freshTask.scheduled) {
-					expectedChanges.scheduled = updatedTask.scheduled;
+				if (updatedTask.next_scheduled !== freshTask.next_scheduled) {
+					expectedChanges.next_scheduled = updatedTask.next_scheduled;
 				}
 				if (updatedTask.due !== freshTask.due) {
 					expectedChanges.due = updatedTask.due;
@@ -2233,9 +2233,9 @@ export class TaskService {
 			}
 		}
 
-		// Step 6: Sync to Google Calendar if enabled (scheduled date changed)
+		// Step 6: Sync to Google Calendar if enabled (next_scheduled date changed)
 		if (this.plugin.taskCalendarSyncService?.isEnabled()) {
-			// Recurring task completion updates the scheduled date to next occurrence
+			// Recurring task completion updates the next_scheduled date to next occurrence
 			this.plugin.taskCalendarSyncService
 				.updateTaskInCalendar(updatedTask, freshTask)
 				.catch((error) => {
@@ -2254,11 +2254,11 @@ export class TaskService {
 	 * When skipping:
 	 * - Adds date to skipped_instances
 	 * - Removes date from complete_instances (if present)
-	 * - Updates scheduled date to next uncompleted occurrence
+	 * - Updates next_scheduled date to next uncompleted occurrence
 	 *
 	 * When unskipping:
 	 * - Removes date from skipped_instances
-	 * - Updates scheduled date back to this date (since it's now incomplete)
+	 * - Updates next_scheduled date back to this date (since it's now incomplete)
 	 */
 	async toggleRecurringTaskSkipped(task: TaskInfo, date?: Date): Promise<TaskInfo> {
 		const file = this.plugin.app.vault.getAbstractFileByPath(task.path);
@@ -2309,14 +2309,14 @@ export class TaskService {
 			updatedTask.skipped_instances = skippedInstances.filter((d) => d !== dateStr);
 		}
 
-		// Step 2: Update scheduled date to next uncompleted occurrence
+		// Step 2: Update next_scheduled date to next uncompleted occurrence
 		// (This will skip over both completed AND skipped instances)
 		const nextDates = updateToNextScheduledOccurrence(
 			updatedTask,
 			this.plugin.settings.maintainDueDateOffsetInRecurring
 		);
-		if (nextDates.scheduled) {
-			updatedTask.scheduled = nextDates.scheduled;
+		if (nextDates.next_scheduled) {
+			updatedTask.next_scheduled = nextDates.next_scheduled;
 		}
 		if (nextDates.due) {
 			updatedTask.due = nextDates.due;
@@ -2327,7 +2327,7 @@ export class TaskService {
 			const skippedField = this.plugin.fieldMapper.toUserField("skippedInstances");
 			const completeField = this.plugin.fieldMapper.toUserField("completeInstances");
 			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
-			const scheduledField = this.plugin.fieldMapper.toUserField("scheduled");
+			const scheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
 			const dueField = this.plugin.fieldMapper.toUserField("due");
 
 			// Ensure skipped_instances array exists
@@ -2356,9 +2356,9 @@ export class TaskService {
 			frontmatter[timeEntriesField] = filtered;
 			updatedTask.timeEntries = filtered;
 
-			// Update scheduled/due dates
-			if (updatedTask.scheduled) {
-				frontmatter[scheduledField] = updatedTask.scheduled;
+			// Update next_scheduled/due dates
+			if (updatedTask.next_scheduled) {
+				frontmatter[scheduledField] = updatedTask.next_scheduled;
 			}
 			if (updatedTask.due) {
 				frontmatter[dueField] = updatedTask.due;
@@ -2397,9 +2397,9 @@ export class TaskService {
 			}
 		}
 
-		// Step 7: Sync to Google Calendar if enabled (scheduled date changed)
+		// Step 7: Sync to Google Calendar if enabled (next_scheduled date changed)
 		if (this.plugin.taskCalendarSyncService?.isEnabled()) {
-			// Skipping a recurring task updates the scheduled date to next occurrence
+			// Skipping a recurring task updates the next_scheduled date to next occurrence
 			this.plugin.taskCalendarSyncService
 				.updateTaskInCalendar(updatedTask, freshTask)
 				.catch((error) => {

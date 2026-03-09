@@ -74,7 +74,7 @@ describe('Issue #810 - Overdue tasks disappear in agenda view when clicking "tod
         const recurringOverdueTask: TaskInfo = TaskFactory.createTask({
             path: 'test-recurring.md',
             content: '- [ ] Recurring task',
-            scheduled: formatDateForStorage(yesterday),
+            next_scheduled: formatDateForStorage(yesterday),
             recurrence: 'RRULE:FREQ=DAILY',
             status: ' ',
         });
@@ -99,7 +99,7 @@ describe('Issue #810 - Overdue tasks disappear in agenda view when clicking "tod
             id: 'root',
             conjunction: 'and',
             children: [],
-            sortKey: 'scheduled',
+            sortKey: 'next_scheduled',
             sortDirection: 'asc',
             groupKey: 'none'
         };
@@ -156,7 +156,7 @@ describe('Issue #810 - Overdue tasks disappear in agenda view when clicking "tod
             id: 'root',
             conjunction: 'and',
             children: [],
-            sortKey: 'scheduled',
+            sortKey: 'next_scheduled',
             sortDirection: 'asc',
             groupKey: 'none'
         };
@@ -182,7 +182,7 @@ describe('Issue #810 - Overdue tasks disappear in agenda view when clicking "tod
         const recurringTask: TaskInfo = TaskFactory.createTask({
             path: 'test-recurring-today.md',
             content: '- [ ] Daily recurring task',
-            scheduled: formatDateForStorage(today), // Current scheduled instance is today
+            next_scheduled: formatDateForStorage(today), // Current scheduled instance is today
             recurrence: 'RRULE:FREQ=DAILY',
             status: ' ',
         });
@@ -195,7 +195,7 @@ describe('Issue #810 - Overdue tasks disappear in agenda view when clicking "tod
             id: 'root',
             conjunction: 'and',
             children: [],
-            sortKey: 'scheduled',
+            sortKey: 'next_scheduled',
             sortDirection: 'asc',
             groupKey: 'none'
         };

@@ -10,7 +10,7 @@
  * ---
  * status: open
  * priority: normal
- * scheduled: 2025-11-18
+ * next_scheduled: 2025-11-18
  * dateCreated: 2025-11-18T13:24:38.557-06:00
  * dateModified: 2025-11-18T13:24:38.557-06:00
  * tags:
@@ -55,7 +55,7 @@ describe.skip("Issue #1146: Title is null in Task List View", () => {
 			const frontmatter = {
 				status: "open",
 				priority: "normal",
-				scheduled: "2025-11-18",
+				next_scheduled: "2025-11-18",
 				dateCreated: "2025-11-18T13:24:38.557-06:00",
 				dateModified: "2025-11-18T13:24:38.557-06:00",
 				tags: ["task"],

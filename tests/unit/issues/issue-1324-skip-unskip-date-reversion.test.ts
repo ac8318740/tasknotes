@@ -21,7 +21,7 @@ import { TaskInfo } from "../../../src/types";
  * 3. TaskService:
  *    - Adds "today" to skipped_instances ✓
  *    - Calls updateToNextScheduledOccurrence() which returns "tomorrow"
- *    - Updates task.scheduled to "tomorrow", task.due to "day after tomorrow"
+ *    - Updates task.next_scheduled to "tomorrow", task.due to "day after tomorrow"
  * 4. UI shows task now scheduled for "tomorrow"
  * 5. When user opens context menu, targetDate = "tomorrow" (current scheduled date)
  * 6. User clicks "Unskip Instance"
@@ -66,7 +66,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 		archived: false,
 		recurrence: `DTSTART:${scheduledDate.replace(/-/g, "")};RRULE:FREQ=DAILY`,
 		recurrence_anchor: "scheduled",
-		scheduled: scheduledDate,
+		next_scheduled: scheduledDate,
 		due: dueDate,
 		skipped_instances: [],
 		complete_instances: [],
@@ -84,12 +84,12 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 		taskWithSkip.skipped_instances = [...(task.skipped_instances || []), skipDate];
 
 		const afterSkip = updateToNextScheduledOccurrence(taskWithSkip, true);
-		taskWithSkip.scheduled = afterSkip.scheduled || taskWithSkip.scheduled;
+		taskWithSkip.next_scheduled = afterSkip.next_scheduled || taskWithSkip.next_scheduled;
 		taskWithSkip.due = afterSkip.due || taskWithSkip.due;
 
 		// Step 2: In the UI, the task now shows with new scheduled date
-		// When user opens context menu, targetDate = task.scheduled (the new date)
-		const unskipTargetDate = taskWithSkip.scheduled;
+		// When user opens context menu, targetDate = task.next_scheduled (the new date)
+		const unskipTargetDate = taskWithSkip.next_scheduled;
 
 		// Step 3: User clicks "Unskip" - TaskService tries to unskip unskipTargetDate
 		// This is the BUG: unskipTargetDate is the NEW scheduled date, not the skipped date
@@ -102,7 +102,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 
 		// updateToNextScheduledOccurrence is called again
 		const afterUnskip = updateToNextScheduledOccurrence(taskForUnskip, true);
-		taskForUnskip.scheduled = afterUnskip.scheduled || taskForUnskip.scheduled;
+		taskForUnskip.next_scheduled = afterUnskip.next_scheduled || taskForUnskip.next_scheduled;
 		taskForUnskip.due = afterUnskip.due || taskForUnskip.due;
 
 		return {
@@ -122,7 +122,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			const result = simulateSkipUnskipWorkflow(task, originalScheduled);
 
 			// After skip, scheduled is tomorrow
-			expect(result.afterSkipTask.scheduled).toBe(tomorrow);
+			expect(result.afterSkipTask.next_scheduled).toBe(tomorrow);
 			expect(result.afterSkipTask.skipped_instances).toContain(originalScheduled);
 
 			// BUG: The UI would pass tomorrow as the unskip target
@@ -144,7 +144,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			// Skip the task
 			task.skipped_instances = [originalScheduled];
 			const afterSkip = updateToNextScheduledOccurrence(task, true);
-			task.scheduled = afterSkip.scheduled!;
+			task.next_scheduled = afterSkip.next_scheduled!;
 			task.due = afterSkip.due!;
 
 			// Now do a CORRECT unskip by using the originally skipped date
@@ -159,7 +159,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 
 			// And updateToNextScheduledOccurrence should return today
 			const afterUnskip = updateToNextScheduledOccurrence(task, true);
-			expect(afterUnskip.scheduled).toBe(originalScheduled);
+			expect(afterUnskip.next_scheduled).toBe(originalScheduled);
 			expect(afterUnskip.due).toBe(originalDue);
 		});
 	});
@@ -173,11 +173,11 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			// Skip
 			task.skipped_instances = [originalScheduled];
 			const afterSkip = updateToNextScheduledOccurrence(task, true);
-			expect(afterSkip.scheduled).toBe(tomorrow);
+			expect(afterSkip.next_scheduled).toBe(tomorrow);
 			expect(afterSkip.due).toBe(dayAfterTomorrow);
 
 			// Update task with new dates
-			task.scheduled = afterSkip.scheduled!;
+			task.next_scheduled = afterSkip.next_scheduled!;
 			task.due = afterSkip.due!;
 
 			// Correct unskip: remove the ORIGINAL skipped date, not the current scheduled
@@ -185,7 +185,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 
 			// Next occurrence should be original date
 			const afterUnskip = updateToNextScheduledOccurrence(task, true);
-			expect(afterUnskip.scheduled).toBe(originalScheduled);
+			expect(afterUnskip.next_scheduled).toBe(originalScheduled);
 			expect(afterUnskip.due).toBe(originalDue);
 		});
 
@@ -203,7 +203,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 				archived: false,
 				recurrence: `DTSTART:${scheduledToday.replace(/-/g, "")};RRULE:FREQ=DAILY`,
 				recurrence_anchor: "scheduled",
-				scheduled: scheduledToday,
+				next_scheduled: scheduledToday,
 				due: dueNextWeek,
 				skipped_instances: [],
 				complete_instances: [],
@@ -214,16 +214,16 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			const afterSkip = updateToNextScheduledOccurrence(task, true);
 
 			// Due maintains 7-day offset
-			expect(afterSkip.scheduled).toBe(tomorrow);
+			expect(afterSkip.next_scheduled).toBe(tomorrow);
 			expect(afterSkip.due).toBe(addDays(tomorrow, 7));
 
 			// Correct unskip
-			task.scheduled = afterSkip.scheduled!;
+			task.next_scheduled = afterSkip.next_scheduled!;
 			task.due = afterSkip.due!;
 			task.skipped_instances = [];
 
 			const afterUnskip = updateToNextScheduledOccurrence(task, true);
-			expect(afterUnskip.scheduled).toBe(scheduledToday);
+			expect(afterUnskip.next_scheduled).toBe(scheduledToday);
 			expect(afterUnskip.due).toBe(dueNextWeek);
 		});
 	});
@@ -237,15 +237,15 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			// Mark complete for today
 			task.complete_instances = [originalScheduled];
 			const afterComplete = updateToNextScheduledOccurrence(task, true);
-			task.scheduled = afterComplete.scheduled!;
+			task.next_scheduled = afterComplete.next_scheduled!;
 			task.due = afterComplete.due!;
 
 			// Task now shows scheduled for tomorrow
-			expect(task.scheduled).toBe(tomorrow);
+			expect(task.next_scheduled).toBe(tomorrow);
 
 			// UI would pass tomorrow as target date for "mark incomplete"
 			// But today is what's in complete_instances
-			const uiTargetDate = task.scheduled; // This is wrong!
+			const uiTargetDate = task.next_scheduled; // This is wrong!
 			expect(uiTargetDate).not.toBe(originalScheduled);
 
 			// Trying to mark incomplete for the wrong date
@@ -266,7 +266,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 
 			const result = updateToNextScheduledOccurrence(task, true);
 
-			expect(result.scheduled).toBe(originalScheduled);
+			expect(result.next_scheduled).toBe(originalScheduled);
 			expect(result.due).toBe(originalDue);
 		});
 
@@ -279,8 +279,8 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			const result = updateToNextScheduledOccurrence(task, true);
 
 			// Should advance to today, not go back to 2020
-			expect(result.scheduled).not.toBe(pastScheduled);
-			expect(result.scheduled).toBe(today);
+			expect(result.next_scheduled).not.toBe(pastScheduled);
+			expect(result.next_scheduled).toBe(today);
 		});
 	});
 
@@ -306,11 +306,11 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			// Skip today
 			task.skipped_instances = [originalScheduled];
 			const afterSkip = updateToNextScheduledOccurrence(task, true);
-			task.scheduled = afterSkip.scheduled!;
+			task.next_scheduled = afterSkip.next_scheduled!;
 			task.due = afterSkip.due!;
 
 			// Current scheduled date is tomorrow
-			expect(task.scheduled).toBe(tomorrow);
+			expect(task.next_scheduled).toBe(tomorrow);
 
 			// Current context menu logic (from TaskContextMenu.ts:87):
 			// const dateStr = formatDateForStorage(this.options.targetDate);
@@ -318,7 +318,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			//
 			// When targetDate = tomorrow (the current scheduled), this is FALSE
 			// because tomorrow was never skipped - today was!
-			const targetDateFromUI = task.scheduled; // tomorrow
+			const targetDateFromUI = task.next_scheduled; // tomorrow
 			const isSkippedForDate = task.skipped_instances?.includes(targetDateFromUI) || false;
 
 			// This is FALSE, which is why "Unskip Instance" doesn't work correctly
@@ -326,7 +326,7 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 
 			// But there IS a skipped occurrence before the current scheduled date
 			const hasSkippedBeforeScheduled = (task.skipped_instances || []).some(skippedDate => {
-				return skippedDate < task.scheduled;
+				return skippedDate < task.next_scheduled;
 			});
 			expect(hasSkippedBeforeScheduled).toBe(true);
 		});
@@ -340,14 +340,14 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			// Step 1: Skip today
 			task.skipped_instances = [originalScheduled];
 			const afterSkip = updateToNextScheduledOccurrence(task, true);
-			task.scheduled = afterSkip.scheduled!;
+			task.next_scheduled = afterSkip.next_scheduled!;
 			task.due = afterSkip.due!;
 
-			expect(task.scheduled).toBe(tomorrow);
+			expect(task.next_scheduled).toBe(tomorrow);
 			expect(task.due).toBe(dayAfterTomorrow);
 
 			// Step 2: User tries to "unskip" but UI passes wrong targetDate
-			const targetDateFromUI = task.scheduled; // tomorrow - WRONG!
+			const targetDateFromUI = task.next_scheduled; // tomorrow - WRONG!
 
 			// This simulates what toggleRecurringTaskSkipped does:
 			// It removes targetDateFromUI from skipped_instances
@@ -361,11 +361,11 @@ describe("Issue #1324: Skip/Unskip instance should properly revert dates", () =>
 			const afterUnskip = updateToNextScheduledOccurrence(task, true);
 
 			// BUG DEMONSTRATION: dates don't revert because wrong date was unskipped
-			expect(afterUnskip.scheduled).toBe(tomorrow); // Still tomorrow, not today!
+			expect(afterUnskip.next_scheduled).toBe(tomorrow); // Still tomorrow, not today!
 			expect(afterUnskip.due).toBe(dayAfterTomorrow); // Still day after tomorrow
 
 			// Expected (after fix): should be original dates
-			// expect(afterUnskip.scheduled).toBe(originalScheduled);
+			// expect(afterUnskip.next_scheduled).toBe(originalScheduled);
 			// expect(afterUnskip.due).toBe(originalDue);
 		});
 	});

@@ -36,7 +36,7 @@ export class ScheduledMigrationService {
 		// Count tasks that need migration
 		const allTasks = await this.plugin.cacheManager.getAllTasks();
 		const tasksNeedingMigration = allTasks.filter(
-			(task) => task.scheduled && (!task.timeEntries || !task.timeEntries.some((e) => e.type === "planned"))
+			(task) => task.next_scheduled && (!task.timeEntries || !task.timeEntries.some((e) => e.type === "planned"))
 		);
 
 		if (tasksNeedingMigration.length === 0) {
@@ -149,13 +149,13 @@ export class ScheduledMigrationService {
 		if (!(file instanceof TFile)) return;
 
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-			const scheduledField = this.plugin.fieldMapper.toUserField("scheduled");
+			const scheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
 			const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
 
 			const scheduledValue = frontmatter[scheduledField];
 			if (!scheduledValue) return;
 
-			// Create planned time entry from scheduled value
+			// Create planned time entry from next_scheduled value
 			const rawValue = String(scheduledValue);
 			const hasTime = rawValue.includes("T");
 			const newEntry: UnifiedTimeEntry = {
@@ -181,7 +181,7 @@ export class ScheduledMigrationService {
 			entries.push(newEntry);
 			frontmatter[timeEntriesField] = entries;
 
-			// Remove scheduled from frontmatter
+			// Remove next_scheduled from frontmatter
 			delete frontmatter[scheduledField];
 		});
 	}
@@ -229,7 +229,7 @@ export class ScheduledMigrationService {
 		);
 
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-			const scheduledField = this.plugin.fieldMapper.toUserField("scheduled");
+			const scheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
 			const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
 			const completeInstancesField = this.plugin.fieldMapper.toUserField("completeInstances");
 			const skippedInstancesField = this.plugin.fieldMapper.toUserField("skippedInstances");

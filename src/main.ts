@@ -2444,7 +2444,7 @@ export default class TaskNotesPlugin extends Plugin {
 			priority: frontmatter.priority ?? this.settings.defaultTaskPriority,
 			archived: false,
 			due: frontmatter.due || undefined,
-			scheduled: frontmatter.scheduled || undefined,
+			next_scheduled: frontmatter.scheduled || undefined,
 			contexts: frontmatter.contexts
 				? (Array.isArray(frontmatter.contexts) ? frontmatter.contexts : [frontmatter.contexts])
 				: undefined,

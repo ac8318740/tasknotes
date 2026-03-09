@@ -103,6 +103,8 @@ function mapPropertyToBasesProperty(property: string, plugin: TaskNotesPlugin): 
 		case "blocking":
 			// Blocking is a computed property, use blockedBy as the source
 			return fm.toUserField("blockedBy");
+		case "next_scheduled":
+			return fm.toUserField("nextScheduled");
 		case "complete_instances":
 			return fm.toUserField("completeInstances");
 		case "totalTrackedTime":
@@ -133,7 +135,7 @@ function generateOrderArray(plugin: TaskNotesPlugin): string[] {
 		"status",
 		"priority",
 		"due",
-		"scheduled",
+		"next_scheduled",
 		"projects",
 		"contexts",
 		"tags",
@@ -257,7 +259,7 @@ function generateAllFormulas(plugin: TaskNotesPlugin): Record<string, string> {
 		.map(status => `${statusProperty} != "${status}"`)
 		.join(' && ');
 
-	const scheduledProperty = getPropertyName(mapPropertyToBasesProperty('scheduled', plugin));
+	const scheduledProperty = getPropertyName(mapPropertyToBasesProperty('next_scheduled', plugin));
 	const recurrenceProperty = getPropertyName(mapPropertyToBasesProperty('recurrence', plugin));
 
 	return {
@@ -421,7 +423,7 @@ export function generateBasesFileTemplate(commandId: string, plugin: TaskNotesPl
 	switch (commandId) {
 		case 'open-calendar-view': {
 			const dueProperty = mapPropertyToBasesProperty('due', plugin);
-			const scheduledProperty = mapPropertyToBasesProperty('scheduled', plugin);
+			const scheduledProperty = mapPropertyToBasesProperty('next_scheduled', plugin);
 			return `# Mini Calendar
 # Generated with your TaskNotes settings
 
@@ -475,7 +477,7 @@ ${orderYaml}
 		case 'open-tasks-view': {
 			const statusProperty = mapPropertyToBasesProperty('status', plugin);
 			const dueProperty = mapPropertyToBasesProperty('due', plugin);
-			const scheduledProperty = mapPropertyToBasesProperty('scheduled', plugin);
+			const scheduledProperty = mapPropertyToBasesProperty('next_scheduled', plugin);
 			const recurrenceProperty = mapPropertyToBasesProperty('recurrence', plugin);
 			const completeInstancesProperty = mapPropertyToBasesProperty('completeInstances', plugin);
 			const blockedByProperty = mapPropertyToBasesProperty('blockedBy', plugin);

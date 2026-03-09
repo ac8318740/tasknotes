@@ -17,7 +17,7 @@
  *
  * Meanwhile, FilterService.getOverdueTasks() (lines 2556-2569) correctly checks BOTH:
  *   - if (task.due) { isOverdueTimeAware(task.due, ...) }
- *   - if (task.scheduled) { isOverdueTimeAware(task.scheduled, ...) }
+ *   - if (task.next_scheduled) { isOverdueTimeAware(task.next_scheduled, ...) }
  *
  * This discrepancy means:
  * - The old agenda view (using FilterService) showed overdue scheduled tasks
@@ -101,7 +101,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
             const taskWithOnlyScheduledDate: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/scheduled-only.md',
                 title: 'Task with only scheduled date',
-                scheduled: formatDateForStorage(yesterday), // Yesterday
+                next_scheduled: formatDateForStorage(yesterday), // Yesterday
                 due: undefined, // No due date
                 status: ' ',
             });
@@ -114,7 +114,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };
@@ -151,7 +151,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
             const taskScheduledYesterdayDueNextWeek: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/scheduled-yesterday-due-next-week.md',
                 title: 'Task scheduled yesterday, due next week',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 due: formatDateForStorage(nextWeek),
                 status: ' ',
             });
@@ -164,7 +164,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };
@@ -194,7 +194,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
             const recurringTaskOverdueScheduled: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/recurring-scheduled-overdue.md',
                 title: 'Daily recurring task - overdue scheduled',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 recurrence: 'RRULE:FREQ=DAILY',
                 due: undefined,
                 status: ' ',
@@ -209,7 +209,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };
@@ -243,14 +243,14 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
                     path: 'tasks/due-only-past.md',
                     title: 'Due only (past)',
                     due: formatDateForStorage(yesterday),
-                    scheduled: undefined,
+                    next_scheduled: undefined,
                     status: ' ',
                 }),
                 // Task 2: Only scheduled date (past) - FilterService shows, Bases doesn't
                 TaskFactory.createTask({
                     path: 'tasks/scheduled-only-past.md',
                     title: 'Scheduled only (past)',
-                    scheduled: formatDateForStorage(yesterday),
+                    next_scheduled: formatDateForStorage(yesterday),
                     due: undefined,
                     status: ' ',
                 }),
@@ -259,7 +259,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
                     path: 'tasks/both-past.md',
                     title: 'Both dates past',
                     due: formatDateForStorage(yesterday),
-                    scheduled: formatDateForStorage(yesterday),
+                    next_scheduled: formatDateForStorage(yesterday),
                     status: ' ',
                 }),
             ];
@@ -274,7 +274,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };
@@ -318,7 +318,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
             const taskWithOnlyScheduledDate: TaskInfo = TaskFactory.createTask({
                 path: 'tasks/scheduled-only.md',
                 title: 'Task with only scheduled date',
-                scheduled: formatDateForStorage(yesterday),
+                next_scheduled: formatDateForStorage(yesterday),
                 due: undefined,
                 status: ' ',
             });
@@ -331,7 +331,7 @@ describe('Issue #1231: Bases overdue view not including overdue scheduled tasks'
                 id: 'root',
                 conjunction: 'and',
                 children: [],
-                sortKey: 'scheduled',
+                sortKey: 'next_scheduled',
                 sortDirection: 'asc',
                 groupKey: 'none'
             };

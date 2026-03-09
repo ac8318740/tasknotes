@@ -1161,7 +1161,7 @@ export class TaskCreationModal extends TaskModal {
 	private applyPrePopulatedValues(values: Partial<TaskInfo>): void {
 		if (values.title !== undefined) this.title = values.title;
 		if (values.due !== undefined) this.dueDate = values.due;
-		if (values.scheduled !== undefined) this.scheduledDate = values.scheduled;
+		if (values.next_scheduled !== undefined) this.scheduledDate = values.next_scheduled;
 		if (values.priority !== undefined) this.priority = values.priority;
 		if (values.status !== undefined) this.status = values.status;
 		if (values.contexts !== undefined) {
@@ -1313,7 +1313,7 @@ export class TaskCreationModal extends TaskModal {
 		const taskData: TaskCreationData = {
 			title: this.title.trim(),
 			due: this.dueDate || undefined,
-			scheduled: this.scheduledDate || undefined,
+			next_scheduled: this.scheduledDate || undefined,
 			priority: this.priority,
 			status: this.status,
 			contexts: contextList.length > 0 ? contextList : undefined,
@@ -1372,7 +1372,7 @@ export class TaskCreationModal extends TaskModal {
 			status: taskData.status || "open",
 			priority: taskData.priority || "normal",
 			dueDate: taskData.due,
-			scheduledDate: taskData.scheduled,
+			scheduledDate: taskData.next_scheduled,
 		};
 
 		return generateTaskFilename(context, this.plugin.settings);

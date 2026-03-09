@@ -95,7 +95,7 @@ describe('Calendar Recurrence Off-by-One Bug', () => {
           id: `${dayName.toLowerCase()}-task`,
           title: `Weekly ${dayName} Task`,
           recurrence: rrule,
-          scheduled: scheduledDate,
+          next_scheduled: scheduledDate,
           complete_instances: []
         });
 
@@ -127,7 +127,7 @@ describe('Calendar Recurrence Off-by-One Bug', () => {
           id: `${dayName.toLowerCase()}-bug-task`,
           title: `Weekly ${dayName} Task (Bug Test)`,
           recurrence: rrule,
-          scheduled: scheduledDate,
+          next_scheduled: scheduledDate,
           complete_instances: []
         });
 
@@ -157,7 +157,7 @@ describe('Calendar Recurrence Off-by-One Bug', () => {
         id: 'tuesday-recurring-task',
         title: 'Weekly Tuesday Meeting',
         recurrence: 'FREQ=WEEKLY;BYDAY=TU',
-        scheduled: '2025-01-21', // Tuesday, January 21, 2025
+        next_scheduled: '2025-01-21', // Tuesday, January 21, 2025
         complete_instances: []
       });
 
@@ -226,7 +226,7 @@ describe('Calendar Recurrence Off-by-One Bug', () => {
           id: `boundary-${name.replace(/\s+/g, '-').toLowerCase()}`,
           title: `Boundary Test: ${name}`,
           recurrence: rrule,
-          scheduled: scheduledDate,
+          next_scheduled: scheduledDate,
           complete_instances: []
         });
 
@@ -295,7 +295,7 @@ describe('Calendar Recurrence Off-by-One Bug', () => {
         id: 'dst-spring-task', 
         title: 'DST Spring Test',
         recurrence: 'FREQ=WEEKLY;BYDAY=SU', // Weekly on Sunday
-        scheduled: '2025-03-09', // Sunday before typical DST change
+        next_scheduled: '2025-03-09', // Sunday before typical DST change
         complete_instances: []
       });
       

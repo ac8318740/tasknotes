@@ -17,7 +17,7 @@
  *   Original scheduled date (e.g., 2025-01-01) != today (e.g., 2025-10-06)
  *
  * Example:
- * - Task created with: scheduled: 2025-01-01, recurrence: RRULE:FREQ=DAILY
+ * - Task created with: next_scheduled: 2025-01-01, recurrence: RRULE:FREQ=DAILY
  * - Today is 2025-10-06
  * - The task should appear in "Today" view because 2025-10-06 is a valid daily occurrence
  * - But the filter checks: date("2025-01-01") == today() -> false
@@ -55,7 +55,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Daily standup',
                 status: 'open',
                 path: 'tasks/daily-standup.md',
-                scheduled: '2025-01-01', // Original start date
+                next_scheduled: '2025-01-01', // Original start date
                 recurrence: 'RRULE:FREQ=DAILY',
             };
 
@@ -68,7 +68,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
             // But the Bases filter compares:
             // date("2025-01-01") == today()  -> false
             // This is the bug - the filter uses the wrong comparison
-            const scheduledDateMatchesToday = task.scheduled === formatDateForStorage(today);
+            const scheduledDateMatchesToday = task.next_scheduled === formatDateForStorage(today);
             expect(scheduledDateMatchesToday).toBe(false);
 
             // EXPECTED: Task should appear in Today view
@@ -83,7 +83,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Weekly review',
                 status: 'open',
                 path: 'tasks/weekly-review.md',
-                scheduled: '2025-01-06', // First Monday of 2025
+                next_scheduled: '2025-01-06', // First Monday of 2025
                 recurrence: 'RRULE:FREQ=WEEKLY;BYDAY=MO',
             };
 
@@ -95,7 +95,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
             expect(isDue).toBe(true);
 
             // But filter would compare: date("2025-01-06") == date("2025-10-06") -> false
-            const scheduledDateMatchesToday = task.scheduled === formatDateForStorage(mondayOct6);
+            const scheduledDateMatchesToday = task.next_scheduled === formatDateForStorage(mondayOct6);
             expect(scheduledDateMatchesToday).toBe(false);
 
             // Bug: Task should appear on Oct 6 but doesn't due to filter logic
@@ -109,7 +109,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Monthly report',
                 status: 'open',
                 path: 'tasks/monthly-report.md',
-                scheduled: '2025-01-15', // 15th of January
+                next_scheduled: '2025-01-15', // 15th of January
                 recurrence: 'RRULE:FREQ=MONTHLY;BYMONTHDAY=15',
             };
 
@@ -121,7 +121,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
             expect(isDue).toBe(true);
 
             // Filter comparison fails
-            const scheduledDateMatchesToday = task.scheduled === formatDateForStorage(oct15);
+            const scheduledDateMatchesToday = task.next_scheduled === formatDateForStorage(oct15);
             expect(scheduledDateMatchesToday).toBe(false);
         });
     });
@@ -135,7 +135,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Daily task',
                 status: 'open',
                 path: 'tasks/daily.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: [], // No completed instances
             };
@@ -150,7 +150,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
 
             // Filter condition 2: Date match check (FAILS FOR RECURRING TASKS)
             // "date(scheduled) == today()"
-            const dateMatches = task.scheduled === todayStr;
+            const dateMatches = task.next_scheduled === todayStr;
             expect(dateMatches).toBe(false); // This is the bug!
 
             // The AND of both conditions fails:
@@ -169,14 +169,14 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'One-time task',
                 status: 'open',
                 path: 'tasks/one-time.md',
-                scheduled: '2025-10-06', // Scheduled for today
+                next_scheduled: '2025-10-06', // Scheduled for today
             };
 
             const today = new Date(Date.UTC(2025, 9, 6));
             const todayStr = formatDateForStorage(today);
 
             // For non-recurring tasks, the simple date comparison works
-            const dateMatches = task.scheduled === todayStr;
+            const dateMatches = task.next_scheduled === todayStr;
             expect(dateMatches).toBe(true); // This works!
 
             // So non-recurring tasks appear correctly
@@ -193,7 +193,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Daily task',
                 status: 'open',
                 path: 'tasks/daily.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: [],
             };
@@ -214,7 +214,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 shouldAppearInTodayView = isDueByRRule(task, today) && isIncomplete;
             } else {
                 // Use simple date comparison for non-recurring tasks
-                shouldAppearInTodayView = task.scheduled === todayStr && isIncomplete;
+                shouldAppearInTodayView = task.next_scheduled === todayStr && isIncomplete;
             }
 
             expect(shouldAppearInTodayView).toBe(true);
@@ -231,7 +231,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Daily task (completed today)',
                 status: 'open',
                 path: 'tasks/daily.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY',
                 complete_instances: [todayStr], // Completed today
             };
@@ -278,7 +278,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Task with DTSTART in RRULE',
                 status: 'open',
                 path: 'tasks/dtstart-rrule.md',
-                scheduled: '2025-10-01', // This might differ from DTSTART
+                next_scheduled: '2025-10-01', // This might differ from DTSTART
                 recurrence: 'DTSTART:20250101;RRULE:FREQ=DAILY',
             };
 
@@ -296,7 +296,7 @@ describe('Issue #1232: Recurring tasks do not show in today\'s tasks view', () =
                 title: 'Ended recurring task',
                 status: 'open',
                 path: 'tasks/ended.md',
-                scheduled: '2025-01-01',
+                next_scheduled: '2025-01-01',
                 recurrence: 'RRULE:FREQ=DAILY;UNTIL=20250901', // Ended Sept 1, 2025
             };
 

@@ -65,7 +65,7 @@ export class ScheduledDateModal extends Modal {
 				placeholder: this.translate("modals.scheduledDate.inputs.date.placeholder"),
 			},
 		});
-		this.scheduledDateInput.value = getDatePart(this.task.scheduled || "");
+		this.scheduledDateInput.value = getDatePart(this.task.next_scheduled || "");
 
 		// Time input (always visible but optional)
 		this.scheduledTimeInput = dateTimeContainer.createEl("input", {
@@ -76,7 +76,7 @@ export class ScheduledDateModal extends Modal {
 				placeholder: this.translate("modals.scheduledDate.inputs.time.placeholder"),
 			},
 		});
-		this.scheduledTimeInput.value = getTimePart(this.task.scheduled || "") || "";
+		this.scheduledTimeInput.value = getTimePart(this.task.next_scheduled || "") || "";
 
 		// Event listeners for keyboard navigation
 		this.scheduledDateInput.addEventListener("keydown", (e) => {
@@ -226,7 +226,7 @@ export class ScheduledDateModal extends Modal {
 
 		try {
 			// Use the TaskService to update the property with proper cache timing
-			await this.plugin.taskService.updateProperty(this.task, "scheduled", finalValue);
+			await this.plugin.taskService.updateProperty(this.task, "next_scheduled", finalValue);
 			this.close();
 		} catch (error) {
 			console.error("Failed to update scheduled date:", error);

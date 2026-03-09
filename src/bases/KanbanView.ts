@@ -3018,8 +3018,8 @@ export class KanbanView extends BasesViewBase {
 				);
 				return;
 			case "edit-date": {
-				const dateType = target.dataset.tnDateType as "due" | "scheduled" | undefined;
-				if (dateType === "scheduled") {
+				const dateType = target.dataset.tnDateType as "due" | "next_scheduled" | undefined;
+				if (dateType === "next_scheduled") {
 					// Open UnifiedTimeInfoModal for scheduled dates
 					const plannedEntries = (task.timeEntries || [])
 						.filter((entry: UnifiedTimeEntry) => entry.type === "planned")
@@ -3039,7 +3039,7 @@ export class KanbanView extends BasesViewBase {
 						const newEntry: UnifiedTimeEntry = {
 							id: generateTimeEntryId(),
 							type: "planned",
-							startTime: task.scheduled || new Date().toISOString().substring(0, 10),
+							startTime: task.next_scheduled || new Date().toISOString().substring(0, 10),
 						};
 						showUnifiedTimeInfoModal(newEntry, task, this.plugin, () => {
 							this.plugin.notifyDataChanged();
@@ -3077,7 +3077,7 @@ export class KanbanView extends BasesViewBase {
 	 * Prefers the task's scheduled (or due) date to avoid marking the wrong instance.
 	 */
 	private getTaskActionDate(task: TaskInfo): Date {
-		const dateStr = getDatePart(task.scheduled || task.due || "");
+		const dateStr = getDatePart(task.next_scheduled || task.due || "");
 		if (dateStr) {
 			return parseDateToUTC(dateStr);
 		}
@@ -3109,7 +3109,7 @@ export class KanbanView extends BasesViewBase {
 		const menu = new RecurrenceContextMenu({
 			currentValue: typeof task.recurrence === "string" ? task.recurrence : undefined,
 			currentAnchor: task.recurrence_anchor || "scheduled",
-			scheduledDate: task.scheduled,
+			scheduledDate: task.next_scheduled,
 			onSelect: async (newRecurrence: string | null, anchor?: "scheduled" | "completion") => {
 				try {
 					await this.plugin.updateTaskProperty(
@@ -3152,14 +3152,14 @@ export class KanbanView extends BasesViewBase {
 
 	private async openDateContextMenu(
 		task: TaskInfo,
-		dateType: "due" | "scheduled" | undefined,
+		dateType: "due" | "next_scheduled" | undefined,
 		event: MouseEvent,
 		DateContextMenu: any
 	): Promise<void> {
 		if (!dateType) return;
 
 		const { getDatePart, getTimePart } = await import("../utils/dateUtils");
-		const currentValue = dateType === "due" ? task.due : task.scheduled;
+		const currentValue = dateType === "due" ? task.due : task.next_scheduled;
 
 		const menu = new DateContextMenu({
 			currentValue: getDatePart(currentValue || ""),

@@ -10,7 +10,7 @@ export interface TaskTemplateData {
 	contexts?: string[];
 	projects?: string[];
 	due?: string;
-	scheduled?: string;
+	next_scheduled?: string;
 }
 
 /**
@@ -165,7 +165,7 @@ export function processFolderTemplate(
 		const dueDate = taskData.due || "";
 		processedPath = processedPath.replace(/\{\{dueDate\}\}/g, dueDate);
 
-		const scheduledDate = taskData.scheduled || "";
+		const scheduledDate = taskData.next_scheduled || "";
 		processedPath = processedPath.replace(/\{\{scheduledDate\}\}/g, scheduledDate);
 
 		// Priority and status variations

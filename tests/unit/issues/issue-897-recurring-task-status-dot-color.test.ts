@@ -61,7 +61,7 @@ describe('Issue #897: Task Status Dot colouring doesn\'t work for recurring task
 				title: 'Daily standup',
 				status: 'in-progress', // User set status to in-progress
 				path: 'tasks/daily-standup.md',
-				scheduled: '2025-01-01',
+				next_scheduled: '2025-01-01',
 				recurrence: 'RRULE:FREQ=DAILY',
 				complete_instances: [], // Not completed for today
 			};

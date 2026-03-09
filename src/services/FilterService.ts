@@ -563,7 +563,7 @@ export class FilterService extends EventEmitter {
 
 		// Scheduled date conditions (uses tasksByDate index)
 		if (
-			property === "scheduled" &&
+			property === "next_scheduled" &&
 			(operator === "is" || operator === "is-before" || operator === "is-after") &&
 			value
 		) {
@@ -653,7 +653,7 @@ export class FilterService extends EventEmitter {
 			}
 
 			if (
-				(property === "due" || property === "scheduled") &&
+				(property === "due" || property === "next_scheduled") &&
 				operator === "is" &&
 				value &&
 				typeof value === "string"
@@ -663,7 +663,7 @@ export class FilterService extends EventEmitter {
 
 			// For date range conditions, we'll need to implement range queries
 			if (
-				(property === "due" || property === "scheduled") &&
+				(property === "due" || property === "next_scheduled") &&
 				(operator === "is-before" || operator === "is-after") &&
 				value &&
 				typeof value === "string"
@@ -1243,8 +1243,8 @@ export class FilterService extends EventEmitter {
 					case "due":
 						comparison = this.compareDates(a.due, b.due);
 						break;
-					case "scheduled":
-						comparison = this.compareDates(a.scheduled, b.scheduled);
+					case "next_scheduled":
+						comparison = this.compareDates(a.next_scheduled, b.next_scheduled);
 						break;
 					case "priority":
 						comparison = this.comparePriorities(a.priority, b.priority);
@@ -1349,11 +1349,11 @@ export class FilterService extends EventEmitter {
 
 	/**
 	 * Apply fallback sorting criteria when primary sort yields equal values
-	 * Order: scheduled date → due date → priority → title
+	 * Order: next_scheduled date → due date → priority → title
 	 */
 	private applyFallbackSorting(a: TaskInfo, b: TaskInfo, primarySortKey: TaskSortKey): number {
-		// Define fallback order: scheduled → due → priority → title
-		const fallbackOrder: TaskSortKey[] = ["scheduled", "due", "priority", "title"];
+		// Define fallback order: next_scheduled → due → priority → title
+		const fallbackOrder: TaskSortKey[] = ["next_scheduled", "due", "priority", "title"];
 
 		// Remove the primary sort key from fallbacks to avoid redundant comparison
 		const fallbacks = fallbackOrder.filter((key) => key !== primarySortKey);
@@ -1362,8 +1362,8 @@ export class FilterService extends EventEmitter {
 			let comparison = 0;
 
 			switch (fallbackKey) {
-				case "scheduled":
-					comparison = this.compareDates(a.scheduled, b.scheduled);
+				case "next_scheduled":
+					comparison = this.compareDates(a.next_scheduled, b.next_scheduled);
 					break;
 				case "due":
 					comparison = this.compareDates(a.due, b.due);
@@ -1557,7 +1557,7 @@ export class FilterService extends EventEmitter {
 						case "due":
 							groupValue = this.getDueDateGroup(task, targetDate);
 							break;
-						case "scheduled":
+						case "next_scheduled":
 							groupValue = this.getScheduledDateGroup(task, targetDate);
 							break;
 						case "completedDate":
@@ -1776,13 +1776,13 @@ export class FilterService extends EventEmitter {
 	}
 
 	private getScheduledDateGroup(task: TaskInfo, targetDate?: Date): string {
-		if (!task.scheduled) return this.getScheduledGroupLabel("none");
+		if (!task.next_scheduled) return this.getScheduledGroupLabel("none");
 
 		const isCompleted = this.statusManager.isCompletedStatus(task.status);
 		const hideCompletedFromOverdue = this.plugin?.settings?.hideCompletedFromOverdue ?? true;
 
 		return this.getScheduledDateGroupForTask(
-			task.scheduled,
+			task.next_scheduled,
 			isCompleted,
 			hideCompletedFromOverdue
 		);
@@ -1930,7 +1930,7 @@ export class FilterService extends EventEmitter {
 					break;
 				}
 
-				case "scheduled": {
+				case "next_scheduled": {
 					// Sort by logical scheduled date order
 					const scheduledOrderKeys: Array<
 						"past" | "today" | "tomorrow" | "nextSevenDays" | "later" | "none"
@@ -2482,8 +2482,8 @@ export class FilterService extends EventEmitter {
 
 			// Handle regular tasks with scheduled dates for this specific date
 			// Use robust date comparison to handle timezone edge cases
-			if (task.scheduled) {
-				const taskScheduledDatePart = getDatePart(task.scheduled);
+			if (task.next_scheduled) {
+				const taskScheduledDatePart = getDatePart(task.next_scheduled);
 				if (taskScheduledDatePart === dateStr) {
 					return true;
 				}
@@ -2503,8 +2503,8 @@ export class FilterService extends EventEmitter {
 				}
 
 				// Check if scheduled date is overdue (show on today)
-				if (task.scheduled && getDatePart(task.scheduled) !== dateStr) {
-					if (isOverdueTimeAware(task.scheduled, isCompleted, hideCompletedFromOverdue)) {
+				if (task.next_scheduled && getDatePart(task.next_scheduled) !== dateStr) {
+					if (isOverdueTimeAware(task.next_scheduled, isCompleted, hideCompletedFromOverdue)) {
 						return true;
 					}
 				}
@@ -2536,24 +2536,24 @@ export class FilterService extends EventEmitter {
 			const hideCompletedFromOverdue =
 				this.plugin?.settings?.hideCompletedFromOverdue ?? true;
 
-			// For recurring tasks, check if the current scheduled date is overdue
+			// For recurring tasks, check if the current next_scheduled date is overdue
 			if (task.recurrence) {
-				// For recurring tasks, check scheduled date (current instance)
+				// For recurring tasks, check next_scheduled date (current instance)
 				// Also check due date if it exists (user may set both)
 				if (task.due) {
 					if (isOverdueTimeAware(task.due, isCompleted, hideCompletedFromOverdue)) {
 						return true;
 					}
 				}
-				if (task.scheduled) {
-					if (isOverdueTimeAware(task.scheduled, isCompleted, hideCompletedFromOverdue)) {
+				if (task.next_scheduled) {
+					if (isOverdueTimeAware(task.next_scheduled, isCompleted, hideCompletedFromOverdue)) {
 						return true;
 					}
 				}
 				return false;
 			}
 
-			// For non-recurring tasks, check both due and scheduled dates
+			// For non-recurring tasks, check both due and next_scheduled dates
 			// Check if due date is overdue
 			if (task.due) {
 				if (isOverdueTimeAware(task.due, isCompleted, hideCompletedFromOverdue)) {
@@ -2561,9 +2561,9 @@ export class FilterService extends EventEmitter {
 				}
 			}
 
-			// Check if scheduled date is overdue
-			if (task.scheduled) {
-				if (isOverdueTimeAware(task.scheduled, isCompleted, hideCompletedFromOverdue)) {
+			// Check if next_scheduled date is overdue
+			if (task.next_scheduled) {
+				if (isOverdueTimeAware(task.next_scheduled, isCompleted, hideCompletedFromOverdue)) {
 					return true;
 				}
 			}

@@ -30,7 +30,7 @@ export function renderFeaturesTab(
 	// Inline Tasks Section
 	const availableProperties = getAvailableProperties(plugin);
 	const currentInlineProperties = plugin.settings.inlineVisibleProperties || [
-		"status", "priority", "due", "scheduled", "recurrence",
+		"status", "priority", "due", "next_scheduled", "recurrence",
 	];
 	const currentInlineLabels = getPropertyLabels(plugin, currentInlineProperties);
 

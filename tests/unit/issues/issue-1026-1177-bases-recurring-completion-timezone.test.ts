@@ -9,7 +9,7 @@
  * - User in PST (UTC-8)
  * - Local time: Wednesday 2025-11-19 at 8:00 PM PST
  * - UTC time: Thursday 2025-11-20 at 4:00 AM UTC
- * - Task scheduled: "2025-11-19"
+ * - Task next_scheduled: "2025-11-19"
  * - Expected: Complete instance for "2025-11-19"
  * - Actual (bug): Complete instance for "2025-11-20"
  *
@@ -60,7 +60,7 @@ describe("Issue #1026 & #1177: Bases recurring completion timezone bug", () => {
 				status: "open",
 				path: "test.md",
 				recurrence: "RRULE:FREQ=DAILY",
-				scheduled: "2025-11-19",
+				next_scheduled: "2025-11-19",
 			};
 
 			const actionDate = (view as any).getTaskActionDate(taskWithScheduled) as Date;

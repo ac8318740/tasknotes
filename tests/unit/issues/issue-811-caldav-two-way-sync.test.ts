@@ -68,7 +68,7 @@ class MockCalDAVTwoWaySyncService extends EventEmitter {
 	 */
 	async syncTaskToCalDAV(task: TaskInfo): Promise<string | null> {
 		if (!this.isEnabled()) return null;
-		if (!task.due && !task.scheduled) return null;
+		if (!task.due && !task.next_scheduled) return null;
 
 		const eventUid = `tasknotes-${task.path.replace(/[^a-z0-9]/gi, "-")}`;
 		this.syncedTasks.set(task.path, eventUid);
@@ -170,7 +170,7 @@ describe("Issue #811 - CalDAV Two-Way Sync Support", () => {
 				path: "tasks/team-meeting-prep.md",
 				status: "open",
 				priority: "high",
-				scheduled: "2025-01-15T09:00",
+				next_scheduled: "2025-01-15T09:00",
 				projects: [],
 				contexts: [],
 				tags: [],

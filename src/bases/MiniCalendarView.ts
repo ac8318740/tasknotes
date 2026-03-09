@@ -27,7 +27,7 @@ export class MiniCalendarView extends BasesViewBase {
 	private calendarEl: HTMLElement | null = null;
 
 	// View options
-	private dateProperty: string | null = null; // e.g., "note.dueDate", "file.ctime", "note.scheduled"
+	private dateProperty: string | null = null; // e.g., "note.dueDate", "file.ctime", "note.next_scheduled"
 	private titleProperty: string | null = null; // e.g., "file.name", "note.title"
 	private displayedMonth: number;
 	private displayedYear: number;
