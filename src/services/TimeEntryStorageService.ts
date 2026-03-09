@@ -343,11 +343,10 @@ export class TimeEntryStorageService {
 
 	/** Update the denormalized `scheduled` field on the task file based on earliest future planned entry */
 	private async updateDenormalizedScheduled(task: TaskInfo, entries?: UnifiedTimeEntry[]): Promise<void> {
-		if (this.plugin.settings.timeEntriesStorage !== "dailyNote") return;
-
-		const allEntries = entries ?? await this.readEntries(task);
 		const file = this.plugin.app.vault.getAbstractFileByPath(task.path);
 		if (!(file instanceof TFile)) return;
+
+		const allEntries = entries ?? await this.readEntries(task);
 
 		const now = new Date();
 		const planned = allEntries
@@ -360,8 +359,9 @@ export class TimeEntryStorageService {
 			if (target) {
 				const startTime = target.startTime;
 				fm[scheduledField] = startTime.length === 10 ? startTime : startTime.substring(0, 10);
+			} else {
+				delete fm[scheduledField];
 			}
-			// Don't remove scheduled if no planned entries — can't distinguish manual vs derived
 		});
 	}
 }

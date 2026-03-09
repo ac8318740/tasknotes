@@ -561,6 +561,47 @@ export class TaskEditModal extends TaskModal {
 		await this.createTimeSection(this.timeSectionParent);
 	}
 
+	protected getScheduledCustomDateHandler(): (() => void) | undefined {
+		return () => {
+			const entries = this.task?.timeEntries || [];
+			const planned = entries.filter(
+				(e: UnifiedTimeEntry) => e.type === "planned" && !e.fromRecurrence
+			);
+			if (planned.length > 0) {
+				showUnifiedTimeInfoModal(planned[0], this.task, this.plugin, async () => {
+					this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+					const updated = await this.plugin.timeEntryStorageService.readEntries(this.task);
+					const nextPlanned = updated
+						.filter((e: UnifiedTimeEntry) => e.type === "planned")
+						.sort((a: UnifiedTimeEntry, b: UnifiedTimeEntry) => a.startTime.localeCompare(b.startTime))[0];
+					this.scheduledDate = nextPlanned
+						? nextPlanned.startTime.substring(0, 10)
+						: "";
+					this.updateDateIconState();
+					await this.rebuildTimeSection();
+				});
+			} else {
+				const tomorrow = new Date();
+				tomorrow.setDate(tomorrow.getDate() + 1);
+				tomorrow.setHours(9, 0, 0, 0);
+				const end = new Date(tomorrow);
+				end.setHours(10, 0, 0, 0);
+				const newEntry: UnifiedTimeEntry = {
+					id: generateTimeEntryId(),
+					type: "planned",
+					startTime: formatDateWithTimezone(tomorrow),
+					endTime: formatDateWithTimezone(end),
+				};
+				showUnifiedTimeInfoModal(newEntry, this.task, this.plugin, async () => {
+					this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+					this.scheduledDate = newEntry.startTime.substring(0, 10);
+					this.updateDateIconState();
+					await this.rebuildTimeSection();
+				}, { isNew: true });
+			}
+		};
+	}
+
 	private renderTimeEntryGroup(
 		container: HTMLElement,
 		headerText: string,

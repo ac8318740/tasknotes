@@ -156,6 +156,9 @@ export class FieldMapper {
 				mapped.scheduled = startTime.length === 10
 					? startTime
 					: startTime.substring(0, 10);
+			} else {
+				// No planned entries — clear any stale scheduled value
+				mapped.scheduled = undefined;
 			}
 		}
 

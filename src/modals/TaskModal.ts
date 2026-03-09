@@ -1315,9 +1315,18 @@ export abstract class TaskModal extends Modal {
 				}
 				this.updateDateIconState();
 			},
+			onCustomDate: type === "scheduled" ? this.getScheduledCustomDateHandler() : undefined,
 		});
 
 		menu.show(event);
+	}
+
+	/**
+	 * Override in subclasses to provide a custom "Pick date & time" handler for scheduled dates.
+	 * When provided, opens UnifiedTimeInfoModal instead of DateTimePickerModal.
+	 */
+	protected getScheduledCustomDateHandler(): (() => void) | undefined {
+		return undefined;
 	}
 
 	protected showStatusContextMenu(event: UIEvent): void {

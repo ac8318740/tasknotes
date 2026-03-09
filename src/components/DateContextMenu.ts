@@ -112,7 +112,11 @@ export class DateContextMenu {
 			item.setTitle(this.t("contextMenus.date.pickDateTime", "Pick date & time…"));
 			item.setIcon("calendar");
 			item.onClick(async () => {
-				this.showDateTimePicker();
+				if (this.options.onCustomDate) {
+					this.options.onCustomDate();
+				} else {
+					this.showDateTimePicker();
+				}
 			});
 		});
 

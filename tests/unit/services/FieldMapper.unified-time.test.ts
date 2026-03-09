@@ -54,7 +54,7 @@ describe('FieldMapper - Unified Time Entries', () => {
             expect(result.scheduled).toBe(pastDate.toISOString().substring(0, 10));
         });
 
-        it('should fall back to frontmatter scheduled when entries have no type', () => {
+        it('should clear scheduled when entries have no type: "planned"', () => {
             const frontmatter = {
                 title: 'Test Task',
                 status: 'open',
@@ -67,8 +67,8 @@ describe('FieldMapper - Unified Time Entries', () => {
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            // No planned entries found, so frontmatter scheduled value is used
-            expect(result.scheduled).toBe('2025-01-15');
+            // No planned entries — stale scheduled value is cleared
+            expect(result.scheduled).toBeUndefined();
         });
 
         it('should handle date-only startTime', () => {
@@ -137,8 +137,8 @@ describe('FieldMapper - Unified Time Entries', () => {
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            // No planned entries, so frontmatter scheduled is used
-            expect(result.scheduled).toBe('2025-01-01');
+            // No planned entries — stale scheduled value is cleared
+            expect(result.scheduled).toBeUndefined();
         });
 
         it('should handle mix of past and future planned entries', () => {
