@@ -92,6 +92,29 @@ The `scheduled` field automatically tracks the next uncompleted occurrence:
 
 This behavior keeps recurring tasks practical in real planning: you can preserve a stable weekly/monthly pattern while still adapting the immediate next occurrence to calendar realities.
 
+## Once per period, any day
+
+Some habits need one occurrence per week or month, and any day counts ("call Mom once a week"). Set `recurrence_anchor: period` for these. Choose **Once a week, any day** or **Once a month, any day** in the recurrence menu, or pick **Any day in each period** under **Recur from** in the custom recurrence modal.
+
+```yaml
+recurrence: "DTSTART:20261102;FREQ=WEEKLY"
+recurrence_anchor: period
+scheduled: 2026-11-02 # start of the current period
+due: 2026-11-08 # optional: last day of the current period
+complete_instances:
+  - 2026-11-02
+```
+
+Each date the rule produces opens a period that lasts until the next date. A weekly rule gives weeks that start on the `DTSTART` weekday. A monthly rule starting on the 1st gives calendar months. The presets start weeks on the **First day of week** calendar setting.
+
+- **Completing**: completing on any day of a period records the period's start date in `complete_instances`. `scheduled` moves to the next open period.
+- **Skipping**: skipping records the period's start date in `skipped_instances`.
+- **Missed periods**: a period that ends without completion is left as missed. The next completion or skip counts for the current period, not the missed one.
+- **Due date**: if the task has a `due` date, TaskNotes keeps it on the last day of the scheduled period, including for months of different lengths. The task becomes overdue only after its period ends. With the calendar option **Span tasks between scheduled and due dates** on, the calendar shows each period as one bar.
+- **Older versions** read `period` as `scheduled`. They show the task as a fixed weekly or monthly task on the period start date, with the same completion history.
+
+Period recurrence does not limit which days count, and does not support materialized occurrence notes or Google Calendar recurring events.
+
 ## Materialized Occurrence Notes
 
 Most recurring tasks can remain virtual: the parent task stores `complete_instances` and `skipped_instances`, and TaskNotes renders each calendar/list instance from that parent. Materialized occurrence notes are for heavier instances where the date-specific work needs its own note.

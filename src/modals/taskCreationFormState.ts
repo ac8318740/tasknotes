@@ -4,7 +4,7 @@ import { calculateDefaultDate, calculateDefaultDateTime, sanitizeTags } from "..
 import { convertDefaultRemindersToReminders } from "../utils/settingsUtils";
 import { splitListPreservingLinksAndQuotes } from "../utils/stringSplit";
 
-type RecurrenceAnchor = "scheduled" | "completion";
+type RecurrenceAnchor = "scheduled" | "completion" | "period";
 
 export type TaskCreationPrepopulatedValues = Partial<TaskInfo> & {
 	customFrontmatter?: Record<string, unknown>;

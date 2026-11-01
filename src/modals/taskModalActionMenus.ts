@@ -11,7 +11,7 @@ import { combineDateAndTime, getDatePart, getTimePart } from "../utils/dateUtils
 import { DateTimePickerModal } from "./DateTimePickerModal";
 
 export type TaskModalDateMenuType = "due" | "scheduled";
-type RecurrenceAnchor = "scheduled" | "completion";
+type RecurrenceAnchor = "scheduled" | "completion" | "period";
 
 export interface TaskModalActionMenuState {
 	title: string;

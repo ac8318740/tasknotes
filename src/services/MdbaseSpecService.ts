@@ -248,7 +248,7 @@ export class MdbaseSpecService {
 		this.addRoleField(lines, "recurrence", { type: "string" });
 		this.addRoleField(lines, "recurrenceAnchor", {
 			type: "enum",
-			values: ["scheduled", "completion"],
+			values: ["scheduled", "completion", "period"],
 			default: "scheduled",
 		});
 		this.addRoleField(lines, "occurrenceMaterialization", {

@@ -45,7 +45,7 @@ export interface TaskEditFormState {
 	initialTags: string;
 	timeEstimate: number;
 	recurrenceRule: string;
-	recurrenceAnchor: "scheduled" | "completion";
+	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
 	details: string;
 	originalDetails: string;

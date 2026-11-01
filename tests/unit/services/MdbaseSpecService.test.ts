@@ -454,7 +454,7 @@ describe("MdbaseSpecService", () => {
 		it("should define recurrence_anchor as enum", () => {
 			const block = getFieldBlock(fm, "recurrence_anchor");
 			expect(block).toContain("type: enum");
-			expect(block).toContain("values: [scheduled, completion]");
+			expect(block).toContain("values: [scheduled, completion, period]");
 			expect(block).toContain("default: scheduled");
 		});
 
