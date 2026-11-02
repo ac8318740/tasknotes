@@ -1,4 +1,4 @@
-import { Reminder, TaskCreationData, TaskDependency } from "../types";
+import { Reminder, TaskCreationData, TaskDependency, TaskInfo } from "../types";
 import { getCurrentTimestamp } from "../utils/dateUtils";
 import { sanitizeTags } from "../utils/helpers";
 import { splitListPreservingLinksAndQuotes } from "../utils/stringSplit";
@@ -20,7 +20,7 @@ export interface TaskCreationDataInput {
 	tags: string;
 	timeEstimate: number;
 	recurrenceRule: string;
-	recurrenceAnchor: "scheduled" | "completion";
+	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
 	blockedByItems: DependencyItem[];
 	details: string;
@@ -68,7 +68,9 @@ export function buildTaskCreationData(input: TaskCreationDataInput): TaskCreatio
 		tags: tagList.length > 0 ? tagList : undefined,
 		timeEstimate: input.timeEstimate > 0 ? input.timeEstimate : undefined,
 		recurrence: input.recurrenceRule || undefined,
-		recurrence_anchor: input.recurrenceRule ? input.recurrenceAnchor : undefined,
+		recurrence_anchor: input.recurrenceRule
+			? (input.recurrenceAnchor as TaskInfo["recurrence_anchor"])
+			: undefined,
 		reminders: input.reminders.length > 0 ? input.reminders : undefined,
 		creationContext: input.creationContext || "manual-creation",
 		dateCreated: now,

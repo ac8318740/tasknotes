@@ -342,7 +342,7 @@ export abstract class TaskModal extends Modal {
 	protected tags = "";
 	protected timeEstimate = 0;
 	protected recurrenceRule = "";
-	protected recurrenceAnchor: "scheduled" | "completion" = "scheduled";
+	protected recurrenceAnchor: "scheduled" | "completion" | "period" = "scheduled";
 	protected reminders: Reminder[] = [];
 
 	// User-defined fields (dynamic based on settings)

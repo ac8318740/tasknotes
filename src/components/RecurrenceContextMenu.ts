@@ -15,14 +15,14 @@ export interface RecurrenceOption {
 	label: string;
 	value: string;
 	icon?: string;
-	anchor?: "scheduled" | "completion"; // NEW: Determines if recurrence is from scheduled date or completion date
+	anchor?: "scheduled" | "completion" | "period"; // NEW: Determines if recurrence is from scheduled date or completion date
 }
 
 export interface RecurrenceContextMenuOptions {
 	currentValue?: string;
-	currentAnchor?: "scheduled" | "completion";
+	currentAnchor?: "scheduled" | "completion" | "period";
 	scheduledDate?: string; // Task's scheduled date to extract time from
-	onSelect: (value: string | null, anchor?: "scheduled" | "completion") => void;
+	onSelect: (value: string | null, anchor?: "scheduled" | "completion" | "period") => void;
 	app: App;
 	plugin: TaskNotesPlugin;
 }
@@ -32,7 +32,7 @@ export interface CustomRecurrenceRuleInput {
 	interval: number;
 	dtstart: string;
 	dtstartTime: string;
-	recurrenceAnchor: "scheduled" | "completion";
+	recurrenceAnchor: "scheduled" | "completion" | "period";
 	byDay: string[];
 	byMonthDay: number[];
 	byMonth: number[];
@@ -71,6 +71,7 @@ export interface BuildRecurrenceOptionsInput {
 	currentValue?: string;
 	scheduledDate?: string;
 	calendarLocale?: string;
+	firstDay?: number;
 	translate: (key: MessageDescriptor, vars?: Record<string, string>) => string;
 }
 
@@ -356,12 +357,33 @@ export function buildRecurrenceOptions(input: BuildRecurrenceOptionsInput): Recu
 		anchor: "completion",
 	});
 
+	// Period-based options: each period starts on the first day of the week or month
+	const startTime = startDTSTART.slice(8);
+	const weekStart = new Date(startDate);
+	weekStart.setDate(
+		weekStart.getDate() -
+			((weekStart.getDay() - normalizeFirstDay(input.firstDay, input.calendarLocale) + 7) % 7)
+	);
+	options.push({
+		label: input.translate(msg({ message: "Once a week, any day", context: "components.recurrenceContextMenu.onceAWeekAnyDay" })),
+		value: `DTSTART:${formatDateForDTSTART(weekStart)}${startTime};FREQ=WEEKLY`,
+		icon: "calendar",
+		anchor: "period",
+	});
+
+	options.push({
+		label: input.translate(msg({ message: "Once a month, any day", context: "components.recurrenceContextMenu.onceAMonthAnyDay" })),
+		value: `DTSTART:${formatDateForDTSTART(new Date(startDate.getFullYear(), startDate.getMonth(), 1))}${startTime};FREQ=MONTHLY`,
+		icon: "calendar-range",
+		anchor: "period",
+	});
+
 	return options;
 }
 
 export function buildCustomRecurrenceRule(input: CustomRecurrenceRuleInput): string {
 	const parts: string[] = [];
-	const isFlexibleCompletionAnchor = input.recurrenceAnchor === "completion";
+	const isFlexibleAnchor = input.recurrenceAnchor !== "scheduled";
 
 	if (input.dtstart) {
 		let dtstartFormatted = input.dtstart.replace(/-/g, "");
@@ -386,19 +408,19 @@ export function buildCustomRecurrenceRule(input: CustomRecurrenceRuleInput): str
 
 	switch (input.frequency) {
 		case "DAILY":
-			if (!isFlexibleCompletionAnchor && input.byDay.length > 0) {
+			if (!isFlexibleAnchor && input.byDay.length > 0) {
 				parts.push(`BYDAY=${input.byDay.join(",")}`);
 			}
 			break;
 
 		case "WEEKLY":
-			if (!isFlexibleCompletionAnchor && input.byDay.length > 0) {
+			if (!isFlexibleAnchor && input.byDay.length > 0) {
 				parts.push(`BYDAY=${input.byDay.join(",")}`);
 			}
 			break;
 
 		case "MONTHLY":
-			if (isFlexibleCompletionAnchor) {
+			if (isFlexibleAnchor) {
 				break;
 			}
 
@@ -413,7 +435,7 @@ export function buildCustomRecurrenceRule(input: CustomRecurrenceRuleInput): str
 			break;
 
 		case "YEARLY":
-			if (isFlexibleCompletionAnchor) {
+			if (isFlexibleAnchor) {
 				break;
 			}
 
@@ -542,6 +564,7 @@ export class RecurrenceContextMenu {
 			currentValue: this.options.currentValue,
 			scheduledDate: this.options.scheduledDate,
 			calendarLocale: getPluginCalendarLocale(this.options.plugin),
+			firstDay: this.options.plugin.settings?.calendarViewSettings?.firstDay,
 			translate: this.translate,
 		});
 	}
@@ -570,7 +593,7 @@ export class CustomRecurrenceModal extends Modal {
 	private currentValue: string;
 	private scheduledDate?: string;
 	private plugin: TaskNotesPlugin;
-	private onSubmit: (result: string | null, anchor?: "scheduled" | "completion") => void;
+	private onSubmit: (result: string | null, anchor?: "scheduled" | "completion" | "period") => void;
 	private translate: (key: MessageDescriptor, vars?: Record<string, string>) => string;
 	private frequency = "DAILY";
 	private interval = 1;
@@ -583,15 +606,15 @@ export class CustomRecurrenceModal extends Modal {
 	private endType: "never" | "count" | "until" = "never";
 	private dtstart = "";
 	private dtstartTime = "";
-	private recurrenceAnchor: "scheduled" | "completion" = "scheduled"; // NEW: Recurrence anchor
+	private recurrenceAnchor: "scheduled" | "completion" | "period" = "scheduled"; // NEW: Recurrence anchor
 
 	constructor(
 		app: App,
 		currentValue: string,
-		currentAnchor: "scheduled" | "completion",
+		currentAnchor: "scheduled" | "completion" | "period",
 		scheduledDate: string | undefined,
 		plugin: TaskNotesPlugin,
-		onSubmit: (result: string | null, anchor?: "scheduled" | "completion") => void
+		onSubmit: (result: string | null, anchor?: "scheduled" | "completion" | "period") => void
 	) {
 		super(app);
 		this.currentValue = currentValue;
@@ -796,9 +819,15 @@ export class CustomRecurrenceModal extends Modal {
 							msg({ message: "Completion date", context: "components.recurrenceContextMenu.customRecurrenceModal.completionDate" })
 						)
 					)
+					.addOption(
+						"period",
+						this.translate(
+							msg({ message: "Any day in each period", context: "components.recurrenceContextMenu.customRecurrenceModal.anyDayInPeriod" })
+						)
+					)
 					.setValue(this.recurrenceAnchor)
 					.onChange((value) => {
-						this.recurrenceAnchor = value as "scheduled" | "completion";
+						this.recurrenceAnchor = value as "scheduled" | "completion" | "period";
 						this.updateFrequencySpecificVisibility();
 					});
 			});
@@ -1408,7 +1437,7 @@ export class CustomRecurrenceModal extends Modal {
 		});
 
 		this.updateFrequencySpecificVisibility = () => {
-			const useFlexibleInterval = this.recurrenceAnchor === "completion";
+			const useFlexibleInterval = this.recurrenceAnchor !== "scheduled";
 			byDaySetting.settingEl.style.display =
 				(this.frequency === "DAILY" || this.frequency === "WEEKLY") && !useFlexibleInterval
 					? "flex"

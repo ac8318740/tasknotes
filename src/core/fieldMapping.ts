@@ -163,6 +163,10 @@ export function mapTaskFromFrontmatter(
 	if (originalDate) {
 		mapped.recurrence_original_date = originalDate;
 	}
+	// The model reads unknown anchors as "scheduled"; keep the plugin's "period" anchor.
+	if (frontmatter?.[resolved.recurrenceAnchor] === "period") {
+		mapped.recurrence_anchor = frontmatter[resolved.recurrenceAnchor] as TaskInfo["recurrence_anchor"];
+	}
 	return mapped;
 }
 

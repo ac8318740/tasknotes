@@ -3797,7 +3797,7 @@ export class TaskListView extends BasesViewBase {
 			currentValue: typeof task.recurrence === "string" ? task.recurrence : undefined,
 			currentAnchor: task.recurrence_anchor || "scheduled",
 			scheduledDate: task.scheduled,
-			onSelect: (newRecurrence: string | null, anchor?: "scheduled" | "completion") => {
+			onSelect: (newRecurrence: string | null, anchor?: "scheduled" | "completion" | "period") => {
 				void (async () => {
 					try {
 						await this.plugin.updateTaskProperty(
