@@ -27,10 +27,10 @@ const mockGetTodayString = getTodayString as jest.MockedFunction<typeof getToday
 // 2026-11-02 is a Monday.
 function weeklyTask(overrides: Partial<TaskInfo> = {}): TaskInfo {
 	return {
-		title: "Call Mom",
+		title: "Weekly review",
 		status: "open",
 		priority: "normal",
-		path: "TaskNotes/Call Mom.md",
+		path: "TaskNotes/Weekly review.md",
 		archived: false,
 		recurrence: "DTSTART:20261102;FREQ=WEEKLY",
 		recurrence_anchor: "period",
@@ -186,8 +186,8 @@ describe("recurrence_anchor: period (one occurrence per period, any day)", () =>
 	it("keeps the period anchor when reading frontmatter", () => {
 		const task = mapTaskFromFrontmatter(
 			DEFAULT_FIELD_MAPPING,
-			{ title: "Call Mom", recurrence: "DTSTART:20261102;FREQ=WEEKLY", recurrence_anchor: "period" },
-			"TaskNotes/Call Mom.md"
+			{ title: "Weekly review", recurrence: "DTSTART:20261102;FREQ=WEEKLY", recurrence_anchor: "period" },
+			"TaskNotes/Weekly review.md"
 		);
 
 		expect(task.recurrence_anchor).toBe("period");
