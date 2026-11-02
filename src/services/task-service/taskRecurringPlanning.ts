@@ -3,6 +3,10 @@ import {
 	generateRecurringInstances,
 	getNextUncompletedOccurrence,
 	getOpenOccurrenceFloor,
+	getPeriodActionDate,
+	getRecurrencePeriodStart,
+	getRecurrenceSearchDays,
+	isPeriodAnchor,
 	updateDTSTARTInRecurrenceRule,
 	updateToNextScheduledOccurrence,
 } from "../../core/recurrence";
@@ -108,17 +112,6 @@ function getStringArray(value: unknown): string[] {
 		: [];
 }
 
-function getRecurrenceSearchDays(recurrence: string): number {
-	const intervalMatch = recurrence.match(/(?:^|;)INTERVAL=(\d+)(?:;|$)/);
-	const interval = intervalMatch ? Number.parseInt(intervalMatch[1], 10) : 1;
-
-	if (recurrence.includes("FREQ=DAILY")) return Math.max(30, interval * 2);
-	if (recurrence.includes("FREQ=WEEKLY")) return Math.max(90, interval * 7 * 2);
-	if (recurrence.includes("FREQ=MONTHLY")) return Math.max(400, interval * 31 * 2);
-	if (recurrence.includes("FREQ=YEARLY")) return Math.max(800, interval * 366 * 2);
-	return 365;
-}
-
 function findOwningRecurrenceDate(task: TaskInfo, targetDate: Date): Date | null {
 	if (!task.recurrence) return null;
 
@@ -161,6 +154,9 @@ function getOwningRecurrenceDate(task: TaskInfo, targetDate: Date): Date | null 
 	const recurrenceAnchor = task.recurrence_anchor || "scheduled";
 	if (recurrenceAnchor === "completion" || task.googleCalendarExceptionOriginalScheduled) {
 		return null;
+	}
+	if (isPeriodAnchor(task)) {
+		return getRecurrencePeriodStart(task, targetDate) ?? findOwningRecurrenceDate(task, targetDate);
 	}
 
 	return findOwningRecurrenceDate(task, targetDate);
@@ -227,6 +223,10 @@ export function getRecurringTaskActionDate(task: TaskInfo, date?: Date): Date {
 		const target = formatDateForStorage(date);
 		const identity = resolveRecurringMoveDate(task, target);
 		return identity === target ? date : parseDateToUTC(identity);
+	}
+
+	if (isPeriodAnchor(task)) {
+		return getPeriodActionDate(task);
 	}
 
 	if (task.recurrence_anchor !== "completion" && task.scheduled) {

@@ -467,6 +467,7 @@ export interface TaskInfo {
 	projects?: string[];
 	attachments?: string[]; // Ordered links to files that belong to this task
 	recurrence?: string; // RFC 5545 recurrence rule string
+	// May also hold "period" (one occurrence per period, any day; see isPeriodAnchor), which the model types do not list yet.
 	recurrence_anchor?: "scheduled" | "completion"; // Determines if recurrence is from scheduled date (fixed) or completion date (flexible). Defaults to 'scheduled'
 	complete_instances?: string[]; // Array of dates (YYYY-MM-DD) when recurring task was completed
 	skipped_instances?: string[]; // Array of dates (YYYY-MM-DD) when recurring task was skipped

@@ -33,7 +33,9 @@ describe("Recurrence anchor time (#2298, #2299)", () => {
 			scheduledDate: "2026-09-07", translate: (key) => key,
 		});
 		for (const option of options.filter((option) => option.value)) {
-			expect(option.value).toMatch(/^DTSTART:20260907T200037Z;/);
+			// Period presets start on the period's first day, keeping the clock.
+			const date = option.value.includes("FREQ=MONTHLY") && option.anchor === "period" ? "20260901" : "20260907";
+			expect(option.value).toMatch(new RegExp(`^DTSTART:${date}T200037Z;`));
 		}
 	});
 

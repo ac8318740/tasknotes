@@ -34,7 +34,7 @@ export interface TaskEditModalChangeState {
 	initialTags: string;
 	timeEstimate: number;
 	recurrenceRule: string;
-	recurrenceAnchor: "scheduled" | "completion";
+	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
 	blockedByItems: DependencyItemLike[];
 	initialBlockedBy: TaskDependency[];

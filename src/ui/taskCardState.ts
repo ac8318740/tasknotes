@@ -2,6 +2,7 @@ import type TaskNotesPlugin from "../main";
 import type { TaskInfo } from "../types";
 import { formatDateForStorage, getDatePart } from "../utils/dateUtils";
 import { getRecurringMoveOriginalDate } from "../services/task-service/recurringMoveIdentity";
+import { getPeriodActionDate, isPeriodAnchor } from "../core/recurrence";
 import { filterEmptyProjects, getEffectiveTaskStatus, sanitizeForCssClass } from "../utils/helpers";
 
 export interface TaskCardStateOptions {
@@ -41,6 +42,10 @@ function getTodayTaskCardTargetDate(): Date {
 }
 
 export function getDefaultTaskCardTargetDate(task: TaskInfo): Date {
+	if (task.recurrence && isPeriodAnchor(task)) {
+		return getPeriodActionDate(task);
+	}
+
 	if (task.recurrence && task.recurrence_anchor !== "completion" && task.scheduled) {
 		const scheduledDate = createUTCDateFromStorageDate(getRecurringMoveOriginalDate(task) || getDatePart(task.scheduled));
 		if (scheduledDate) {

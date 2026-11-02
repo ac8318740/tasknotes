@@ -20,7 +20,7 @@ This reference documents the expected data types for each frontmatter property t
 | projects | list | `["[[Project A]]"]` |
 | timeEstimate | number | `120` (minutes) |
 | recurrence | text | `"FREQ=WEEKLY;BYDAY=MO"` |
-| recurrence_anchor | text | `"scheduled"` or `"completion"` |
+| recurrence_anchor | text | `"scheduled"`, `"completion"` or `"period"` |
 | recurrence_original_date | date (optional system property) | `"2026-10-18"` |
 | recurrence_window | number or text (optional) | `8` (days) or `"month_end"` |
 | timeEntries | list (objects) | See [Time Entries](#time-entries) |
@@ -193,8 +193,8 @@ Single-item arrays may look verbose, but they prevent edge cases when filters an
 #### recurrence_anchor
 
 - **Type:** text (string)
-- **Valid values:** `"scheduled"` or `"completion"`
-- **Description:** Determines whether the next occurrence is calculated from the scheduled date or when the task was completed
+- **Valid values:** `"scheduled"`, `"completion"` or `"period"`
+- **Description:** Determines whether the next occurrence is calculated from the scheduled date or when the task was completed. `"period"` needs one completion per rule period on any day in it. See [Once per period, any day](../features/recurring-tasks.md#once-per-period-any-day)
 - **Example:** `recurrence_anchor: "scheduled"`
 
 #### recurrence_window

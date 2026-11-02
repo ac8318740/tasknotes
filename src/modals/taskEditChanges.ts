@@ -31,7 +31,7 @@ export interface TaskEditChangeInput {
 	initialTags: string;
 	timeEstimate: number;
 	recurrenceRule: string;
-	recurrenceAnchor: "scheduled" | "completion";
+	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
 	blockedByItems: DependencyItem[];
 	initialBlockedBy: TaskDependency[];
@@ -162,7 +162,7 @@ export function buildTaskEditChanges(input: TaskEditChangeInput): TaskEditChange
 
 	const oldRecurrenceAnchor = input.task.recurrence_anchor || "scheduled";
 	if (input.recurrenceAnchor !== oldRecurrenceAnchor) {
-		changes.recurrence_anchor = input.recurrenceAnchor;
+		changes.recurrence_anchor = input.recurrenceAnchor as TaskInfo["recurrence_anchor"];
 	}
 
 	const oldReminders = input.task.reminders || [];

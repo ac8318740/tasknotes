@@ -388,7 +388,7 @@ function getCommonSchemas(): Record<string, unknown> {
 				},
 				recurrence_anchor: {
 					type: "string",
-					enum: ["scheduled", "completion"],
+					enum: ["scheduled", "completion", "period"],
 					description:
 						"Whether recurrence advances from the scheduled date or completion date",
 					nullable: true,
@@ -513,7 +513,7 @@ function getCommonSchemas(): Record<string, unknown> {
 				},
 				recurrence_anchor: {
 					type: "string",
-					enum: ["scheduled", "completion"],
+					enum: ["scheduled", "completion", "period"],
 					description:
 						"Whether recurrence advances from the scheduled date or completion date",
 				},

@@ -1900,6 +1900,11 @@ msgctxt "settings.taskProperties.customUserFields.validation.duplicateKey"
 msgid "Another property already uses this key."
 msgstr "Otra propiedad ya utiliza esta clave."
 
+#: src/components/RecurrenceContextMenu.ts
+msgctxt "components.recurrenceContextMenu.customRecurrenceModal.anyDayInPeriod"
+msgid "Any day in each period"
+msgstr "Cualquier día del periodo"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.httpApi.authToken.name"
 msgid "API authentication token"
@@ -9108,6 +9113,16 @@ msgstr "El {week} {day} de {month} de cada año"
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.onTheWeekOfMonth"
 msgid "On the {week} {day} of each month"
 msgstr "El {week} {day} de cada mes"
+
+#: src/components/RecurrenceContextMenu.ts
+msgctxt "components.recurrenceContextMenu.onceAMonthAnyDay"
+msgid "Once a month, any day"
+msgstr "Una vez al mes, cualquier día"
+
+#: src/components/RecurrenceContextMenu.ts
+msgctxt "components.recurrenceContextMenu.onceAWeekAnyDay"
+msgid "Once a week, any day"
+msgstr "Una vez por semana, cualquier día"
 
 #: src/modals/DeviceCodeModal.ts
 #: src/modals/ICSEventInfoModal.ts
