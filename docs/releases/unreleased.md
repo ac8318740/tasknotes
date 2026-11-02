@@ -34,7 +34,7 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 
 ## Added
 
-- Added recurring tasks that need one occurrence per week or month on any day (`recurrence_anchor: period`), such as "water the plants once a week". Completing on any day of the period counts for that period, missed periods are not carried forward, and a `due` date stays on the period's last day. Choose **Once a week, any day** or **Once a month, any day** in the recurrence menu. See [Once per period, any day](https://tasknotes.dev/features/recurring-tasks/#once-per-period-any-day). Thanks to @ac8318740 for contributing this.
+- (#2474) Added recurring tasks that need one occurrence per week or month on any day (`recurrence_anchor: period`), such as "water the plants once a week". Completing on any day of the period counts for that period, missed periods are not carried forward, and a `due` date stays on the period's last day. Choose **Once a week, any day** or **Once a month, any day** in the recurrence menu. See [Once per period, any day](https://tasknotes.dev/features/recurring-tasks/#once-per-period-any-day).
 
 - (Discussion #2435) Added an arbitrary date/time picker to batch Scheduled date and Due date menus in Task List, Kanban, and Calendar. Calendar tasks can be selected and rescheduled as a group, with non-interactive drag previews, relative dates/times preserved, and Undo for successful moves. Recurring templates, span bars, tracked time and external events are excluded from calendar task selection. See [Calendar selection](https://tasknotes.dev/views/calendar-views/#selecting-and-rescheduling-multiple-tasks).
   - Thanks to @mnicolas94 for requesting this and @Thanatos9404 for explaining the existing selection support and quick-date limitation.
