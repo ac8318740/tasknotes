@@ -94,7 +94,7 @@ This behavior keeps recurring tasks practical in real planning: you can preserve
 
 ## Once per period, any day
 
-Some habits need one occurrence per week or month, and any day counts ("call Mom once a week"). Set `recurrence_anchor: period` for these. Choose **Once a week, any day** or **Once a month, any day** in the recurrence menu, or pick **Any day in each period** under **Recur from** in the custom recurrence modal.
+Some habits need one occurrence per week or month, and any day counts ("water the plants once a week", "review the budget once a month"). Set `recurrence_anchor: period` for these. Choose **Once a week, any day** or **Once a month, any day** in the recurrence menu, or pick **Any day in each period** under **Recur from** in the custom recurrence modal.
 
 ```yaml
 recurrence: "DTSTART:20261102;FREQ=WEEKLY"
