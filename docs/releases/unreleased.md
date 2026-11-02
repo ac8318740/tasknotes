@@ -27,7 +27,7 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 ```
 ## Added
 
-- (#TBD) Recurring tasks can keep each occurrence open for a number of days with `recurrence_window`, for example every month on the 15th, any time up to the 22nd (`recurrence_window: 8`), or until the end of the month (`recurrence_window: month_end`). Completing on any day in the window counts for that occurrence, the occurrence stays next until its window closes, and `due` is set to the window's last day, so it becomes overdue only after the window. See [Occurrence windows](https://tasknotes.dev/features/recurring-tasks/#occurrence-windows).
+- (#2476) Recurring tasks can keep each occurrence open for a number of days with `recurrence_window`, for example every month on the 15th, any time up to the 22nd (`recurrence_window: 8`), or until the end of the month (`recurrence_window: month_end`). Completing on any day in the window counts for that occurrence, the occurrence stays next until its window closes, and `due` is set to the window's last day, so it becomes overdue only after the window. See [Occurrence windows](https://tasknotes.dev/features/recurring-tasks/#occurrence-windows).
 - Added materialized occurrence notes for recurring tasks. See [Recurring Tasks](https://tasknotes.dev/features/recurring-tasks/#materialized-occurrence-notes) for setup and calendar behavior.
 ```
 
