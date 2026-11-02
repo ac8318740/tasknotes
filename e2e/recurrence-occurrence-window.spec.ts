@@ -31,14 +31,20 @@ async function yaml(name: string): Promise<Record<string, any>> {
 	return parse(text.match(/^---\r?\n([\s\S]*?)\r?\n---/)![1]);
 }
 
-async function createTask(name: string, extra: string): Promise<void> {
+function monthDay(monthOffset: number, day: number): string {
+	const now = new Date();
+	const date = new Date(now.getFullYear(), now.getMonth() + monthOffset, day);
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+async function createTask(name: string, extra: string, taskRule = rule, window = "5"): Promise<void> {
 	await page.evaluate(
 		async ({ path, body }) => {
 			await (window as any).app.vault.create(path, body);
 		},
 		{
 			path: `${folder}/${name}.md`,
-			body: `---\ntags: [task]\ntitle: ${name}\nstatus: open\npriority: normal\nrecurrence: "${rule}"\nrecurrence_window: 5\n${extra}---\n`,
+			body: `---\ntags: [task]\ntitle: ${name}\nstatus: open\npriority: normal\nrecurrence: "${taskRule}"\nrecurrence_window: ${window}\n${extra}---\n`,
 		}
 	);
 }
@@ -105,4 +111,17 @@ test("completing an occurrence moved inside its window keeps the next due date o
 	const after = await yaml("Moved");
 	expect(after.complete_instances).toEqual([openOccurrence]);
 	expect(after.due).toBe(addDays(8));
+});
+
+test("a month_end window keeps this month's occurrence open, due on the month's last day", async () => {
+	// Monthly on the 1st: this month's occurrence is open on any day of the month.
+	const monthlyRule = `DTSTART:${monthDay(-2, 1).replaceAll("-", "")};FREQ=MONTHLY;BYMONTHDAY=1`;
+	await createTask("Month end", `scheduled: ${monthDay(-1, 1)}\n`, monthlyRule, "month_end");
+
+	await act("Month end", "skip");
+
+	await expect.poll(async () => (await yaml("Month end")).scheduled).toBe(monthDay(0, 1));
+	const after = await yaml("Month end");
+	expect(after.skipped_instances).toEqual([monthDay(-1, 1)]);
+	expect(after.due).toBe(monthDay(1, 0));
 });

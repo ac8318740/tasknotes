@@ -71,8 +71,9 @@ function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
 	};
 }
 
-/** A recurrence window is a whole number of days; anything else means no window. */
-export function normalizeRecurrenceWindow(value: unknown): number | undefined {
+/** A recurrence window is a whole number of days or "month_end"; anything else means no window. */
+export function normalizeRecurrenceWindow(value: unknown): number | "month_end" | undefined {
+	if (value === "month_end") return value;
 	return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : undefined;
 }
 

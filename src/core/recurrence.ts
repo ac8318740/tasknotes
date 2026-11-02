@@ -22,7 +22,7 @@ export interface RecurrenceOccurrenceOptions {
 }
 
 interface RecurrenceWindowInput {
-	recurrence_window?: number;
+	recurrence_window?: number | "month_end";
 }
 
 export function addDTSTARTToRecurrenceRule(task: AddDTSTARTTaskInput): string | null {
@@ -58,22 +58,25 @@ export function updateToNextScheduledOccurrence(
 	const next = updateToNextScheduledOccurrenceModel(task, maintainDueOffset, {
 		today: options?.minOccurrenceDate ?? getOpenOccurrenceFloor(task),
 	});
-	const windowDays = getRecurrenceWindowDays(task);
-	if (windowDays === 1 || !next.scheduled) return next;
+	const windowEnd = next.scheduled ? getWindowEnd(task, getDatePart(next.scheduled)) : null;
+	if (!windowEnd) return next;
 
 	// The window sets each occurrence's due date, so moving an occurrence inside its
 	// window, or a scheduled-to-due gap that differs from the window, does not carry over.
 	const dueTime = task.due ? task.due.slice(getDatePart(task.due).length) : "";
-	return {
-		...next,
-		due: addDaysToDateString(getDatePart(next.scheduled), windowDays - 1) + dueTime,
-	};
+	return { ...next, due: windowEnd + dueTime };
 }
 
-/** Days each occurrence stays open, counting its own date (`recurrence_window`). */
-function getRecurrenceWindowDays(task: RecurrenceWindowInput): number {
-	const days = task.recurrence_window;
-	return typeof days === "number" && Number.isInteger(days) && days > 1 ? days : 1;
+/** Last open day (YYYY-MM-DD) of the occurrence on `date`, or null without a window. */
+function getWindowEnd(task: RecurrenceWindowInput, date: string): string | null {
+	const window = task.recurrence_window;
+	if (window === "month_end") {
+		const [year, month] = date.split("-").map(Number);
+		return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
+	}
+	return typeof window === "number" && Number.isInteger(window) && window > 1
+		? addDaysToDateString(date, window - 1)
+		: null;
 }
 
 /** The earliest occurrence date whose window is still open on `today`. */
@@ -81,8 +84,11 @@ export function getOpenOccurrenceFloor(
 	task: RecurrenceWindowInput,
 	today = getTodayString()
 ): string {
-	const windowDays = getRecurrenceWindowDays(task);
-	return windowDays === 1 ? today : addDaysToDateString(today, 1 - windowDays);
+	const window = task.recurrence_window;
+	if (window === "month_end") return `${today.slice(0, 8)}01`;
+	return typeof window === "number" && Number.isInteger(window) && window > 1
+		? addDaysToDateString(today, 1 - window)
+		: today;
 }
 
 function normalizeMinutePrecisionDateInputs<T extends { scheduled?: string; dateCreated?: string }>(

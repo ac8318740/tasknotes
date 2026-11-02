@@ -73,11 +73,13 @@ scheduled: 2026-11-15
 due: 2026-11-22
 ```
 
+Set `recurrence_window: month_end` to keep each occurrence open until the last day of its own month, for example "every month on the 15th, until the end of the month". The window then follows the month: 14 days in February, 17 in October. With a weekly or daily rule, each occurrence is open until the end of the month it falls in, so several occurrences can be open at once; the earliest open one is next.
+
 - **Due date**: when the series advances, TaskNotes sets `due` to the last open day of the next occurrence and keeps any due time. The window replaces the scheduled-to-due offset, so moving an occurrence inside its window does not shift later due dates, and **Maintain due date offset in recurring tasks** does not apply. Set `due` yourself for the occurrence that is current when you add the window.
 - **Overdue**: an occurrence becomes overdue the day after its window closes, as any task does after its due date. The **Overdue** view in the default tasks base also lists tasks whose scheduled date has passed, so it shows an open occurrence from its second day. Filter on `formula.isOverdue` to list only tasks past their due date.
 - **Next occurrence**: an occurrence stays next until its window closes. Completing or skipping an older occurrence, or changing the rule, keeps an open occurrence instead of moving on to the following date.
 - **Completing and skipping**: completing or skipping on any day in the window records the occurrence's own date in `complete_instances` or `skipped_instances`.
-- **Month lengths**: the window is a number of days, so "15th to 22nd" covers the same dates every month.
+- **Month lengths**: a number of days covers the same dates every month ("15th to 22nd"). `month_end` always ends on the month's last day.
 - **Calendar**: with **Span tasks between scheduled and due dates** on, each occurrence shows as one bar across its window.
 - **Older versions** ignore `recurrence_window` and treat `due` as an ordinary due date.
 

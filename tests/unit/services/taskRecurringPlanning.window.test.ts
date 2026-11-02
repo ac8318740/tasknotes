@@ -122,6 +122,8 @@ describe("recurrence_window (an occurrence stays open for a number of days)", ()
 			mapTaskFromFrontmatter(mapping, { title: "T", [key]: value }, "T.md").recurrence_window;
 
 		expect(read(8)).toBe(8);
+		expect(read("month_end")).toBe("month_end");
+		expect(read("monthEnd")).toBeUndefined();
 		expect(read("8")).toBeUndefined();
 		expect(read(0)).toBeUndefined();
 		expect(read(2.5)).toBeUndefined();
@@ -130,5 +132,50 @@ describe("recurrence_window (an occurrence stays open for a number of days)", ()
 		const legacy = { ...DEFAULT_FIELD_MAPPING };
 		delete legacy.recurrenceWindow;
 		expect(mapTaskToFrontmatter(legacy, { recurrence_window: 8 }).recurrence_window).toBe(8);
+	});
+
+	describe("month_end (open until the last day of the occurrence's month)", () => {
+		const monthEnd = (overrides: Partial<TaskInfo> = {}) =>
+			monthlyTask({ recurrence_window: "month_end", due: "2026-11-30", ...overrides });
+
+		it("sets due to the last day of each month, including February", () => {
+			mockGetTodayString.mockReturnValue("2027-01-20");
+			const plan = complete(
+				monthEnd({ scheduled: "2027-01-15", due: "2027-01-31", complete_instances: [] })
+			);
+
+			expect(plan.dateStr).toBe("2027-01-15");
+			expect(plan.updatedTask.scheduled).toBe("2027-02-15");
+			expect(plan.updatedTask.due).toBe("2027-02-28");
+		});
+
+		it("an occurrence is next until its month ends", () => {
+			const task = monthEnd();
+			const next = () => getNextUncompletedOccurrence(task)?.toISOString().slice(0, 10);
+
+			mockGetTodayString.mockReturnValue("2026-11-30");
+			expect(next()).toBe("2026-11-15");
+			mockGetTodayString.mockReturnValue("2026-12-01");
+			expect(next()).toBe("2026-12-15");
+		});
+
+		it("skipping a missed occurrence late in the month keeps this month's open", () => {
+			mockGetTodayString.mockReturnValue("2026-11-28");
+			const plan = skip(monthEnd({ complete_instances: [], scheduled: "2026-10-15", due: undefined }));
+
+			expect(plan.updatedTask.scheduled).toBe("2026-11-15");
+			expect(plan.updatedTask.due).toBe("2026-11-30");
+		});
+
+		it("a weekly occurrence stays open until the end of its own month", () => {
+			mockGetTodayString.mockReturnValue("2026-11-24");
+			const next = updateToNextScheduledOccurrence(
+				monthEnd({ recurrence: "DTSTART:20261102;FREQ=WEEKLY", scheduled: "2026-11-23" }),
+				false,
+				{ minOccurrenceDate: "2026-11-24" }
+			);
+
+			expect(next).toEqual({ scheduled: "2026-11-30", due: "2026-11-30" });
+		});
 	});
 });
