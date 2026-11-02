@@ -4,7 +4,11 @@ import type { FieldMapping } from "../types";
 /** Default frontmatter property for a pending moved recurring occurrence's original rule date. */
 export const DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY = "recurrence_original_date";
 
+/** Default frontmatter property for the days each recurring occurrence stays open. */
+export const DEFAULT_RECURRENCE_WINDOW_PROPERTY = "recurrence_window";
+
 export const DEFAULT_FIELD_MAPPING: FieldMapping = {
 	...MODEL_DEFAULT_FIELD_MAPPING,
 	recurrenceOriginalDate: DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
+	recurrenceWindow: DEFAULT_RECURRENCE_WINDOW_PROPERTY,
 };

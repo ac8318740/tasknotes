@@ -22,6 +22,7 @@ This reference documents the expected data types for each frontmatter property t
 | recurrence | text | `"FREQ=WEEKLY;BYDAY=MO"` |
 | recurrence_anchor | text | `"scheduled"`, `"completion"` or `"period"` |
 | recurrence_original_date | date (optional system property) | `"2026-10-18"` |
+| recurrence_window | number or text (optional) | `8` (days) or `"month_end"` |
 | timeEntries | list (objects) | See [Time Entries](#time-entries) |
 | blockedBy | list (objects) | See [Dependencies](#dependencies-blockedby) |
 | reminders | list (objects) | See [Reminders](#reminders) |
@@ -195,6 +196,12 @@ Single-item arrays may look verbose, but they prevent edge cases when filters an
 - **Valid values:** `"scheduled"`, `"completion"` or `"period"`
 - **Description:** Determines whether the next occurrence is calculated from the scheduled date or when the task was completed. `"period"` needs one completion per rule period on any day in it. See [Once per period, any day](../features/recurring-tasks.md#once-per-period-any-day)
 - **Example:** `recurrence_anchor: "scheduled"`
+
+#### recurrence_window
+
+- **Type:** number (whole days) or `"month_end"`, optional
+- **Description:** How long each occurrence of a recurring task stays open: a number of days counting its own date, or `month_end` for the last day of the occurrence's month. When the series advances, `due` is set to the last open day of the next occurrence. See [Occurrence windows](../features/recurring-tasks.md#occurrence-windows)
+- **Example:** `recurrence_window: 8` with `recurrence: "FREQ=MONTHLY;BYMONTHDAY=15"` keeps each occurrence open from the 15th to the 22nd
 
 #### recurrence_original_date
 

@@ -28,7 +28,10 @@ import type {
 	TaskInfo,
 } from "../types";
 import type { UserMappedField } from "../types/settings";
-import { DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY } from "./defaultFieldMapping";
+import {
+	DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
+	DEFAULT_RECURRENCE_WINDOW_PROPERTY,
+} from "./defaultFieldMapping";
 import { normalizeStringArrayValue } from "./nullableListNormalization";
 
 export {
@@ -47,17 +50,31 @@ export {
 	VALID_DEPENDENCY_RELTYPES,
 };
 
-// The shared model mapping does not know about `recurrenceOriginalDate`, and settings saved
-// before the field existed do not contain it. These wrappers resolve the property name
-// (falling back to the default) and handle the field around the model functions.
+// The shared model mapping does not know about `recurrenceOriginalDate` or `recurrenceWindow`,
+// and settings saved before the fields existed do not contain them. These wrappers resolve the
+// property names (falling back to the defaults) and handle the fields around the model functions.
 
-type ResolvedFieldMapping = FieldMapping & { recurrenceOriginalDate: string };
+type ResolvedFieldMapping = FieldMapping & { recurrenceOriginalDate: string; recurrenceWindow: string };
 
 function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
-	if (typeof mapping.recurrenceOriginalDate === "string") {
+	if (
+		typeof mapping.recurrenceOriginalDate === "string" &&
+		typeof mapping.recurrenceWindow === "string"
+	) {
 		return mapping as ResolvedFieldMapping;
 	}
-	return { ...mapping, recurrenceOriginalDate: DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY };
+	return {
+		...mapping,
+		recurrenceOriginalDate:
+			mapping.recurrenceOriginalDate ?? DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
+		recurrenceWindow: mapping.recurrenceWindow ?? DEFAULT_RECURRENCE_WINDOW_PROPERTY,
+	};
+}
+
+/** A recurrence window is a whole number of days or "month_end"; anything else means no window. */
+export function normalizeRecurrenceWindow(value: unknown): number | "month_end" | undefined {
+	if (value === "month_end") return value;
+	return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : undefined;
 }
 
 /**
@@ -163,6 +180,10 @@ export function mapTaskFromFrontmatter(
 	if (originalDate) {
 		mapped.recurrence_original_date = originalDate;
 	}
+	const window = normalizeRecurrenceWindow(frontmatter?.[resolved.recurrenceWindow]);
+	if (window) {
+		mapped.recurrence_window = window;
+	}
 	// The model reads unknown anchors as "scheduled"; keep the plugin's "period" anchor.
 	if (frontmatter?.[resolved.recurrenceAnchor] === "period") {
 		mapped.recurrence_anchor = frontmatter[resolved.recurrenceAnchor] as TaskInfo["recurrence_anchor"];
@@ -188,6 +209,10 @@ export function mapTaskToFrontmatter(
 	const originalDate = normalizeRecurrenceOriginalDate(taskData.recurrence_original_date);
 	if (originalDate) {
 		frontmatter[resolved.recurrenceOriginalDate] = originalDate;
+	}
+	const window = normalizeRecurrenceWindow(taskData.recurrence_window);
+	if (window) {
+		frontmatter[resolved.recurrenceWindow] = window;
 	}
 	return frontmatter;
 }

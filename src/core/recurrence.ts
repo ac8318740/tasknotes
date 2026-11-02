@@ -9,6 +9,7 @@ import {
 	updateToNextScheduledOccurrence as updateToNextScheduledOccurrenceModel,
 } from "@tasknotes/model/recurrence";
 import {
+	addDaysToDateString,
 	formatDateForStorage,
 	getDatePart,
 	getTodayString,
@@ -28,6 +29,10 @@ export interface RecurrenceOccurrenceOptions {
 	minOccurrenceDate?: string;
 }
 
+interface RecurrenceWindowInput {
+	recurrence_window?: number | "month_end";
+}
+
 export function addDTSTARTToRecurrenceRule(task: AddDTSTARTTaskInput): string | null {
 	return addDTSTARTToRecurrenceRuleModel(normalizeMinutePrecisionDateInputs(task));
 }
@@ -45,21 +50,32 @@ export function addDTSTARTToRecurrenceRuleWithDraggedTime(
 }
 
 export function getNextUncompletedOccurrence(
-	task: RecurringTaskInput,
+	task: RecurringTaskInput & RecurrenceWindowInput,
 	options?: RecurrenceOccurrenceOptions
 ): Date | null {
 	return getNextUncompletedOccurrenceModel(task, { today: getOccurrenceFloor(task, options) });
 }
 
 export function updateToNextScheduledOccurrence(
-	task: RecurrenceUpdateTaskInput,
+	task: RecurrenceUpdateTaskInput & RecurrenceWindowInput,
 	maintainDueOffset = true,
 	options?: RecurrenceOccurrenceOptions
 ): RecurrenceUpdateResult {
 	const next = updateToNextScheduledOccurrenceModel(task, maintainDueOffset, {
 		today: getOccurrenceFloor(task, options),
 	});
-	if (!isPeriodAnchor(task) || !next.scheduled || !next.due) return next;
+	if (isPeriodAnchor(task)) return withPeriodDue(task, next);
+	const windowEnd = next.scheduled ? getWindowEnd(task, getDatePart(next.scheduled)) : null;
+	if (!windowEnd) return next;
+
+	// The window sets each occurrence's due date, so moving an occurrence inside its
+	// window, or a scheduled-to-due gap that differs from the window, does not carry over.
+	const dueTime = task.due ? task.due.slice(getDatePart(task.due).length) : "";
+	return { ...next, due: windowEnd + dueTime };
+}
+
+function withPeriodDue(task: PeriodTaskInput, next: RecurrenceUpdateResult): RecurrenceUpdateResult {
+	if (!next.scheduled || !next.due) return next;
 
 	// A period's due date is its last day, which a fixed offset misses for months.
 	const periodEnd = getRecurrencePeriodEnd(task, parseDateToUTC(getDatePart(next.scheduled)));
@@ -68,6 +84,30 @@ export function updateToNextScheduledOccurrence(
 		...next,
 		due: formatDateForStorage(periodEnd) + next.due.slice(getDatePart(next.due).length),
 	};
+}
+
+/** Last open day (YYYY-MM-DD) of the occurrence on `date`, or null without a window. */
+function getWindowEnd(task: RecurrenceWindowInput, date: string): string | null {
+	const window = task.recurrence_window;
+	if (window === "month_end") {
+		const [year, month] = date.split("-").map(Number);
+		return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
+	}
+	return typeof window === "number" && Number.isInteger(window) && window > 1
+		? addDaysToDateString(date, window - 1)
+		: null;
+}
+
+/** The earliest occurrence date whose window is still open on `today`. */
+export function getOpenOccurrenceFloor(
+	task: RecurrenceWindowInput,
+	today = getTodayString()
+): string {
+	const window = task.recurrence_window;
+	if (window === "month_end") return `${today.slice(0, 8)}01`;
+	return typeof window === "number" && Number.isInteger(window) && window > 1
+		? addDaysToDateString(today, 1 - window)
+		: today;
 }
 
 export function getRecurrenceSearchDays(recurrence: string): number {
@@ -125,10 +165,10 @@ export function getPeriodActionDate(task: PeriodTaskInput): Date {
 }
 
 function getOccurrenceFloor(
-	task: RecurringTaskInput,
+	task: RecurringTaskInput & RecurrenceWindowInput,
 	options?: RecurrenceOccurrenceOptions
 ): string {
-	const floor = options?.minOccurrenceDate ?? getTodayString();
+	const floor = options?.minOccurrenceDate ?? getOpenOccurrenceFloor(task);
 	if (!isPeriodAnchor(task)) return floor;
 	// The period containing the floor is still open, so its start stays eligible.
 	const periodStart = getRecurrencePeriodStart(task, parseDateToUTC(floor));
