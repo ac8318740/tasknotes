@@ -287,6 +287,11 @@ export class MdbaseSpecService {
 			type: "date",
 			description: "Original rule date of a pending moved virtual recurring occurrence.",
 		});
+		this.addRoleField(lines, "recurrenceWindow", {
+			type: "integer",
+			min: 1,
+			description: "Days each recurring occurrence stays open, counting its own date.",
+		});
 		this.addField(lines, "tags", { type: "list", items: { type: "string" }, tn_role: "tags" });
 
 		// Complex nested fields

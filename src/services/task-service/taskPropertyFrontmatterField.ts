@@ -8,6 +8,7 @@ export interface TaskPropertyFieldMapper {
 const TASK_PROPERTY_FIELD_MAPPING_ALIASES: Partial<Record<keyof TaskInfo, FieldMappingKey>> = {
 	recurrence_anchor: "recurrenceAnchor",
 	recurrence_original_date: "recurrenceOriginalDate",
+	recurrence_window: "recurrenceWindow",
 	complete_instances: "completeInstances",
 	skipped_instances: "skippedInstances",
 	recurrence_parent: "recurrenceParent",

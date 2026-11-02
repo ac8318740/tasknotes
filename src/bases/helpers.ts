@@ -4,7 +4,7 @@ import TaskNotesPlugin from "../main";
 import { Reminder, TaskDependency, TaskInfo, TimeEntry } from "../types";
 import type { OccurrenceMaterializationMode, OccurrenceNextTrigger } from "@tasknotes/model";
 import { calculateTotalTimeSpent } from "../utils/helpers";
-import { normalizeRecurrenceOriginalDate } from "../core/fieldMapping";
+import { normalizeRecurrenceOriginalDate, normalizeRecurrenceWindow } from "../core/fieldMapping";
 import { convertInternalToUserProperties } from "../utils/propertyMapping";
 import { DEFAULT_INTERNAL_VISIBLE_PROPERTIES } from "../settings/defaults";
 import type { TaskCardOptions } from "../ui/TaskCard";
@@ -188,6 +188,7 @@ function createTaskInfoFromProperties(
 		"recurrence_parent",
 		"occurrence_date",
 		"recurrence_original_date",
+		"recurrence_window",
 		"occurrence_materialization",
 		"occurrence_next_trigger",
 		"occurrence_template",
@@ -259,6 +260,7 @@ function createTaskInfoFromProperties(
 		recurrence_parent: toOptionalString(props.recurrence_parent),
 		occurrence_date: toOptionalString(props.occurrence_date),
 		recurrence_original_date: normalizeRecurrenceOriginalDate(props.recurrence_original_date),
+		recurrence_window: normalizeRecurrenceWindow(props.recurrence_window),
 		occurrence_materialization: toOccurrenceMaterializationMode(
 			props.occurrence_materialization
 		),

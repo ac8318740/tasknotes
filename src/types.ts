@@ -472,6 +472,7 @@ export interface TaskInfo {
 	skipped_instances?: string[]; // Array of dates (YYYY-MM-DD) when recurring task was skipped
 	recurrence_parent?: string; // Link/path to the parent recurring task when this is a materialized occurrence
 	occurrence_date?: string; // Target recurrence date (YYYY-MM-DD) for materialized occurrences
+	recurrence_window?: number; // Days each occurrence stays open, counting its own date; sets its due date
 	recurrence_original_date?: string; // Original rule date (YYYY-MM-DD) of a pending moved virtual recurring occurrence
 	occurrence_materialization?: OccurrenceMaterializationMode; // Parent occurrence materialization policy
 	occurrence_next_trigger?: OccurrenceNextTrigger; // Parent policy for materializing the next occurrence
@@ -723,6 +724,7 @@ export interface FieldMapping {
 	recurrenceAnchor: string; // User-configurable property name for recurrence_anchor field
 	recurrenceParent: string;
 	occurrenceDate: string;
+	recurrenceWindow?: string; // Optional like recurrenceOriginalDate; defaults to recurrence_window
 	recurrenceOriginalDate?: string; // Optional so settings saved before this field existed keep working; defaults to recurrence_original_date
 	occurrenceMaterialization: string;
 	occurrenceNextTrigger: string;

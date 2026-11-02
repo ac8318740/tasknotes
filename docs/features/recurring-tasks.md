@@ -62,6 +62,27 @@ If the task advances to `scheduled: 2025-01-08`, the due date becomes `2025-01-1
 
 This setting is most useful when due dates represent a fixed lead/lag relative to scheduled work (for example, "due two days after execution"). If due dates are independent deadlines, leaving the setting off is usually clearer.
 
+## Occurrence windows
+
+Some recurring tasks can be done on any day within a few days of their date, for example "every month on the 15th, any time up to the 22nd". Set `recurrence_window` to the number of days each occurrence stays open, counting its own date:
+
+```yaml
+recurrence: "DTSTART:20261115;FREQ=MONTHLY;BYMONTHDAY=15"
+recurrence_window: 8 # open from the 15th to the 22nd
+scheduled: 2026-11-15
+due: 2026-11-22
+```
+
+- **Due date**: when the series advances, TaskNotes sets `due` to the last open day of the next occurrence and keeps any due time. The window replaces the scheduled-to-due offset, so moving an occurrence inside its window does not shift later due dates, and **Maintain due date offset in recurring tasks** does not apply. Set `due` yourself for the occurrence that is current when you add the window.
+- **Overdue**: an occurrence becomes overdue the day after its window closes, as any task does after its due date. The **Overdue** view in the default tasks base also lists tasks whose scheduled date has passed, so it shows an open occurrence from its second day. Filter on `formula.isOverdue` to list only tasks past their due date.
+- **Next occurrence**: an occurrence stays next until its window closes. Completing or skipping an older occurrence, or changing the rule, keeps an open occurrence instead of moving on to the following date.
+- **Completing and skipping**: completing or skipping on any day in the window records the occurrence's own date in `complete_instances` or `skipped_instances`.
+- **Month lengths**: the window is a number of days, so "15th to 22nd" covers the same dates every month.
+- **Calendar**: with **Span tasks between scheduled and due dates** on, each occurrence shows as one bar across its window.
+- **Older versions** ignore `recurrence_window` and treat `due` as an ordinary due date.
+
+A window of `1`, or no `recurrence_window`, keeps the usual behaviour.
+
 ## Recurrence Pattern Examples
 
 ```text

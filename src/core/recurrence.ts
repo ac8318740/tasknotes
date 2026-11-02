@@ -7,7 +7,7 @@ import {
 	getNextUncompletedOccurrence as getNextUncompletedOccurrenceModel,
 	updateToNextScheduledOccurrence as updateToNextScheduledOccurrenceModel,
 } from "@tasknotes/model/recurrence";
-import { getTodayString } from "../utils/dateUtils";
+import { addDaysToDateString, getDatePart, getTodayString } from "../utils/dateUtils";
 
 type AddDTSTARTTaskInput = Parameters<typeof addDTSTARTToRecurrenceRuleModel>[0];
 type AddDTSTARTWithDraggedTimeTaskInput = Parameters<
@@ -19,6 +19,10 @@ type RecurrenceUpdateResult = ReturnType<typeof updateToNextScheduledOccurrenceM
 
 export interface RecurrenceOccurrenceOptions {
 	minOccurrenceDate?: string;
+}
+
+interface RecurrenceWindowInput {
+	recurrence_window?: number;
 }
 
 export function addDTSTARTToRecurrenceRule(task: AddDTSTARTTaskInput): string | null {
@@ -38,22 +42,47 @@ export function addDTSTARTToRecurrenceRuleWithDraggedTime(
 }
 
 export function getNextUncompletedOccurrence(
-	task: RecurringTaskInput,
+	task: RecurringTaskInput & RecurrenceWindowInput,
 	options?: RecurrenceOccurrenceOptions
 ): Date | null {
 	return getNextUncompletedOccurrenceModel(task, {
-		today: options?.minOccurrenceDate ?? getTodayString(),
+		today: options?.minOccurrenceDate ?? getOpenOccurrenceFloor(task),
 	});
 }
 
 export function updateToNextScheduledOccurrence(
-	task: RecurrenceUpdateTaskInput,
+	task: RecurrenceUpdateTaskInput & RecurrenceWindowInput,
 	maintainDueOffset = true,
 	options?: RecurrenceOccurrenceOptions
 ): RecurrenceUpdateResult {
-	return updateToNextScheduledOccurrenceModel(task, maintainDueOffset, {
-		today: options?.minOccurrenceDate ?? getTodayString(),
+	const next = updateToNextScheduledOccurrenceModel(task, maintainDueOffset, {
+		today: options?.minOccurrenceDate ?? getOpenOccurrenceFloor(task),
 	});
+	const windowDays = getRecurrenceWindowDays(task);
+	if (windowDays === 1 || !next.scheduled) return next;
+
+	// The window sets each occurrence's due date, so moving an occurrence inside its
+	// window, or a scheduled-to-due gap that differs from the window, does not carry over.
+	const dueTime = task.due ? task.due.slice(getDatePart(task.due).length) : "";
+	return {
+		...next,
+		due: addDaysToDateString(getDatePart(next.scheduled), windowDays - 1) + dueTime,
+	};
+}
+
+/** Days each occurrence stays open, counting its own date (`recurrence_window`). */
+function getRecurrenceWindowDays(task: RecurrenceWindowInput): number {
+	const days = task.recurrence_window;
+	return typeof days === "number" && Number.isInteger(days) && days > 1 ? days : 1;
+}
+
+/** The earliest occurrence date whose window is still open on `today`. */
+export function getOpenOccurrenceFloor(
+	task: RecurrenceWindowInput,
+	today = getTodayString()
+): string {
+	const windowDays = getRecurrenceWindowDays(task);
+	return windowDays === 1 ? today : addDaysToDateString(today, 1 - windowDays);
 }
 
 function normalizeMinutePrecisionDateInputs<T extends { scheduled?: string; dateCreated?: string }>(

@@ -2,6 +2,7 @@ import {
 	addDTSTARTToRecurrenceRule,
 	generateRecurringInstances,
 	getNextUncompletedOccurrence,
+	getOpenOccurrenceFloor,
 	updateDTSTARTInRecurrenceRule,
 	updateToNextScheduledOccurrence,
 } from "../../core/recurrence";
@@ -11,7 +12,6 @@ import {
 	formatDateForStorage,
 	getDatePart,
 	getTodayLocal,
-	getTodayString,
 	parseDateToUTC,
 } from "../../utils/dateUtils";
 import {
@@ -308,6 +308,7 @@ export function buildRecurringTaskCompletePlan({
 	// together while the explicit floor below controls recurrence searching.
 	// Pass max(today, instanceDate) as the floor so future-dated tasks advance past
 	// the current cycle rather than jumping back to today's nearest occurrence.
+	// With a recurrence window, "today" is the earliest occurrence still open today.
 	const taskForNextOccurrenceBase = owningRecurrenceDate && !getRecurringMoveOriginalDate(freshTask)
 		? {
 				...updatedTask,
@@ -322,8 +323,8 @@ export function buildRecurringTaskCompletePlan({
 		freshTask,
 		dateStr
 	);
-	const todayStr = getTodayString();
-	const floorDate = dateStr > todayStr ? dateStr : todayStr;
+	const openFloor = getOpenOccurrenceFloor(freshTask);
+	const floorDate = dateStr > openFloor ? dateStr : openFloor;
 	const nextDates = updateToNextScheduledOccurrence(
 		taskForNextOccurrence,
 		maintainDueDateOffsetInRecurring,
@@ -479,8 +480,8 @@ export function buildRecurringTaskSkippedPlan({
 		freshTask,
 		dateStr
 	);
-	const todayStr = getTodayString();
-	const floorDate = dateStr > todayStr ? dateStr : todayStr;
+	const openFloor = getOpenOccurrenceFloor(freshTask);
+	const floorDate = dateStr > openFloor ? dateStr : openFloor;
 	const nextDates = updateToNextScheduledOccurrence(
 		taskForNextOccurrence,
 		maintainDueDateOffsetInRecurring,
