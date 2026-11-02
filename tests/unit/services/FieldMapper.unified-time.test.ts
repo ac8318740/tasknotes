@@ -35,7 +35,7 @@ describe('FieldMapper - Unified Time Entries', () => {
             expect(result.next_scheduled).toBe(futureDate1.toISOString());
         });
 
-        it('should return undefined when only past planned entries exist (no past fallback)', () => {
+        it('should return undefined when only past planned entries exist', () => {
             const pastDate = new Date(Date.now() - 86400000); // yesterday
 
             const frontmatter = {
@@ -50,7 +50,7 @@ describe('FieldMapper - Unified Time Entries', () => {
             };
 
             const result = mapper.mapFromFrontmatter(frontmatter, 'test.md');
-            // No future planned entries — next_scheduled is undefined (no past fallback)
+            // No future planned entries — next_scheduled should be cleared
             expect(result.next_scheduled).toBeUndefined();
         });
 

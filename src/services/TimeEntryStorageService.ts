@@ -341,6 +341,19 @@ export class TimeEntryStorageService {
 		}
 	}
 
+	/**
+	 * Refresh the denormalized `next_scheduled` field for all tasks.
+	 * In daily note mode, entries are stored externally and may be written by
+	 * integrations that bypass TimeEntryStorageService, so this must run at
+	 * startup to ensure task files reflect the current state of daily notes.
+	 */
+	async refreshAllScheduledFields(): Promise<void> {
+		const allTasks = await this.plugin.cacheManager.getAllTasks();
+		for (const task of allTasks) {
+			await this.updateDenormalizedScheduled(task, undefined);
+		}
+	}
+
 	/** Update the denormalized `next_scheduled` field on the task file based on earliest future planned entry */
 	private async updateDenormalizedScheduled(task: TaskInfo, entries?: UnifiedTimeEntry[]): Promise<void> {
 		const file = this.plugin.app.vault.getAbstractFileByPath(task.path);
@@ -355,11 +368,25 @@ export class TimeEntryStorageService {
 		const target = planned.find(e => new Date(e.startTime) >= now);
 
 		const scheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
+		const desiredValue = target ? target.startTime : undefined;
+
+		// Read current frontmatter to check if update is needed
+		const cache = this.plugin.app.metadataCache.getFileCache(file);
+		const currentValue = cache?.frontmatter?.[scheduledField];
+		const hasLegacyScheduled = cache?.frontmatter?.["scheduled"] !== undefined && "scheduled" !== scheduledField;
+
+		// Skip write if value already matches and no legacy cleanup needed
+		if (currentValue === desiredValue && !hasLegacyScheduled) return;
+
 		await this.plugin.app.fileManager.processFrontMatter(file, (fm) => {
-			if (target) {
-				fm[scheduledField] = target.startTime;
+			if (desiredValue) {
+				fm[scheduledField] = desiredValue;
 			} else {
 				delete fm[scheduledField];
+			}
+			// Clean up legacy "scheduled" field from pre-migration tasks
+			if (fm["scheduled"] !== undefined && "scheduled" !== scheduledField) {
+				delete fm["scheduled"];
 			}
 		});
 	}

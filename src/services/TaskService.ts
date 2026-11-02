@@ -1593,6 +1593,15 @@ export class TaskService {
 					}
 				});
 
+				// Migrate legacy "scheduled" → "next_scheduled" field
+				const nextScheduledField = this.plugin.fieldMapper.toUserField("nextScheduled");
+				if (frontmatter["scheduled"] !== undefined && "scheduled" !== nextScheduledField) {
+					if (frontmatter[nextScheduledField] === undefined) {
+						frontmatter[nextScheduledField] = frontmatter["scheduled"];
+					}
+					delete frontmatter["scheduled"];
+				}
+
 				// Handle completedDate for status changes (non-recurring tasks only)
 				if (updates.status !== undefined) {
 					this.updateCompletedDateInFrontmatter(frontmatter, updates.status, !!originalTask.recurrence);

@@ -587,6 +587,15 @@ export default class TaskNotesPlugin extends Plugin {
 				console.warn("[TaskNotes] Scheduled migration check failed:", error);
 			}
 
+			// Refresh denormalized next_scheduled fields on all tasks.
+			// In daily note mode entries live outside task files, so this ensures
+			// task frontmatter stays in sync with the actual planned entries.
+			try {
+				await this.timeEntryStorageService.refreshAllScheduledFields();
+			} catch (error) {
+				console.warn("[TaskNotes] Failed to refresh scheduled fields:", error);
+			}
+
 			// Maintain rolling window of planned entries for recurring tasks
 			// Run after a short delay to avoid blocking plugin startup
 			this.registerInterval(

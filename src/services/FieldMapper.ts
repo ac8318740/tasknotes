@@ -83,6 +83,9 @@ export class FieldMapper {
 
 		if (frontmatter[this.mapping.nextScheduled] !== undefined) {
 			mapped.next_scheduled = frontmatter[this.mapping.nextScheduled];
+		} else if (frontmatter["scheduled"] !== undefined) {
+			// Backward compat: read legacy "scheduled" field for pre-migration tasks
+			mapped.next_scheduled = frontmatter["scheduled"];
 		}
 
 		if (frontmatter[this.mapping.contexts] !== undefined) {
@@ -154,7 +157,7 @@ export class FieldMapper {
 			if (target) {
 				mapped.next_scheduled = target.startTime as string;
 			} else {
-				// No future planned entries — clear any stale next_scheduled value
+				// No planned entries at all — clear any stale next_scheduled value
 				mapped.next_scheduled = undefined;
 			}
 		}
