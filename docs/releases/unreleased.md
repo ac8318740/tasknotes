@@ -35,6 +35,7 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 
 ## Added
 
+- (#2479) You can now pin timeblocks linked to a task: right-click a timeblock in the calendar, or use the **Pinned** toggle in its edit modal. TaskNotes shows a pin icon and stores `pinned: true` on the timeblock in the daily note. See [Pinned timeblocks](https://tasknotes.dev/features/calendar-integration/#pinned-timeblocks).
 - (#1065) Time logged on a recurring task now counts toward one occurrence. Each time entry records its occurrence's rule date in `occurrence`. That is the occurrence whose week, month or other period contains the entry's start, or, for "after completion" rules, the occurrence the task shows. A recurring task's estimate is the length of each occurrence. Its card shows progress such as "1 hr logged of 5 hr estimated this occurrence", and **Total tracked time** stays the all-time total. Cards now say "logged" instead of "tracked". Time entries can also hold time logged without clock times, as `minutes` on an entry whose start and end are the same local midnight. See [Time Management](https://tasknotes.dev/features/time-management/#recurring-tasks)
   - The time entry editor shows one aligned row per entry with its date, start and end times, and duration. Clear the start time to log a duration without clock times. A recurring task's entries are grouped by occurrence, each with its progress against the estimate
   - Generated Bases files add `currentOccurrence` and `timeTrackedThisOccurrence` formulas, and `timeRemaining` and `efficiencyRatio` compare a recurring task's estimate with the current occurrence's time. All time formulas count `minutes` entries. Existing Bases files keep their formulas until regenerated
@@ -91,3 +92,8 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 - (#1370) A recurring series now moves to the **Next status** set on your first completed status when its current occurrence is completed or skipped, so an in-progress status does not carry over to the next occurrence. Series keep their status when no next status is set. See [Recurring Tasks](https://tasknotes.dev/features/recurring-tasks/#completion-tracking).
   - Thanks to @martin-forge for the implementation in PR #2441
 - Task List group and subgroup headers stay visible while scrolling, including virtualized lists. Thanks to @christenbc for the contribution in #2168.
+
+## Fixed
+
+- (#2482) Fixed open calendars not showing timeblock changes made outside TaskNotes (for example by a sync tool or a hand edit to a daily note) until refreshed.
+- (#2481) Fixed the timeblock edit modal dropping attachments written as links without `.md` (for example `[[Tasks/Write report]]`) when saving. Existing links now keep their original text.

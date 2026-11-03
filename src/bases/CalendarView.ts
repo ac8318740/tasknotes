@@ -86,6 +86,7 @@ import {
 import { CALENDAR_END_TIME_MAX_HOUR, normalizeCalendarTimeValue } from "../utils/calendarTime";
 import { filterEmptyProjects, sanitizeForCssClass } from "../utils/helpers";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { getDateFromFile } from "obsidian-daily-notes-interface";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/CalendarView" });
 
@@ -125,6 +126,7 @@ export function suppressCalendarContextMenuOnMobile(element: HTMLElement): void 
 }
 
 const CALENDAR_DATA_UPDATE_DEBOUNCE_MS = 5000;
+const TIMEBLOCK_REFETCH_DEBOUNCE_MS = 300;
 const CALENDAR_DATA_SIGNATURE_CHECK_INTERVAL_MS = 250;
 const CALENDAR_DATA_SIGNATURE_CHECK_MAX_MS = 2000;
 const DEFAULT_CALENDAR_EVENT_ORDER = "start,-duration,allDay,title";
@@ -436,6 +438,26 @@ export class CalendarView extends BasesViewBase {
 				if (this.rootElement?.isConnected) void this.refetchEvents();
 			}));
 		}
+		// Timeblocks live in daily notes, outside this base's results, so edits made outside
+		// TaskNotes (sync tools, hand edits) would otherwise only show after a manual refresh.
+		let timeblockRefetchTimer: number | null = null;
+		// Last seen timeblocks per daily note, so body-only edits do not rebuild the calendar.
+		const timeblockSnapshots = new Map<string, string>();
+		this.register(() => {
+			if (timeblockRefetchTimer !== null) window.clearTimeout(timeblockRefetchTimer);
+		});
+		this.registerEvent(this.plugin.app.metadataCache.on("changed", (file, _data, cache) => {
+			if (!this.viewOptions.showTimeblocks || !this.rootElement?.isConnected) return;
+			if (!getDateFromFile(file, "day")) return;
+			const snapshot = JSON.stringify(cache?.frontmatter?.timeblocks ?? null);
+			if (timeblockSnapshots.get(file.path) === snapshot) return;
+			timeblockSnapshots.set(file.path, snapshot);
+			if (timeblockRefetchTimer !== null) window.clearTimeout(timeblockRefetchTimer);
+			timeblockRefetchTimer = window.setTimeout(() => {
+				timeblockRefetchTimer = null;
+				void this.refetchEvents();
+			}, TIMEBLOCK_REFETCH_DEBOUNCE_MS);
+		}));
 		if (this.rootElement) {
 			const preview = new CalendarBatchPreview({
 				root: this.rootElement,

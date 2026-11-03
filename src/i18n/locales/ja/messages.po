@@ -605,6 +605,11 @@ msgctxt "views.pomodoroStats.recents.duration"
 msgid "{minutes} min"
 msgstr "{minutes}分"
 
+#: src/bases/calendar-core.ts
+msgctxt "pinned timeblock tooltip title"
+msgid "{name} (pinned)"
+msgstr "{name}（固定）"
+
 #: src/bases/MiniCalendarView.ts
 msgctxt "bases/MiniCalendarView: MiniCalendarView.createNotePreviewText display"
 msgid "{noteCount, plural, one {{eventCount, plural, one {{noteCount, number} note, {eventCount, number} event} other {{noteCount, number} note, {eventCount, number} events}}} other {{eventCount, plural, one {{noteCount, number} notes, {eventCount, number} event} other {{noteCount, number} notes, {eventCount, number} events}}}}"
@@ -6532,6 +6537,11 @@ msgctxt "modals.taskEdit.notices.updateFailure"
 msgid "Failed to update task: {message}"
 msgstr "タスクの更新に失敗しました：{message}"
 
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.notices.timeblockPinFailed"
+msgid "Failed to update timeblock: {message}"
+msgstr "タイムブロックの更新に失敗しました：{message}"
+
 #: src/modals/TimeblockInfoModal.ts
 msgctxt "notices.timeblockUpdateFailed"
 msgid "Failed to update timeblock. Check console for details."
@@ -7502,6 +7512,11 @@ msgstr "編集を続ける"
 msgctxt "settings.features.recurring.maintainOffsetDesc"
 msgid "Keep the offset between due date and scheduled date when recurring tasks are completed"
 msgstr "繰り返しタスクが完了したときに期限日と予定日の間のオフセットを保持"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedDesc"
+msgid "Keep this timeblock at its current time"
+msgstr "このタイムブロックを現在の時刻に固定します"
 
 #: src/settings/components/FieldManagerComponent.ts
 msgctxt "settings.modalFields.manager.fieldKey"
@@ -9658,6 +9673,21 @@ msgstr "{field}の日付を選択"
 msgctxt "contextMenus.date.pickDateTime"
 msgid "Pick date & time…"
 msgstr "日時を選択…"
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.pinTimeblock"
+msgid "Pin timeblock"
+msgstr "タイムブロックを固定"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedLabel"
+msgid "Pinned"
+msgstr "固定"
+
+#: src/bases/calendar-core.ts
+msgctxt "timeblock pinned indicator"
+msgid "Pinned"
+msgstr "固定"
 
 #: src/bases/registration.ts
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration.options displayName"
@@ -13660,6 +13690,11 @@ msgstr "名前なしフィールド"
 msgctxt "settings.defaults.reminders.unnamedReminder"
 msgid "Unnamed reminder"
 msgstr "名前なしリマインダー"
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.unpinTimeblock"
+msgid "Unpin timeblock"
+msgstr "タイムブロックの固定を解除"
 
 #: src/modals/TaskEditModal.ts
 msgctxt "modals.task.unsavedChanges.title"

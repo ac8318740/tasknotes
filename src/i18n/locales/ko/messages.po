@@ -605,6 +605,11 @@ msgctxt "views.pomodoroStats.recents.duration"
 msgid "{minutes} min"
 msgstr "{minutes}분"
 
+#: src/bases/calendar-core.ts
+msgctxt "pinned timeblock tooltip title"
+msgid "{name} (pinned)"
+msgstr "{name} (고정됨)"
+
 #: src/bases/MiniCalendarView.ts
 msgctxt "bases/MiniCalendarView: MiniCalendarView.createNotePreviewText display"
 msgid "{noteCount, plural, one {{eventCount, plural, one {{noteCount, number} note, {eventCount, number} event} other {{noteCount, number} note, {eventCount, number} events}}} other {{eventCount, plural, one {{noteCount, number} notes, {eventCount, number} event} other {{noteCount, number} notes, {eventCount, number} events}}}}"
@@ -6532,6 +6537,11 @@ msgctxt "modals.taskEdit.notices.updateFailure"
 msgid "Failed to update task: {message}"
 msgstr "작업 업데이트 실패: {message}"
 
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.notices.timeblockPinFailed"
+msgid "Failed to update timeblock: {message}"
+msgstr "타임블록 업데이트 실패: {message}"
+
 #: src/modals/TimeblockInfoModal.ts
 msgctxt "notices.timeblockUpdateFailed"
 msgid "Failed to update timeblock. Check console for details."
@@ -7502,6 +7512,11 @@ msgstr "계속 편집"
 msgctxt "settings.features.recurring.maintainOffsetDesc"
 msgid "Keep the offset between due date and scheduled date when recurring tasks are completed"
 msgstr "반복 작업 완료 시 마감일과 예정일 간의 오프셋 유지"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedDesc"
+msgid "Keep this timeblock at its current time"
+msgstr "이 타임블록을 현재 시간에 고정합니다"
 
 #: src/settings/components/FieldManagerComponent.ts
 msgctxt "settings.modalFields.manager.fieldKey"
@@ -9658,6 +9673,21 @@ msgstr "{field} 날짜 선택"
 msgctxt "contextMenus.date.pickDateTime"
 msgid "Pick date & time…"
 msgstr "날짜 및 시간 선택..."
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.pinTimeblock"
+msgid "Pin timeblock"
+msgstr "타임블록 고정"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedLabel"
+msgid "Pinned"
+msgstr "고정됨"
+
+#: src/bases/calendar-core.ts
+msgctxt "timeblock pinned indicator"
+msgid "Pinned"
+msgstr "고정됨"
 
 #: src/bases/registration.ts
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration.options displayName"
@@ -13660,6 +13690,11 @@ msgstr "이름 없는 필드"
 msgctxt "settings.defaults.reminders.unnamedReminder"
 msgid "Unnamed reminder"
 msgstr "이름 없는 리마인더"
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.unpinTimeblock"
+msgid "Unpin timeblock"
+msgstr "타임블록 고정 해제"
 
 #: src/modals/TaskEditModal.ts
 msgctxt "modals.task.unsavedChanges.title"

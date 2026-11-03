@@ -605,6 +605,11 @@ msgctxt "views.pomodoroStats.recents.duration"
 msgid "{minutes} min"
 msgstr "{minutes}分钟"
 
+#: src/bases/calendar-core.ts
+msgctxt "pinned timeblock tooltip title"
+msgid "{name} (pinned)"
+msgstr "{name}（已固定）"
+
 #: src/bases/MiniCalendarView.ts
 msgctxt "bases/MiniCalendarView: MiniCalendarView.createNotePreviewText display"
 msgid "{noteCount, plural, one {{eventCount, plural, one {{noteCount, number} note, {eventCount, number} event} other {{noteCount, number} note, {eventCount, number} events}}} other {{eventCount, plural, one {{noteCount, number} notes, {eventCount, number} event} other {{noteCount, number} notes, {eventCount, number} events}}}}"
@@ -6532,6 +6537,11 @@ msgctxt "modals.taskEdit.notices.updateFailure"
 msgid "Failed to update task: {message}"
 msgstr "更新任务失败：{message}"
 
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.notices.timeblockPinFailed"
+msgid "Failed to update timeblock: {message}"
+msgstr "更新时间块失败：{message}"
+
 #: src/modals/TimeblockInfoModal.ts
 msgctxt "notices.timeblockUpdateFailed"
 msgid "Failed to update timeblock. Check console for details."
@@ -7502,6 +7512,11 @@ msgstr "继续编辑"
 msgctxt "settings.features.recurring.maintainOffsetDesc"
 msgid "Keep the offset between due date and scheduled date when recurring tasks are completed"
 msgstr "重复任务完成时保持截止日期和计划日期之间的偏移"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedDesc"
+msgid "Keep this timeblock at its current time"
+msgstr "将此时间块固定在当前时间"
 
 #: src/settings/components/FieldManagerComponent.ts
 msgctxt "settings.modalFields.manager.fieldKey"
@@ -9658,6 +9673,21 @@ msgstr "选择{field}日期"
 msgctxt "contextMenus.date.pickDateTime"
 msgid "Pick date & time…"
 msgstr "选择日期和时间..."
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.pinTimeblock"
+msgid "Pin timeblock"
+msgstr "固定时间块"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedLabel"
+msgid "Pinned"
+msgstr "已固定"
+
+#: src/bases/calendar-core.ts
+msgctxt "timeblock pinned indicator"
+msgid "Pinned"
+msgstr "已固定"
 
 #: src/bases/registration.ts
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration.options displayName"
@@ -13660,6 +13690,11 @@ msgstr "未命名字段"
 msgctxt "settings.defaults.reminders.unnamedReminder"
 msgid "Unnamed reminder"
 msgstr "未命名提醒"
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.unpinTimeblock"
+msgid "Unpin timeblock"
+msgstr "取消固定时间块"
 
 #: src/modals/TaskEditModal.ts
 msgctxt "modals.task.unsavedChanges.title"

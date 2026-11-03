@@ -6,11 +6,15 @@ import {
 	getTargetDateForEvent,
 	showTimeblockInfoModal,
 } from "./calendar-core";
+import { setTimeblockPinned, timeblockLinksTask } from "../utils/helpers";
+import { EVENT_DATA_CHANGED } from "../types";
+import { msg } from "@lingui/core/macro";
+import { displayError } from "../i18n/runtime";
 import { handleCalendarTaskClick } from "../utils/clickHandlers";
 import { TaskContextMenu } from "../components/TaskContextMenu";
 import { ICSEventContextMenu } from "../components/ICSEventContextMenu";
 import { ICSEventInfoModal } from "../modals/ICSEventInfoModal";
-import { Menu, TFile } from "obsidian";
+import { Menu, Notice, TFile } from "obsidian";
 import { format } from "date-fns";
 
 export interface CalendarMenuContext {
@@ -99,9 +103,47 @@ export function handleCalendarEventContextMenu(
 ): void {
 	const extendedProps = arg.item.data;
 	if (!extendedProps) return;
-	const { taskInfo, icsEvent, eventType, filePath, subscriptionName } = extendedProps;
+	const { taskInfo, icsEvent, eventType, filePath, subscriptionName, timeblock } = extendedProps;
 	const jsEvent = toMouseEvent(arg.jsEvent, arg.el);
 	const event = eventApiFromItem(arg.item);
+
+	if (
+		eventType === "timeblock" &&
+		timeblock &&
+		event.start &&
+		// Unpin stays available when the task link no longer resolves.
+		(timeblock.pinned || timeblockLinksTask(context.plugin, timeblock.attachments))
+	) {
+		const { plugin } = context;
+		const pinned = timeblock.pinned === true;
+		const date = format(event.start, "yyyy-MM-dd");
+		const menu = new Menu();
+		menu.addItem((item) =>
+			item
+				.setTitle(
+					pinned
+						? plugin.i18n.translate(msg({ message: "Unpin timeblock", context: "views.advancedCalendar.contextMenu.unpinTimeblock" }))
+						: plugin.i18n.translate(msg({ message: "Pin timeblock", context: "views.advancedCalendar.contextMenu.pinTimeblock" }))
+				)
+				.setIcon(pinned ? "pin-off" : "pin")
+				.onClick(async () => {
+					try {
+						await setTimeblockPinned(plugin.app, date, timeblock.id, !pinned);
+						context.expectImmediateUpdate();
+						plugin.emitter.trigger(EVENT_DATA_CHANGED);
+					} catch (error) {
+						const message = error instanceof Error ? error.message : String(error);
+						new Notice(
+							plugin.i18n.translate(msg({ message: "Failed to update timeblock: {message}", context: "views.advancedCalendar.notices.timeblockPinFailed" }), {
+								message: displayError(message),
+							})
+						);
+					}
+				})
+		);
+		menu.showAtPosition({ x: jsEvent.clientX, y: jsEvent.clientY });
+		return;
+	}
 
 	if (taskInfo) {
 		const contextMenu = new TaskContextMenu({
