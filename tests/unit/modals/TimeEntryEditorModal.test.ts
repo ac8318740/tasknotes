@@ -1,4 +1,4 @@
-import { TimeEntryEditorModal } from "../../../src/modals/TimeEntryEditorModal";
+import { setEntryTimes, TimeEntryEditorModal } from "../../../src/modals/TimeEntryEditorModal";
 import { createTaskModalMarkdownEditor } from "../../../src/modals/taskModalEditorAdapter";
 import { PluginFactory, TaskFactory, TimeEntryFactory } from "../../helpers/mock-factories";
 
@@ -131,5 +131,60 @@ describe("TimeEntryEditorModal", () => {
 
 		expect(secondEditor.destroy).toHaveBeenCalledTimes(1);
 		expect(createTaskModalMarkdownEditorMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("shows and saves an entry logged without clock times as its duration", () => {
+		const plugin = PluginFactory.createMockPlugin();
+		const task = TaskFactory.createTask({
+			timeEntries: [{ startTime: "2026-11-02", endTime: "2026-11-02", minutes: 60 }],
+		});
+		const onSave = jest.fn();
+
+		const modal = new TimeEntryEditorModal(plugin.app as any, plugin as any, task, onSave);
+		modal.onOpen();
+
+		const inputs = modal.contentEl.querySelectorAll<HTMLInputElement>(".time-entry-editor-modal__entry input");
+		expect([...inputs].map((input) => input.value)).toEqual(["2026-11-02", "", "", "60"]);
+		(modal as any).save();
+		expect(onSave).toHaveBeenCalledWith([expect.objectContaining({ minutes: 60 })]);
+	});
+
+	it("groups a recurring task's entries by occurrence", () => {
+		const plugin = PluginFactory.createMockPlugin();
+		const task = TaskFactory.createTask({
+			recurrence: "DTSTART:20261005;FREQ=WEEKLY;BYDAY=MO",
+			timeEntries: [
+				{ startTime: "2026-11-02", endTime: "2026-11-02", minutes: 60, occurrence: "2026-11-02" },
+				{ startTime: "2026-10-27", endTime: "2026-10-27", minutes: 30, occurrence: "2026-10-26" },
+			],
+		});
+
+		const modal = new TimeEntryEditorModal(plugin.app as any, plugin as any, task, jest.fn());
+		modal.onOpen();
+
+		const groups = modal.contentEl.querySelectorAll(".time-entry-editor-modal__group");
+		expect(groups).toHaveLength(2);
+		expect(groups[0].querySelectorAll(".time-entry-editor-modal__entry")).toHaveLength(1);
+	});
+});
+
+describe("setEntryTimes", () => {
+	it("stores only a length, on the day's local midnight, when there is no start time", () => {
+		const entry = { startTime: "2026-11-02T09:00:00Z", endTime: "2026-11-02T10:00:00Z" };
+		setEntryTimes(entry, "2026-11-03", "", 45);
+		expect(entry).toEqual({ startTime: "2026-11-03T00:00", endTime: "2026-11-03T00:00", minutes: 45 });
+	});
+
+	it("keeps lengths of a day or more, and crosses midnight", () => {
+		const entry: any = { startTime: "2026-11-02T00:00", endTime: "2026-11-02T00:00", minutes: 45 };
+		setEntryTimes(entry, "2026-11-02", "23:30", 1500);
+		expect(entry.minutes).toBeUndefined();
+		expect((new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()) / 60000).toBe(1500);
+	});
+
+	it("leaves the end empty for a running entry", () => {
+		const entry: any = { startTime: "2026-11-02T00:00", endTime: "2026-11-02T00:00", minutes: 45 };
+		setEntryTimes(entry, "2026-11-02", "09:00", null);
+		expect(entry.endTime).toBeUndefined();
 	});
 });

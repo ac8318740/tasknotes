@@ -175,15 +175,15 @@ export function calculateTotalTimeSpent(timeEntries: TimeEntry[]): number {
 		return 0;
 	}
 
-	return timeEntries.reduce((total, entry) => {
-		// Skip entries without both start and end times
-		if (!entry.startTime || !entry.endTime) {
-			return total;
-		}
+	return timeEntries.reduce((total, entry) => total + getTimeEntryMinutes(entry), 0);
+}
 
-		const duration = calculateDuration(entry.startTime, entry.endTime);
-		return total + duration;
-	}, 0);
+/** Minutes of a finished entry: its `minutes` when logged without clock times, else end minus start. */
+export function getTimeEntryMinutes(entry: TimeEntry): number {
+	if (typeof entry.minutes === "number") return Math.max(0, entry.minutes);
+	// Skip entries without both start and end times
+	if (!entry.startTime || !entry.endTime) return 0;
+	return calculateDuration(entry.startTime, entry.endTime);
 }
 
 /**

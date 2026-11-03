@@ -522,6 +522,8 @@ export interface TimeEntry {
 	endTime?: string; // ISO timestamp, undefined if currently running
 	description?: string; // Optional description of what was worked on
 	duration?: number; // Legacy field; duration should be derived from start/end timestamps
+	minutes?: number; // Time logged without clock times; start and end hold the same local midnight and this holds the length
+	occurrence?: string; // Rule date (YYYY-MM-DD) of the recurring task occurrence this time counts toward
 }
 
 // Reminder types

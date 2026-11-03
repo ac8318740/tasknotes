@@ -455,11 +455,6 @@ msgctxt "settings.integrations.timeFormats.hoursAgo"
 msgid "{hours, plural, one {{hours, number} hour ago} other {{hours, number} hours ago}}"
 msgstr "{hours, plural, other {{hours, number}시간 전}}"
 
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.totalTime"
-msgid "{hours}h {minutes}m total"
-msgstr "총 {hours}시간 {minutes}분"
-
 #: src/i18n/recurrence.ts
 msgctxt "monthly weekday recurrence"
 msgid "{interval, plural, =1 {{weekday, select, MO {{position, select, last {Monthly on the last Monday} every {Monthly on every Monday} other {{index, selectordinal, one {Monthly on the #st Monday} two {Monthly on the #nd Monday} few {Monthly on the #rd Monday} other {Monthly on the #th Monday}}}}} TU {{position, select, last {Monthly on the last Tuesday} every {Monthly on every Tuesday} other {{index, selectordinal, one {Monthly on the #st Tuesday} two {Monthly on the #nd Tuesday} few {Monthly on the #rd Tuesday} other {Monthly on the #th Tuesday}}}}} WE {{position, select, last {Monthly on the last Wednesday} every {Monthly on every Wednesday} other {{index, selectordinal, one {Monthly on the #st Wednesday} two {Monthly on the #nd Wednesday} few {Monthly on the #rd Wednesday} other {Monthly on the #th Wednesday}}}}} TH {{position, select, last {Monthly on the last Thursday} every {Monthly on every Thursday} other {{index, selectordinal, one {Monthly on the #st Thursday} two {Monthly on the #nd Thursday} few {Monthly on the #rd Thursday} other {Monthly on the #th Thursday}}}}} FR {{position, select, last {Monthly on the last Friday} every {Monthly on every Friday} other {{index, selectordinal, one {Monthly on the #st Friday} two {Monthly on the #nd Friday} few {Monthly on the #rd Friday} other {Monthly on the #th Friday}}}}} SA {{position, select, last {Monthly on the last Saturday} every {Monthly on every Saturday} other {{index, selectordinal, one {Monthly on the #st Saturday} two {Monthly on the #nd Saturday} few {Monthly on the #rd Saturday} other {Monthly on the #th Saturday}}}}} SU {{position, select, last {Monthly on the last Sunday} every {Monthly on every Sunday} other {{index, selectordinal, one {Monthly on the #st Sunday} two {Monthly on the #nd Sunday} few {Monthly on the #rd Sunday} other {Monthly on the #th Sunday}}}}} other {Monthly}}} other {{weekday, select, MO {{position, select, last {Every {interval, number} months on the last Monday} every {Every {interval, number} months on every Monday} other {{index, selectordinal, one {Every {interval, number} months on the #st Monday} two {Every {interval, number} months on the #nd Monday} few {Every {interval, number} months on the #rd Monday} other {Every {interval, number} months on the #th Monday}}}}} TU {{position, select, last {Every {interval, number} months on the last Tuesday} every {Every {interval, number} months on every Tuesday} other {{index, selectordinal, one {Every {interval, number} months on the #st Tuesday} two {Every {interval, number} months on the #nd Tuesday} few {Every {interval, number} months on the #rd Tuesday} other {Every {interval, number} months on the #th Tuesday}}}}} WE {{position, select, last {Every {interval, number} months on the last Wednesday} every {Every {interval, number} months on every Wednesday} other {{index, selectordinal, one {Every {interval, number} months on the #st Wednesday} two {Every {interval, number} months on the #nd Wednesday} few {Every {interval, number} months on the #rd Wednesday} other {Every {interval, number} months on the #th Wednesday}}}}} TH {{position, select, last {Every {interval, number} months on the last Thursday} every {Every {interval, number} months on every Thursday} other {{index, selectordinal, one {Every {interval, number} months on the #st Thursday} two {Every {interval, number} months on the #nd Thursday} few {Every {interval, number} months on the #rd Thursday} other {Every {interval, number} months on the #th Thursday}}}}} FR {{position, select, last {Every {interval, number} months on the last Friday} every {Every {interval, number} months on every Friday} other {{index, selectordinal, one {Every {interval, number} months on the #st Friday} two {Every {interval, number} months on the #nd Friday} few {Every {interval, number} months on the #rd Friday} other {Every {interval, number} months on the #th Friday}}}}} SA {{position, select, last {Every {interval, number} months on the last Saturday} every {Every {interval, number} months on every Saturday} other {{index, selectordinal, one {Every {interval, number} months on the #st Saturday} two {Every {interval, number} months on the #nd Saturday} few {Every {interval, number} months on the #rd Saturday} other {Every {interval, number} months on the #th Saturday}}}}} SU {{position, select, last {Every {interval, number} months on the last Sunday} every {Every {interval, number} months on every Sunday} other {{index, selectordinal, one {Every {interval, number} months on the #st Sunday} two {Every {interval, number} months on the #nd Sunday} few {Every {interval, number} months on the #rd Sunday} other {Every {interval, number} months on the #th Sunday}}}}} other {Every {interval, number} months}}}}"
@@ -572,8 +567,8 @@ msgstr "{length, plural, other {리마인더 {length, number}개}}"
 
 #: src/ui/taskCardProperties.ts
 msgctxt "ui/taskCardProperties: timeEntries display"
-msgid "{length, plural, one {{value1} tracked ({length, number} entry)} other {{value1} tracked ({length, number} entries)}}"
-msgstr "{length, plural, other {{value1} 추적됨 (기록 {length, number}개)}}"
+msgid "{length, plural, one {{value1} logged ({length, number} entry)} other {{value1} logged ({length, number} entries)}}"
+msgstr "{length, plural, other {{value1} 기록됨 (기록 {length, number}개)}}"
 
 #: src/ui/taskCardProperties.ts
 msgctxt "ui/taskCardProperties: icsEventId display"
@@ -590,6 +585,11 @@ msgctxt "pomodoro break notification"
 msgid "{length, select, long {Time for a long break 💤} other {Time for a short break ☕}}"
 msgstr "{length, select, long {긴 휴식 시간입니다 💤} other {짧은 휴식 시간입니다 ☕}}"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.total"
+msgid "{logged} logged in total"
+msgstr "총 {logged} 기록됨"
+
 #: src/templates/defaultBasesFiles.ts
 msgctxt "generated Bases compact minutes"
 msgid "{minutes, number}m"
@@ -604,11 +604,6 @@ msgstr "{minutes, plural, other {{minutes, number}분 전}}"
 msgctxt "views.pomodoroStats.recents.duration"
 msgid "{minutes} min"
 msgstr "{minutes}분"
-
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.totalMinutes"
-msgid "{minutes}m total"
-msgstr "총 {minutes}분"
 
 #: src/bases/MiniCalendarView.ts
 msgctxt "bases/MiniCalendarView: MiniCalendarView.createNotePreviewText display"
@@ -797,8 +792,18 @@ msgstr "{value1}: {startTime}~{endTime}"
 
 #: src/ui/taskCardProperties.ts
 msgctxt "ui/taskCardProperties: totalTrackedTime display"
-msgid "{value1} tracked"
-msgstr "추적 시간 {value1}"
+msgid "{value1} logged"
+msgstr "{value1} 기록됨"
+
+#: src/ui/taskCardProperties.ts
+msgctxt "ui/taskCardProperties: totalTrackedTime display for a recurring task with an estimate"
+msgid "{value1} logged of {value2} estimated this occurrence"
+msgstr "이번 회차 예상 {value2} 중 {value1} 기록됨"
+
+#: src/ui/taskCardProperties.ts
+msgctxt "ui/taskCardProperties: totalTrackedTime display for a recurring task"
+msgid "{value1} logged this occurrence"
+msgstr "이번 회차 {value1} 기록됨"
 
 #: src/ui/StatusBarService.ts
 msgctxt "ui/StatusBarService: StatusBarService.renderStatusBar display"
@@ -4300,6 +4305,11 @@ msgctxt "generated Bases column name"
 msgid "Date"
 msgstr "날짜"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.date"
+msgid "Date"
+msgstr "날짜"
+
 #: src/settings/tabs/taskProperties/userFieldsCard.ts
 msgctxt "settings.taskProperties.customUserFields.types.date"
 msgid "Date"
@@ -4730,11 +4740,6 @@ msgctxt "modals.timeblockInfo.descriptionLabel"
 msgid "Description"
 msgstr "설명"
 
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.description"
-msgid "Description"
-msgstr "설명"
-
 #: src/modals/ReminderModal.ts
 msgctxt "modals.reminder.description"
 msgid "Description (optional)"
@@ -5063,6 +5068,16 @@ msgctxt "modals.task.tooltips.dueValue"
 msgid "Due: {value}"
 msgstr "마감: {value}"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.duration"
+msgid "Duration"
+msgstr "소요 시간"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.durationLabel"
+msgid "Duration in minutes"
+msgstr "소요 시간(분)"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.googleCalendarExport.defaultDuration.description"
 msgid "Duration in minutes for timed events (used when task has no time estimate)."
@@ -5272,6 +5287,11 @@ msgctxt "settings.modalFields.manager.enabled"
 msgid "Enabled:"
 msgstr "사용:"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.end"
+msgid "End"
+msgstr "종료"
+
 #: src/components/RecurrenceContextMenu.ts
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.endAfterOccurrences"
 msgid "End after {count} occurrences"
@@ -5307,15 +5327,15 @@ msgctxt "modals.timeblockCreation.endTimeLabel"
 msgid "End time"
 msgstr "종료 시간"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.endTime"
+msgid "End time"
+msgstr "종료 시간"
+
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.endTime.name"
 msgid "End time"
 msgstr "종료 시간"
-
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.endTime"
-msgid "End time (leave empty if still running)"
-msgstr "종료 시간 (진행 중이면 비워두세요)"
 
 #: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.validation.endBeforeStart"
@@ -7980,6 +8000,11 @@ msgctxt "modals.storageLocation.title.migrate"
 msgid "Migrate Pomodoro data?"
 msgstr "뽀모도로 데이터를 마이그레이션하시겠습니까?"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.minutesUnit"
+msgid "min"
+msgstr "분"
+
 #: src/views/StatsView.ts
 msgctxt "views.stats.filters.minTime"
 msgid "Min time (minutes)"
@@ -8624,6 +8649,11 @@ msgctxt "notices.audit.noNotes"
 msgid "No notes found for selected dates"
 msgstr "선택한 날짜에 노트가 없습니다"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.group.noOccurrence"
+msgid "No occurrence · {logged} logged"
+msgstr "회차 없음 · {logged} 기록됨"
+
 #: src/ui/TaskActionCoordinator.ts
 msgctxt "notices.interface.noOverdue"
 msgid "No overdue scheduled tasks to postpone"
@@ -9047,6 +9077,16 @@ msgstr "회차 노트: 수동"
 msgctxt "ui/taskCardProperties: occurrenceMaterialization display"
 msgid "Occurrence notes: rolling"
 msgstr "회차 노트: 순차 생성"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.group"
+msgid "Occurrence of {date} · {logged} logged"
+msgstr "{date} 회차 · {logged} 기록됨"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.group.withEstimate"
+msgid "Occurrence of {date} · {logged} logged of {estimate} estimated"
+msgstr "{date} 회차 · 예상 {estimate} 중 {logged} 기록됨"
 
 #: src/ui/taskCardMetadata.ts
 msgctxt "ui/taskCardMetadata: createOccurrenceMetadataPill display"
@@ -10654,6 +10694,11 @@ msgctxt "notices.audit.exportedRows"
 msgid "Rows exported: {count}"
 msgstr "내보낸 행: {count}개"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.running"
+msgid "running"
+msgstr "진행 중"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.googleCalendarTimeblockExport.targetCalendar.sameAsTasks"
 msgid "Same as task calendar"
@@ -11479,6 +11524,11 @@ msgstr "예정일부터 마감일까지 작업을 이어서 표시"
 msgctxt "settings.modalFields.splitLayout.name"
 msgid "Split layout on wide screens"
 msgstr "넓은 화면에서 분할 레이아웃"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.start"
+msgid "Start"
+msgstr "시작"
 
 #: src/components/RecurrenceContextMenu.ts
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.startDate"

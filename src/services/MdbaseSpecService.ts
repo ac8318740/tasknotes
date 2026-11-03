@@ -299,6 +299,8 @@ export class MdbaseSpecService {
 					endTime: { type: "datetime" },
 					description: { type: "string" },
 					duration: { type: "integer" },
+					minutes: { type: "integer" },
+					occurrence: { type: "date" },
 				},
 			},
 		});

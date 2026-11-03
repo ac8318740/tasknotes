@@ -357,6 +357,14 @@ function generateAllFormulas(plugin: TaskNotesPlugin): Record<string, string> {
 	const dueDay = formatBasesDateDayExpression(dueProperty);
 	const scheduledDay = formatBasesDateDayExpression(scheduledProperty);
 	const timeEntryStartDay = formatBasesDateDayExpression("value.startTime");
+	// toUserField falls back to the default name for settings saved before the field existed.
+	const recurrenceOriginalDateProperty = plugin.fieldMapper.toUserField("recurrenceOriginalDate");
+	// An entry logged without clock times holds its length in `minutes`.
+	const timeEntryMinutes =
+		"if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)";
+	const trackedThisOccurrence = `list(${timeEntriesProperty}).filter(value.endTime && value.occurrence && ${formatBasesDateDayExpression("value.occurrence")} == formula.currentOccurrence).map(${timeEntryMinutes}).reduce(acc + value, 0)`;
+	// A recurring task's estimate is the length of each occurrence, so it is compared with that occurrence's time.
+	const trackedAgainstEstimate = `if(formula.currentOccurrence, ${trackedThisOccurrence}, list(${timeEntriesProperty}).filter(value.endTime).map(${timeEntryMinutes}).reduce(acc + value, 0))`;
 	const nextDateStartOfDay = 'date(date(formula.nextDate).format("YYYY-MM-DD"))';
 
 	return {
@@ -402,17 +410,23 @@ function generateAllFormulas(plugin: TaskNotesPlugin): Record<string, string> {
 		// === TIME TRACKING FORMULAS ===
 
 		// Time remaining (estimate minus tracked) in minutes, null if no estimate
-		timeRemaining: `if(${timeEstimateProperty} && ${timeEstimateProperty} > 0, ${timeEstimateProperty} - if(${timeEntriesProperty}, list(${timeEntriesProperty}).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0), 0), null)`,
+		timeRemaining: `if(${timeEstimateProperty} && ${timeEstimateProperty} > 0, (${timeEstimateProperty} - if(${timeEntriesProperty}, ${trackedAgainstEstimate}, 0)).round(), null)`,
 
 		// Efficiency ratio: actual time vs estimated (as percentage)
 		// > 100% means took longer than estimated, < 100% means faster
-		efficiencyRatio: `if(${timeEstimateProperty} && ${timeEstimateProperty} > 0 && ${timeEntriesProperty}, (list(${timeEntriesProperty}).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) / ${timeEstimateProperty} * 100).round(), null)`,
+		efficiencyRatio: `if(${timeEstimateProperty} && ${timeEstimateProperty} > 0 && ${timeEntriesProperty}, (${trackedAgainstEstimate} / ${timeEstimateProperty} * 100).round(), null)`,
+
+		// Rule date (YYYY-MM-DD) of the occurrence a recurring task shows, null if it does not recur
+		currentOccurrence: `if(formula.isRecurring, if(${recurrenceOriginalDateProperty}, ${formatBasesDateDayExpression(recurrenceOriginalDateProperty)}, if(${scheduledHasValue}, ${scheduledDay}, null)), null)`,
+
+		// Minutes tracked toward the current occurrence of a recurring task, null if it does not recur
+		timeTrackedThisOccurrence: `if(formula.currentOccurrence, if(${timeEntriesProperty}, ${trackedThisOccurrence}.round(), 0), null)`,
 
 		// Total time tracked this week (in minutes)
-		timeTrackedThisWeek: `if(${timeEntriesProperty}, list(${timeEntriesProperty}).filter(value.endTime && date(value.startTime) >= today() - "7d").map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round(), 0)`,
+		timeTrackedThisWeek: `if(${timeEntriesProperty}, list(${timeEntriesProperty}).filter(value.endTime && date(value.startTime) >= today() - "7d").map(${timeEntryMinutes}).reduce(acc + value, 0).round(), 0)`,
 
 		// Total time tracked today (in minutes)
-		timeTrackedToday: `if(${timeEntriesProperty}, list(${timeEntriesProperty}).filter(value.endTime && ${timeEntryStartDay} == ${todayDay}).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round(), 0)`,
+		timeTrackedToday: `if(${timeEntriesProperty}, list(${timeEntriesProperty}).filter(value.endTime && ${timeEntryStartDay} == ${todayDay}).map(${timeEntryMinutes}).reduce(acc + value, 0).round(), 0)`,
 
 		// === GROUPING FORMULAS ===
 
@@ -505,7 +519,7 @@ function generateAllFormulas(plugin: TaskNotesPlugin): Record<string, string> {
 		// === DISPLAY FORMULAS ===
 
 		// Time tracked formatted as "Xh Ym"
-		timeTrackedFormatted: `if(${timeEntriesProperty}, if(${`list(${timeEntriesProperty}).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0)`} >= 60, ${basesMessage(msg({ message: "{hours, number}h {minutes, number}m", context: "generated Bases compact hours and minutes" }), { hours: `(list(${timeEntriesProperty}).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) / 60).floor()`, minutes: `(list(${timeEntriesProperty}).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) % 60).round()` })}, ${basesMessage(msg({ message: "{minutes, number}m", context: "generated Bases compact minutes" }), { minutes: `list(${timeEntriesProperty}).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round()` })}), ${basesMessage(msg({ message: "{minutes, number}m", context: "generated Bases compact minutes" }), { minutes: "0" })})`,
+		timeTrackedFormatted: `if(${timeEntriesProperty}, if(${`list(${timeEntriesProperty}).filter(value.endTime).map(${timeEntryMinutes}).reduce(acc + value, 0)`} >= 60, ${basesMessage(msg({ message: "{hours, number}h {minutes, number}m", context: "generated Bases compact hours and minutes" }), { hours: `(list(${timeEntriesProperty}).filter(value.endTime).map(${timeEntryMinutes}).reduce(acc + value, 0) / 60).floor()`, minutes: `(list(${timeEntriesProperty}).filter(value.endTime).map(${timeEntryMinutes}).reduce(acc + value, 0) % 60).round()` })}, ${basesMessage(msg({ message: "{minutes, number}m", context: "generated Bases compact minutes" }), { minutes: `list(${timeEntriesProperty}).filter(value.endTime).map(${timeEntryMinutes}).reduce(acc + value, 0).round()` })}), ${basesMessage(msg({ message: "{minutes, number}m", context: "generated Bases compact minutes" }), { minutes: "0" })})`,
 
 		// Due date as human-readable relative text
 		dueDateDisplay: `if(${dueIsEmpty}, "", if(${dueDay} == ${todayDay}, ${JSON.stringify(uiText(msg({ message: "Today", context: "generated Bases grouping label" })))}, if(${dueDay} == ${tomorrowDay}, ${JSON.stringify(uiText(msg({ message: "Tomorrow", context: "generated Bases grouping label" })))}, if(${dueDay} == ${yesterdayDay}, ${JSON.stringify(uiText(msg({ message: "Yesterday", context: "generated Bases grouping label" })))}, if(date(${dueProperty}) < today(), ${basesMessage(msg({ message: "{days, plural, one {# day ago} other {# days ago}}", context: "generated Bases relative due date" }), { days: "formula.daysUntilDue * -1" })}, if(${dueDay} <= ${weekEndDay}, date(${dueProperty}).format("ddd"), date(${dueProperty}).format("MMM D")))))))`,

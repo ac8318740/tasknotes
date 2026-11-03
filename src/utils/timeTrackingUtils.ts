@@ -1,4 +1,5 @@
 import { TaskInfo, TimeEntry } from "../types";
+import { getTimeEntryMinutes } from "./helpers";
 
 export interface ActiveSessionInfo {
 	task: {
@@ -74,14 +75,21 @@ export interface TaskTimeDataResult {
 	}>;
 }
 
+/** Minutes of an entry with an end: its `minutes` when logged without clock times, else end minus start. */
+function getFinishedEntryMinutes(entry: TimeEntry): number {
+	if (typeof entry.minutes === "number") return getTimeEntryMinutes(entry);
+	return Math.floor(
+		(new Date(entry.endTime as string).getTime() - new Date(entry.startTime).getTime()) /
+			(1000 * 60)
+	);
+}
+
 export function calculateTotalTimeSpent(timeEntries: TimeEntry[]): number {
 	if (!timeEntries || timeEntries.length === 0) return 0;
 
 	return timeEntries.reduce((total, entry) => {
 		if (entry.endTime) {
-			const durationMs =
-				new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime();
-			return total + Math.floor(durationMs / (1000 * 60));
+			return total + getFinishedEntryMinutes(entry);
 		} else {
 			// Active session
 			const elapsedMs = Date.now() - new Date(entry.startTime).getTime();
@@ -198,10 +206,7 @@ export function computeTimeSummary(
 					);
 					hasActiveSession = true;
 				} else {
-					const entryEnd = new Date(entry.endTime);
-					taskMinutes += Math.floor(
-						(entryEnd.getTime() - entryStart.getTime()) / (1000 * 60)
-					);
+					taskMinutes += getFinishedEntryMinutes(entry);
 				}
 			}
 		}
@@ -282,13 +287,7 @@ export function computeTaskTimeData(
 		completedEntries.length > 0
 			? Math.round(
 					(completedEntries.reduce(
-						(sum, entry) =>
-							sum +
-							Math.floor(
-								(new Date(entry.endTime as string).getTime() -
-									new Date(entry.startTime).getTime()) /
-									(1000 * 60)
-							),
+						(sum, entry) => sum + getFinishedEntryMinutes(entry),
 						0
 					) /
 						completedEntries.length) *
@@ -326,11 +325,7 @@ export function computeTaskTimeData(
 			endTime: entry.endTime || null,
 			description: entry.description || null,
 			duration: entry.endTime
-				? Math.floor(
-						(new Date(entry.endTime).getTime() -
-							new Date(entry.startTime).getTime()) /
-							(1000 * 60)
-					)
+				? getFinishedEntryMinutes(entry)
 				: Math.floor(
 						(Date.now() - new Date(entry.startTime).getTime()) /
 							(1000 * 60)

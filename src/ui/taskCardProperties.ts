@@ -11,6 +11,7 @@ import { DateContextMenu } from "../components/DateContextMenu";
 import { DEFAULT_INTERNAL_VISIBLE_PROPERTIES } from "../settings/defaults";
 import { calculateTotalTimeSpent, getFiniteRecurringInstanceCount } from "../utils/helpers";
 import { filterTaskIdentificationTags } from "../utils/taskTagFiltering";
+import { getShownOccurrence } from "../core/recurrence";
 import {
 	formatDateTimeForDisplay,
 	getDatePart,
@@ -329,9 +330,18 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 			element.textContent = uiText(msg({ message: "{value1} estimated", context: "ui/taskCardProperties: timeEstimate display" }), { value1: plugin.formatTime(value) });
 		}
 	},
-	totalTrackedTime: (element, value, _, plugin) => {
-		if (typeof value === "number" && value > 0) {
-			element.textContent = uiText(msg({ message: "{value1} tracked", context: "ui/taskCardProperties: totalTrackedTime display" }), { value1: plugin.formatTime(value) });
+	totalTrackedTime: (element, value, task, plugin) => {
+		const occurrence = getShownOccurrence(task);
+		if (occurrence && typeof value === "number" && value > 0) {
+			// A recurring task's estimate is the length of each occurrence, so show this one's progress.
+			const tracked = plugin.formatTime(
+				calculateTotalTimeSpent((task.timeEntries ?? []).filter((entry) => entry.occurrence === occurrence))
+			);
+			element.textContent = task.timeEstimate
+				? uiText(msg({ message: "{value1} logged of {value2} estimated this occurrence", context: "ui/taskCardProperties: totalTrackedTime display for a recurring task with an estimate" }), { value1: tracked, value2: plugin.formatTime(task.timeEstimate) })
+				: uiText(msg({ message: "{value1} logged this occurrence", context: "ui/taskCardProperties: totalTrackedTime display for a recurring task" }), { value1: tracked });
+		} else if (typeof value === "number" && value > 0) {
+			element.textContent = uiText(msg({ message: "{value1} logged", context: "ui/taskCardProperties: totalTrackedTime display" }), { value1: plugin.formatTime(value) });
 		}
 	},
 	recurrence: (element, value, _task, plugin, options) => {
@@ -508,7 +518,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 		if (Array.isArray(value) && value.length > 0) {
 			const totalTime = calculateTotalTimeSpent(value);
 			if (totalTime > 0) {
-				element.textContent = uiText(msg({ message: "{length, plural, one {{value1} tracked ({length, number} entry)} other {{value1} tracked ({length, number} entries)}}", context: "ui/taskCardProperties: timeEntries display" }), { value1: plugin.formatTime(totalTime), length: value.length });
+				element.textContent = uiText(msg({ message: "{length, plural, one {{value1} logged ({length, number} entry)} other {{value1} logged ({length, number} entries)}}", context: "ui/taskCardProperties: timeEntries display" }), { value1: plugin.formatTime(totalTime), length: value.length });
 			}
 		}
 	},
