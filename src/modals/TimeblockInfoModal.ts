@@ -29,6 +29,7 @@ import type { InterpolationValues, MessageDescriptor } from "../i18n";
 import { modifyVaultFile } from "../services/VaultMutationService";
 import { TaskInfo } from "../types";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { resolveTimeblockAttachment } from "../utils/helpers";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Modals/TimeblockInfoModal" });
 
@@ -76,6 +77,8 @@ export class TimeblockInfoModal extends Modal {
 
 	// Attachment management
 	private selectedAttachments: TAbstractFile[] = [];
+	/** Original link text per attachment path, so saving does not rewrite existing links */
+	private attachmentLinks = new Map<string, string>();
 	private attachmentsList: HTMLElement;
 	private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
 
@@ -314,9 +317,12 @@ export class TimeblockInfoModal extends Modal {
 		for (const attachmentPath of this.timeblock.attachments) {
 			// Remove wikilink brackets if present
 			const cleanPath = attachmentPath.replace(/^\[\[|\]\]$/g, "");
-			const file = this.app.vault.getAbstractFileByPath(cleanPath);
-			if (file) {
+			const file =
+				resolveTimeblockAttachment(this.app, attachmentPath) ??
+				this.app.vault.getAbstractFileByPath(cleanPath);
+			if (file && !this.attachmentLinks.has(file.path)) {
 				this.selectedAttachments.push(file);
+				this.attachmentLinks.set(file.path, attachmentPath);
 			}
 		}
 	}
@@ -468,7 +474,7 @@ export class TimeblockInfoModal extends Modal {
 
 			// Convert selected attachments to wikilinks
 			const attachments: string[] = this.selectedAttachments.map(
-				(file) => `[[${file.path}]]`
+				(file) => this.attachmentLinks.get(file.path) ?? `[[${file.path}]]`
 			);
 			this.timeblock.attachments = attachments.length > 0 ? attachments : undefined;
 

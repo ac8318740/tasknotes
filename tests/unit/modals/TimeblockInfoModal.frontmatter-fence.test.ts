@@ -106,4 +106,47 @@ describe("TimeblockInfoModal frontmatter fence detection", () => {
 		expect(finalContent).toContain("# Daily Note Content");
 		expect(finalContent).not.toContain("Standup");
 	});
+	it("keeps a task link written without .md when the modal saves", async () => {
+		const task = await app.vault.create("Tasks/Write report.md", "---\ntitle: Write report\n---\n");
+		const dailyNote = await app.vault.create(
+			"Daily/2026-05-16.md",
+			`---
+timeblocks:
+  - id: tb-1
+    title: Write report
+    startTime: "09:00"
+    endTime: "10:00"
+    attachments:
+      - "[[Tasks/Write report]]"
+---
+`
+		);
+		(getDailyNote as jest.Mock).mockReturnValue(dailyNote);
+		(app.metadataCache as any).getFirstLinkpathDest = (link: string) =>
+			link === "Tasks/Write report" ? task : null;
+
+		const plugin = createMockPlugin();
+		plugin.app = app;
+		plugin.cacheManager.getCachedTaskInfoSync = (path: string) =>
+			path === task.path ? { path } : null;
+		const modal = new TimeblockInfoModal(
+			app,
+			plugin,
+			{
+				id: "tb-1",
+				title: "Write report",
+				startTime: "09:00",
+				endTime: "10:00",
+				attachments: ["[[Tasks/Write report]]"],
+			},
+			new Date("2026-05-16"),
+			"2026-05-16"
+		);
+		await modal.onOpen();
+		await (modal as any).handleSave();
+
+		const finalContent = await app.vault.read(dailyNote);
+		expect(finalContent).toContain("[[Tasks/Write report]]");
+		expect(finalContent).not.toContain("Write report.md]]");
+	});
 });

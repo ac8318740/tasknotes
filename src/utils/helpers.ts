@@ -10,6 +10,7 @@ import {
 	parseYaml,
 	stringifyYaml,
 	getFrontMatterInfo,
+	parseLinktext,
 } from "obsidian";
 import { format } from "date-fns";
 import { TimeInfo, TaskInfo, TimeEntry, TimeBlock, DailyNoteFrontmatter } from "../types";
@@ -891,6 +892,14 @@ async function updateTimeblockTimes(
 
 	// Save back to file
 	await updateDailyNoteFrontmatter(app, dailyNote, frontmatter, content);
+}
+
+/**
+ * Resolves a timeblock attachment such as "[[Folder/Note]]" or "[[Folder/Note.md|alias]]" to its file.
+ */
+export function resolveTimeblockAttachment(app: App, attachment: string) {
+	const linktext = attachment.replace(/^\[\[|\]\]$/g, "").split("|")[0];
+	return app.metadataCache.getFirstLinkpathDest(parseLinktext(linktext).path, "");
 }
 
 /**
