@@ -3,7 +3,7 @@ import { displayError } from "../i18n/runtime";
 import { uiText } from "../i18n/runtime";
 import { msg } from "@lingui/core/macro";
 import { requestUrl } from "obsidian";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import TaskNotesPlugin from "../main";
 import { OAuthService } from "./OAuthService";
 import { ICSEvent } from "../types";
@@ -607,11 +607,9 @@ export class MicrosoftCalendarService extends CalendarProvider {
 			const startIso = this.ensureUtcDateTime(msEvent.start.dateTime, msEvent.start.timeZone);
 			const endIso = this.ensureUtcDateTime(msEvent.end.dateTime, msEvent.end.timeZone);
 
-			const startDate = parseISO(startIso);
-			const endDate = parseISO(endIso);
-
-			start = format(startDate, "yyyy-MM-dd'T'HH:mm:ss");
-			end = format(endDate, "yyyy-MM-dd'T'HH:mm:ss");
+			// Keep the real moment so the calendar places it in the current vault time zone
+			start = parseISO(startIso).toISOString();
+			end = parseISO(endIso).toISOString();
 		}
 
 		// Microsoft doesn't provide event-level colors in the same way as Google

@@ -7,6 +7,7 @@ import { ICSEvent, NoteInfo } from "../types";
 import { SafeAsync } from "../utils/safeAsync";
 import { MessageDescriptor } from "../i18n";
 import { showNotice } from "../ui/notifications";
+import { toVaultDate } from "../utils/vaultTime";
 
 export interface ICSNoteCreationOptions {
 	icsEvent: ICSEvent;
@@ -155,7 +156,7 @@ export class ICSNoteCreationModal extends Modal {
 				icsEvent.allDay && /^\d{4}-\d{2}-\d{2}$/.test(icsEvent.start)
 					? icsEvent.start + "T00:00:00"
 					: icsEvent.start;
-			const startDate = new Date(startDateStr);
+			const startDate = toVaultDate(startDateStr);
 			const startDiv = details.createDiv();
 			startDiv.createEl("strong", {
 				text: this.translate(msg({ message: "Start: ", context: "modals.icsNoteCreation.startLabel" })),
@@ -167,7 +168,7 @@ export class ICSNoteCreationModal extends Modal {
 			const endDateStr = /^\d{4}-\d{2}-\d{2}$/.test(icsEvent.end)
 				? icsEvent.end + "T00:00:00"
 				: icsEvent.end;
-			const endDate = new Date(endDateStr);
+			const endDate = toVaultDate(endDateStr);
 			const endDiv = details.createDiv();
 			endDiv.createEl("strong", { text: this.translate(msg({ message: "End: ", context: "modals.icsNoteCreation.endLabel" })) });
 			endDiv.appendText(formatUIDate(endDate, "PPPp"));
@@ -305,7 +306,7 @@ export class ICSNoteCreationModal extends Modal {
 			icsEvent.allDay && /^\d{4}-\d{2}-\d{2}$/.test(icsEvent.start)
 				? icsEvent.start + "T00:00:00"
 				: icsEvent.start;
-		const startDate = new Date(startDateStr);
+		const startDate = toVaultDate(startDateStr);
 		return `${icsEvent.title} - ${formatStableDate(startDate, "PPP")}`;
 	}
 

@@ -62,6 +62,7 @@ With a vault time zone set, TaskNotes uses it for:
 - today, overdue and other day boundaries
 - times written into task notes and daily notes, and how stored times are read
 - calendar views, reminders, time tracking and statistics
+- Google and Microsoft calendar events, calendar export, and the API
 
 When you change the setting, TaskNotes updates stored times so they keep the same moment. A task due at 9:00 in Sydney becomes due at 22:00 the day before in London. It updates:
 
@@ -77,7 +78,7 @@ It leaves alone:
 
 The update runs in the background on the device where you changed the setting and continues after a restart. To undo it, change the setting back.
 
-Formulas in Bases and other plugins still use the device's time zone.
+Bases formulas such as `today()` and other plugins still use the device's time zone. If the vault and device zones differ, they can disagree with TaskNotes about the date near midnight.
 
 ## Frontmatter
 

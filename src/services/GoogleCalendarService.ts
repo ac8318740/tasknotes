@@ -3,7 +3,6 @@ import { uiText } from "../i18n/runtime";
 import { msg } from "@lingui/core/macro";
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- Calendar sync validates credentials before accessing token fields. */
 import { requestUrl } from "obsidian";
-import { format } from "date-fns";
 import TaskNotesPlugin from "../main";
 import { OAuthService } from "./OAuthService";
 import { GoogleCalendarEvent, ICSEvent } from "../types";
@@ -494,16 +493,11 @@ export class GoogleCalendarService extends CalendarProvider {
 			end = googleEvent.end?.date;
 			allDay = true;
 		} else {
-			// Timed event - parse and convert to local time without timezone offset
-			// FullCalendar expects YYYY-MM-DDTHH:mm:ss format (no timezone) for timed events
-			const startDate = new Date(googleEvent.start.dateTime!);
-			const endDate = googleEvent.end?.dateTime
-				? new Date(googleEvent.end.dateTime)
+			// Timed event: keep the real moment so the calendar places it in the current vault time zone
+			start = new Date(googleEvent.start.dateTime!).toISOString();
+			end = googleEvent.end?.dateTime
+				? new Date(googleEvent.end.dateTime).toISOString()
 				: undefined;
-
-			// Format as YYYY-MM-DDTHH:mm:ss (local time, no timezone offset)
-			start = format(startDate, "yyyy-MM-dd'T'HH:mm:ss");
-			end = endDate ? format(endDate, "yyyy-MM-dd'T'HH:mm:ss") : undefined;
 			allDay = false;
 		}
 

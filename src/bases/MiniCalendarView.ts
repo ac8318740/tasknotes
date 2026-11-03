@@ -43,6 +43,7 @@ import { createElementInDocument } from "../utils/documentDom";
 import { findProviderCalendar } from "../services/CalendarProvider";
 import { buildLinkedGoogleEventPredicate, setProviderCalendarToggle } from "./calendarExternalEvents";
 import { createTaskInfoFromBasesData } from "./helpers";
+import { toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/MiniCalendarView" });
 
@@ -639,7 +640,7 @@ export class MiniCalendarView extends BasesViewBase {
 				trimmed.includes(" ") && !trimmed.includes("T")
 					? trimmed.replace(" ", "T")
 					: trimmed;
-			const parsed = new Date(sanitized);
+			const parsed = toVaultDate(sanitized);
 			if (!isNaN(parsed.getTime())) {
 				return this.toAnchoredDateString(parsed);
 			}

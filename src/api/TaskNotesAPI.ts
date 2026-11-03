@@ -104,7 +104,8 @@ import {
 	type UncompleteTaskOptions,
 } from "./runtime-api";
 import { getTodayString } from "../utils/dateUtils";
-import { vaultNow } from "../utils/vaultTime";
+import { toVaultDate, vaultNow } from "../utils/vaultTime";
+import { format } from "date-fns";
 
 export * from "./runtime-api";
 
@@ -3254,7 +3255,7 @@ function stringifyUnknownValue(value: unknown): string {
 	}
 }
 
-function dateAddRuntimeValue(value: {
+export function dateAddRuntimeValue(value: {
 	fn: "dateAdd";
 	value: TaskNotesRuntimeValue;
 	amount: number;
@@ -3265,12 +3266,12 @@ function dateAddRuntimeValue(value: {
 		baseValue === "today"
 			? vaultNow()
 			: typeof baseValue === "string"
-				? new Date(baseValue)
+				? toVaultDate(/^\d{4}-\d{2}-\d{2}$/.test(baseValue) ? `${baseValue}T00:00:00` : baseValue)
 				: vaultNow();
 	if (value.unit === "day") base.setDate(base.getDate() + value.amount);
 	if (value.unit === "week") base.setDate(base.getDate() + value.amount * 7);
 	if (value.unit === "month") base.setMonth(base.getMonth() + value.amount);
-	return base.toISOString().slice(0, 10);
+	return format(base, "yyyy-MM-dd");
 }
 
 function invertRuntimePredicate(
