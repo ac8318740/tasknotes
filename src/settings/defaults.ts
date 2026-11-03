@@ -302,6 +302,7 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 	nlpEnterToSubmit: false,
 	nlpLanguage: "en", // Default to English
 	uiLanguage: "system",
+	vaultTimeZone: "",
 	// NLP status suggestion trigger (deprecated)
 	statusSuggestionTrigger: "*",
 	// NLP triggers

@@ -1,5 +1,6 @@
 import { TaskInfo, TimeEntry } from "../types";
 import { getTimeEntryMinutes } from "./helpers";
+import { fromVaultDate, vaultNow } from "./vaultTime";
 
 export interface ActiveSessionInfo {
 	task: {
@@ -108,9 +109,7 @@ export function computeActiveTimeSessions(
 		const activeEntry = getActiveSession(task);
 		if (activeEntry) {
 			const startTime = new Date(activeEntry.startTime);
-			const elapsedMinutes = Math.floor(
-				(Date.now() - startTime.getTime()) / (1000 * 60)
-			);
+			const elapsedMinutes = Math.floor((Date.now() - startTime.getTime()) / (1000 * 60));
 
 			activeSessions.push({
 				task: {
@@ -144,21 +143,23 @@ export function computeActiveTimeSessions(
 function computeDateRange(options: TimeSummaryOptions): { startDate: Date; endDate: Date } {
 	let startDate: Date;
 	let endDate: Date = new Date();
+	// Midnight in the vault timezone, as a real moment to compare with time entries.
+	const startOfVaultDay = (adjust?: (day: Date) => void): Date => {
+		const day = vaultNow();
+		adjust?.(day);
+		day.setHours(0, 0, 0, 0);
+		return fromVaultDate(day);
+	};
 
 	switch (options.period) {
 		case "today":
-			startDate = new Date();
-			startDate.setHours(0, 0, 0, 0);
+			startDate = startOfVaultDay();
 			break;
 		case "week":
-			startDate = new Date();
-			startDate.setDate(startDate.getDate() - startDate.getDay());
-			startDate.setHours(0, 0, 0, 0);
+			startDate = startOfVaultDay((day) => day.setDate(day.getDate() - day.getDay()));
 			break;
 		case "month":
-			startDate = new Date();
-			startDate.setDate(1);
-			startDate.setHours(0, 0, 0, 0);
+			startDate = startOfVaultDay((day) => day.setDate(1));
 			break;
 		case "all":
 			startDate = new Date(0);
@@ -168,8 +169,7 @@ function computeDateRange(options: TimeSummaryOptions): { startDate: Date; endDa
 				startDate = options.fromDate;
 				if (options.toDate) endDate = options.toDate;
 			} else {
-				startDate = new Date();
-				startDate.setHours(0, 0, 0, 0);
+				startDate = startOfVaultDay();
 			}
 	}
 
@@ -201,9 +201,7 @@ export function computeTimeSummary(
 
 			if (entryStart >= startDate && entryStart <= endDate) {
 				if (!entry.endTime) {
-					taskMinutes += Math.floor(
-						(Date.now() - entryStart.getTime()) / (1000 * 60)
-					);
+					taskMinutes += Math.floor((Date.now() - entryStart.getTime()) / (1000 * 60));
 					hasActiveSession = true;
 				} else {
 					taskMinutes += getFinishedEntryMinutes(entry);
@@ -315,8 +313,7 @@ export function computeTaskTimeData(
 					startTime: activeSession.startTime,
 					description: activeSession.description,
 					elapsedMinutes: Math.floor(
-						(Date.now() - new Date(activeSession.startTime).getTime()) /
-							(1000 * 60)
+						(Date.now() - new Date(activeSession.startTime).getTime()) / (1000 * 60)
 					),
 				}
 			: null,
@@ -326,10 +323,7 @@ export function computeTaskTimeData(
 			description: entry.description || null,
 			duration: entry.endTime
 				? getFinishedEntryMinutes(entry)
-				: Math.floor(
-						(Date.now() - new Date(entry.startTime).getTime()) /
-							(1000 * 60)
-					),
+				: Math.floor((Date.now() - new Date(entry.startTime).getTime()) / (1000 * 60)),
 			isActive: !entry.endTime,
 		})),
 	};

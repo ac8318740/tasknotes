@@ -36,6 +36,7 @@ import { colorWithAlpha, isCssVariableColor, normalizeThemeColor } from "../util
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { getAttachmentCountLabel } from "../ui/taskCardHelpers";
 import { createElementInDocument } from "../utils/documentDom";
+import { toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/CalendarCore" });
 
@@ -738,8 +739,8 @@ export async function handleTimeblockDrop(
 	copyRequested = false
 ): Promise<void> {
 	try {
-		const newStart = dropInfo.event.start;
-		const newEnd = dropInfo.event.end;
+		const newStart = dropInfo.event.start && toVaultDate(dropInfo.event.start);
+		const newEnd = dropInfo.event.end && toVaultDate(dropInfo.event.end);
 		if (!newStart || !newEnd) {
 			dropInfo.revert();
 			return;
@@ -800,8 +801,8 @@ export async function handleTimeblockResize(
 	plugin: TaskNotesPlugin
 ): Promise<void> {
 	try {
-		const start = resizeInfo.event.start;
-		const end = resizeInfo.event.end;
+		const start = resizeInfo.event.start && toVaultDate(resizeInfo.event.start);
+		const end = resizeInfo.event.end && toVaultDate(resizeInfo.event.end);
 
 		if (!start || !end) {
 			resizeInfo.revert();

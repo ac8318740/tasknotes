@@ -4,6 +4,7 @@ import { formatDateForStorage, getDatePart } from "../utils/dateUtils";
 import { getRecurringMoveOriginalDate } from "../services/task-service/recurringMoveIdentity";
 import { getPeriodActionDate, isPeriodAnchor } from "../core/recurrence";
 import { filterEmptyProjects, getEffectiveTaskStatus, sanitizeForCssClass } from "../utils/helpers";
+import { vaultNow } from "../utils/vaultTime";
 
 export interface TaskCardStateOptions {
 	targetDate?: Date;
@@ -35,7 +36,7 @@ function createUTCDateFromStorageDate(datePart: string): Date | null {
 }
 
 function getTodayTaskCardTargetDate(): Date {
-	const todayLocal = new Date();
+	const todayLocal = vaultNow();
 	return new Date(
 		Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate())
 	);

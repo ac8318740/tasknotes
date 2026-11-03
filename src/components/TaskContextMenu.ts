@@ -67,6 +67,7 @@ import {
 } from "../ui/occurrenceNoteActions";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import type { UserMappedField } from "../types/settings";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Components/TaskContextMenu" });
 
@@ -2206,7 +2207,7 @@ export class TaskContextMenu {
 		onSelect: (value: string | null) => Promise<void>,
 		plugin: TaskNotesPlugin
 	): void {
-		const today = new Date();
+		const today = vaultNow();
 		const dayNames = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 		const currentDay = dayNames[today.getDay()];
 		const currentDate = today.getDate();

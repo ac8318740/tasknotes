@@ -14,6 +14,7 @@ import type { InterpolationValues } from "../i18n/types";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { showNotice } from "../ui/notifications";
 import { isTaskInstanceCompleted } from "../utils/taskInstanceStatus";
+import { toVaultDate, vaultNow, fromVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/NotificationService" });
 
@@ -254,7 +255,7 @@ export class NotificationService {
 				if (!reminder.absoluteTime) {
 					return null;
 				}
-				return parseDateToLocal(reminder.absoluteTime).getTime();
+				return fromVaultDate(parseDateToLocal(reminder.absoluteTime)).getTime();
 			} else if (reminder.type === "relative") {
 				// Relative reminder - calculate based on anchor date
 				if (!reminder.relatedTo || !reminder.offset) {
@@ -267,7 +268,7 @@ export class NotificationService {
 				}
 
 				// Parse the anchor date
-				const anchorDate = parseDateToLocal(anchorDateStr);
+				const anchorDate = fromVaultDate(parseDateToLocal(anchorDateStr));
 
 				// Parse the ISO 8601 duration and apply offset
 				const offsetMs = this.parseISO8601Duration(reminder.offset);
@@ -660,7 +661,7 @@ export class NotificationService {
 		if (!anchorStr) return withPrefix(task.title);
 
 		// Say when the anchor is rather than replaying an offset that no longer holds.
-		const anchor = parseDateToLocal(anchorStr).getTime();
+		const anchor = fromVaultDate(parseDateToLocal(anchorStr)).getTime();
 		const { day, time } = this.formatDateParts(anchor);
 		const hasTime = anchorStr.includes("T");
 		const when = hasTime
@@ -681,9 +682,9 @@ export class NotificationService {
 
 	/** Day is omitted for today. */
 	private formatDateParts(timestamp: number): { day: string | null; time: string } {
-		const date = new Date(timestamp);
+		const date = toVaultDate(timestamp);
 		return {
-			day: date.toDateString() === new Date().toDateString()
+			day: date.toDateString() === vaultNow().toDateString()
 				? null
 				: date.toLocaleDateString(uiLocale(), { month: "short", day: "numeric" }),
 			time: date.toLocaleTimeString(uiLocale(), { hour: "numeric", minute: "2-digit" }),

@@ -17,6 +17,7 @@ import {
 	sortUserFieldGroupKeys,
 } from "./userFieldValues";
 import { createTaskNotesLogger } from "../../utils/tasknotesLogger";
+import { vaultNow } from "../../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/FilterService/FilterTaskGrouping" });
 
@@ -133,7 +134,7 @@ export function getDueDateGroupForFilterTask(
 	context: FilterTaskGroupingContext,
 	targetDate?: Date
 ): string {
-	const referenceDate = targetDate || new Date();
+	const referenceDate = targetDate || vaultNow();
 	referenceDate.setHours(0, 0, 0, 0);
 
 	const isCompleted = context.isCompletedStatus(task.status);
@@ -343,14 +344,14 @@ function getDueDateGroupFromDateString(
 	if (isSameDateSafe(datePart, todayStr)) return getDueGroupLabel("today", context);
 
 	try {
-		const tomorrow = new Date();
+		const tomorrow = vaultNow();
 		tomorrow.setDate(tomorrow.getDate() + 1);
 		const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
 		if (isSameDateSafe(datePart, tomorrowStr)) {
 			return getDueGroupLabel("tomorrow", context);
 		}
 
-		const thisWeek = new Date();
+		const thisWeek = vaultNow();
 		thisWeek.setDate(thisWeek.getDate() + 7);
 		const thisWeekStr = format(thisWeek, "yyyy-MM-dd");
 		if (isBeforeDateSafe(datePart, thisWeekStr) || isSameDateSafe(datePart, thisWeekStr)) {
@@ -384,14 +385,14 @@ function getScheduledDateGroupFromDateString(
 	if (isSameDateSafe(datePart, todayStr)) return getScheduledGroupLabel("today", context);
 
 	try {
-		const tomorrow = new Date();
+		const tomorrow = vaultNow();
 		tomorrow.setDate(tomorrow.getDate() + 1);
 		const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
 		if (isSameDateSafe(datePart, tomorrowStr)) {
 			return getScheduledGroupLabel("tomorrow", context);
 		}
 
-		const thisWeek = new Date();
+		const thisWeek = vaultNow();
 		thisWeek.setDate(thisWeek.getDate() + 7);
 		const thisWeekStr = format(thisWeek, "yyyy-MM-dd");
 		if (isBeforeDateSafe(datePart, thisWeekStr) || isSameDateSafe(datePart, thisWeekStr)) {

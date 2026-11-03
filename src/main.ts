@@ -41,7 +41,8 @@ import { openTaskSelector } from "./modals/TaskSelectorWithCreateModal";
 import { ProjectSelectModal } from "./modals/ProjectSelectModal";
 import { PomodoroService } from "./services/PomodoroService";
 import { formatTime, getActiveTimeEntry } from "./utils/helpers";
-import { convertUTCToLocalCalendarDate } from "./utils/dateUtils";
+import { convertUTCToLocalCalendarDate, getTodayString } from "./utils/dateUtils";
+import { setVaultTimeZone, vaultNow } from "./utils/vaultTime";
 import { TaskManager } from "./utils/TaskManager";
 import { DependencyCache } from "./utils/DependencyCache";
 import { RequestDeduplicator, PredictivePrefetcher } from "./utils/RequestDeduplicator";
@@ -183,6 +184,7 @@ export default class TaskNotesPlugin extends Plugin {
 	workspaceNavigationService: import("./ui/WorkspaceNavigationService").WorkspaceNavigationService;
 	taskActionCoordinator: import("./ui/TaskActionCoordinator").TaskActionCoordinator;
 	settingsLifecycleService: import("./services/SettingsLifecycleService").SettingsLifecycleService;
+	vaultTimeZoneRewriteService: import("./ui/VaultTimeZoneRewriteService").VaultTimeZoneRewriteService;
 	commandRegistry: import("./commands/TranslatedCommandRegistry").TranslatedCommandRegistry;
 
 	// Editor services
@@ -455,7 +457,7 @@ export default class TaskNotesPlugin extends Plugin {
 			// Simple approach: just trigger the lazy index building once
 			// This is much more efficient than processing individual files
 			// Trigger index building with a single call - this will process all files internally
-			this.cacheManager.getTasksForDate(new Date().toISOString().split("T")[0]);
+			this.cacheManager.getTasksForDate(getTodayString());
 		} catch (error) {
 			tasknotesLogger.error("[TaskNotes] Error during project index warmup:", {
 				category: "internal",
@@ -813,6 +815,7 @@ export default class TaskNotesPlugin extends Plugin {
 
 		const { settings, shouldPersistMigratedSettings } = buildSettingsFromLoadedData(loadedData);
 		this.settings = settings;
+		setVaultTimeZone(settings.vaultTimeZone);
 		this.shouldCreateStarterNoteOnStartup = !settings.lastSeenVersion;
 
 		if (shouldPersistMigratedSettings) {
@@ -2033,7 +2036,7 @@ export default class TaskNotesPlugin extends Plugin {
 	private async openQuickActionsForTaskInfo(taskInfo: TaskInfo): Promise<void> {
 		const { TaskActionPaletteModal } = await import("./modals/TaskActionPaletteModal");
 		// Use fresh UTC-anchored "today" for recurring task handling
-		const now = new Date();
+		const now = vaultNow();
 		const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 		const modal = new TaskActionPaletteModal(this.app, taskInfo, this, today);
 		modal.open();

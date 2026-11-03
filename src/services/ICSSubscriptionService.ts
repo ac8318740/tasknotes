@@ -13,6 +13,7 @@ import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { publishUserNotice } from "../core/userNotices";
 import { resolveTzidToIANA, wallTimeInZoneToUtcIso } from "../utils/icsTimezoneFallback";
 import { ICSSecretStore } from "./ICSSecretStore";
+import { getVaultTimeZone } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/ICSSubscriptionService" });
 
@@ -271,7 +272,7 @@ export class ICSSubscriptionService extends EventEmitter {
 
 	private getLocalTimeZoneForFloatingTime(): string | null {
 		try {
-			return resolveTzidToIANA(Intl.DateTimeFormat().resolvedOptions().timeZone);
+			return resolveTzidToIANA(getVaultTimeZone());
 		} catch {
 			return null;
 		}

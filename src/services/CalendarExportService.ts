@@ -2,6 +2,7 @@ import { uiData } from "../i18n/dataText";
 import { TaskInfo } from "../types";
 import { format, parseISO } from "date-fns";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { getTodayString } from "../utils/dateUtils";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/CalendarExportService" });
 
@@ -725,7 +726,7 @@ export class CalendarExportService {
 			return null;
 		}
 
-		const date = new Date().toISOString().split("T")[0];
+		const date = getTodayString();
 		return {
 			content: this.generateMultipleTasksICSContent(exportTasks, options),
 			filename: `tasknotes-all-tasks-${date}.ics`,

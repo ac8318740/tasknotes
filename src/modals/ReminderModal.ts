@@ -7,6 +7,7 @@ import { TaskInfo, Reminder } from "../types";
 import { formatDateForDisplay } from "../utils/dateUtils";
 import { attachDateInputBehavior } from "../ui/dateInputBehavior";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Modals/ReminderModal" });
 const REMINDER_FIELDS_HIDDEN_CLASS = "reminder-modal__fields--hidden";
@@ -16,7 +17,7 @@ export function splitAbsoluteReminderTime(value: string | undefined): { date: st
 	if (!value) return { date: "", time: "" };
 	const local = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}))?(?::\d{2}(?:\.\d+)?)?$/.exec(value);
 	if (local) return { date: local[1], time: local[2] ?? "" };
-	const parsed = new Date(value);
+	const parsed = toVaultDate(value);
 	if (Number.isNaN(parsed.getTime())) return { date: "", time: "" };
 	const pad = (n: number) => String(n).padStart(2, "0");
 	return {
@@ -346,7 +347,7 @@ export class ReminderModal extends Modal {
 		if (reminder.type === "absolute") {
 			if (!reminder.absoluteTime)
 				return this.plugin.i18n.translate(msg({ message: "Absolute", context: "modals.reminder.absolute" }));
-			const date = new Date(reminder.absoluteTime);
+			const date = toVaultDate(reminder.absoluteTime);
 			return this.plugin.i18n.translate(msg({ message: "At {date}", context: "modals.reminder.at" }), {
 				date: Number.isNaN(date.getTime())
 					? reminder.absoluteTime

@@ -26,6 +26,7 @@ import {
 } from "../../utils/taskIdentificationFrontmatter";
 import type { UserMappedField } from "../../types/settings";
 import { createTaskNotesLogger } from "../../utils/tasknotesLogger";
+import { vaultNow } from "../../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/TaskService/TaskCreationService" });
 
@@ -170,7 +171,7 @@ export class TaskCreationService {
 				title: filenameTitle,
 				priority,
 				status,
-				date: new Date(),
+				date: vaultNow(),
 				dueDate: taskData.due,
 				scheduledDate: taskData.scheduled,
 				contexts: contextsArray,

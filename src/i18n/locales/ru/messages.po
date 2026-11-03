@@ -6826,6 +6826,11 @@ msgctxt "settings.integrations.oauth.forgotten"
 msgid "Forgot OAuth credentials for {provider}"
 msgstr "Учётные данные OAuth для {provider} удалены"
 
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.limit"
+msgid "Formulas in Bases and other plugins still use this device's time zone."
+msgstr "Формулы в Bases и другие плагины по-прежнему используют часовой пояс этого устройства."
+
 #: src/components/RecurrenceContextMenu.ts
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.weekPositions.fourth"
 msgid "fourth"
@@ -12550,6 +12555,11 @@ msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Calendar"
 msgstr "Календарь TaskNotes"
 
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.busy"
+msgid "TaskNotes is still updating times for the last time zone change. Try again when it finishes."
+msgstr "TaskNotes всё ещё обновляет время после последней смены часового пояса. Повторите попытку, когда это закончится."
+
 #: src/bases/registration.ts
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Kanban"
@@ -12559,6 +12569,11 @@ msgstr "Доска Канбан TaskNotes"
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Mini Calendar"
 msgstr "Мини-календарь TaskNotes"
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.description"
+msgid "TaskNotes reads and writes task times, reminders and timeblocks in this time zone on every device. When you change it, stored times are updated so they keep the same moment."
+msgstr "TaskNotes читает и записывает время задач, напоминания и временные блоки в этом часовом поясе на каждом устройстве. При его изменении сохранённое время обновляется, чтобы сохранить тот же момент."
 
 #: src/ui/NotificationService.ts
 msgctxt "ui/NotificationService: NotificationService.deliverNotification display"
@@ -12715,6 +12730,11 @@ msgstr "третий"
 msgctxt "common.cannotUndo"
 msgid "This action cannot be undone."
 msgstr "Это действие нельзя отменить."
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.device"
+msgid "This device's time zone ({zone})"
+msgstr "Часовой пояс этого устройства ({zone})"
 
 #: src/ui/NotificationService.ts
 msgctxt "ui/NotificationService: NotificationService.sendTestReminderNotification display"
@@ -12988,6 +13008,11 @@ msgctxt "modals.actionPalette.trackingStopped"
 msgid "Time tracking stopped"
 msgstr "Учёт времени остановлен"
 
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.header"
+msgid "Time zone"
+msgstr "Часовой пояс"
+
 #: src/modals/ReminderModal.ts
 #: src/settings/tabs/taskProperties/remindersPropertyCard.ts
 #: src/settings/tabs/taskPropertiesTab.ts
@@ -13069,6 +13094,11 @@ msgstr "Временные блоки должны иметь конкретно
 msgctxt "views.pomodoro.timer.inputLabel"
 msgid "Timer duration"
 msgstr "Длительность таймера"
+
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.done"
+msgid "Times updated for the new time zone."
+msgstr "Время обновлено для нового часового пояса."
 
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.calendarSubscriptions.filenameFormat.options.timestamp"
@@ -13835,6 +13865,11 @@ msgid "Updated default Bases files ({count}):\n"
 msgstr "Обновлены файлы Bases по умолчанию ({count}):\n"
 "{files}"
 
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.progress"
+msgid "Updating times for the new time zone: {done} of {total} notes"
+msgstr "Обновление времени для нового часового пояса: {done} из {total} заметок"
+
 #: src/modals/ICSEventInfoModal.ts
 msgctxt "modals.icsEventInfo.urlLabel"
 msgid "URL"
@@ -13989,6 +14024,11 @@ msgstr "Значение: Внутренний идентификатор, хр�
 msgctxt "modals.icsNoteCreation.vaultRoot"
 msgid "Vault root"
 msgstr "Корень хранилища"
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.name"
+msgid "Vault time zone"
+msgstr "Часовой пояс хранилища"
 
 #: src/i18n/messages.ts
 msgctxt "views.basesCalendar.settings.groups.view"

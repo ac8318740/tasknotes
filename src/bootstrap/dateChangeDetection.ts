@@ -1,3 +1,4 @@
+import { vaultNow } from "../utils/vaultTime";
 interface DateChangeTimer {
 	setInterval(callback: () => void, timeout: number): number;
 	setTimeout(callback: () => void, timeout: number): number;
@@ -24,8 +25,8 @@ export function startDateChangeDetection({
 	timer = window,
 	registerTimer,
 	emitDateChanged,
-	getDateKey = () => new Date().toDateString(),
-	getNow = () => new Date(),
+	getDateKey = () => vaultNow().toDateString(),
+	getNow = () => vaultNow(),
 	intervalMs = 60000,
 }: DateChangeDetectionOptions): DateChangeDetectionControls {
 	let lastKnownDate = getDateKey();

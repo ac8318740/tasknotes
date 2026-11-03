@@ -16,6 +16,12 @@ type FileContentMutationApp = {
 };
 
 const vaultMutationQueues = new WeakMap<TFile, Promise<unknown>>();
+let beforeVaultFileMutation: ((file: TFile) => Promise<void>) | null = null;
+
+/** Run `hook` inside each file's mutation queue before TaskNotes changes the file. */
+export function setBeforeVaultFileMutation(hook: ((file: TFile) => Promise<void>) | null): void {
+	beforeVaultFileMutation = hook;
+}
 
 /**
  * Serialize TaskNotes mutations for one vault file while allowing unrelated
@@ -27,7 +33,14 @@ export async function withVaultFileMutation<T>(
 	mutation: () => Promise<T>
 ): Promise<T> {
 	const previousMutation = vaultMutationQueues.get(file) ?? Promise.resolve();
-	const currentMutation = previousMutation.catch(() => undefined).then(mutation);
+	const hook = beforeVaultFileMutation;
+	const run = hook
+		? async () => {
+				await hook(file);
+				return mutation();
+			}
+		: mutation;
+	const currentMutation = previousMutation.catch(() => undefined).then(run);
 	vaultMutationQueues.set(file, currentMutation);
 
 	try {

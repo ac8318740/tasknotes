@@ -13,6 +13,7 @@ import { normalizeDependencyList } from "../utils/dependencyUtils";
 import { stringifyUnknown, stringifyUnknownArray } from "../utils/stringUtils";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { createElementInDocument } from "../utils/documentDom";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/Helpers" });
 
@@ -582,7 +583,7 @@ export async function renderTaskNotesInBasesView(
 			// Pass current date as targetDate for proper recurring task completion styling
 			const cardOptionsWithDate = {
 				...cardOptions,
-				targetDate: new Date(),
+				targetDate: vaultNow(),
 			};
 			const taskCard = createTaskCard(
 				taskInfo,

@@ -26,6 +26,7 @@ import {
 import type { PerformanceProfilerDetails } from "../utils/PerformanceProfiler";
 import { withPluginDataWriteLock } from "../utils/pluginDataWriteLock";
 import { TimeblockCalendarSync, type TimeblockNoteSource } from "./TimeblockCalendarSync";
+import { getVaultTimeZone } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/TaskCalendarSyncService" });
 
@@ -2144,13 +2145,11 @@ export class TaskCalendarSyncService {
 	} {
 		// Check if the date includes a time component (has 'T')
 		if (dateStr.includes("T")) {
-			// Timed event - format with local timezone offset for Google Calendar.
-			// Using date-fns format with 'xxx' to produce an offset-aware RFC 3339 string
-			// (e.g. "2024-03-15T14:30:00+05:00") so the dateTime matches the timeZone.
+			// Timed event: a floating wall-clock time; the timeZone field says which zone it is in.
 			const date = new Date(dateStr);
 			return {
-				dateTime: format(date, "yyyy-MM-dd'T'HH:mm:ssxxx"),
-				timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+				dateTime: format(date, "yyyy-MM-dd'T'HH:mm:ss"),
+				timeZone: getVaultTimeZone(),
 				isAllDay: false,
 			};
 		} else {
@@ -2197,7 +2196,7 @@ export class TaskCalendarSyncService {
 			const startDate = new Date(startInfo.dateTime);
 			const endDate = new Date(startDate.getTime() + duration * 60 * 1000);
 			return {
-				dateTime: format(endDate, "yyyy-MM-dd'T'HH:mm:ssxxx"),
+				dateTime: format(endDate, "yyyy-MM-dd'T'HH:mm:ss"),
 				timeZone: startInfo.timeZone,
 			};
 		}
@@ -2529,15 +2528,15 @@ export class TaskCalendarSyncService {
 						const dateTimeStr = `${recurrenceData.dtstart}T${recurrenceData.time}`;
 						const startDate = new Date(dateTimeStr);
 						event.start = {
-							dateTime: format(startDate, "yyyy-MM-dd'T'HH:mm:ssxxx"),
-							timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+							dateTime: format(startDate, "yyyy-MM-dd'T'HH:mm:ss"),
+							timeZone: getVaultTimeZone(),
 						};
 						// Recalculate end based on duration
 						const duration = task.timeEstimate || settings.defaultEventDuration;
 						const endDate = new Date(startDate.getTime() + duration * 60 * 1000);
 						event.end = {
-							dateTime: format(endDate, "yyyy-MM-dd'T'HH:mm:ssxxx"),
-							timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+							dateTime: format(endDate, "yyyy-MM-dd'T'HH:mm:ss"),
+							timeZone: getVaultTimeZone(),
 						};
 					}
 				}

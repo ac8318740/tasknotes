@@ -8,6 +8,7 @@ import {
 } from "../utils/dateUtils";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { getRecurringMoveOriginalDate } from "../services/task-service/recurringMoveIdentity";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/KanbanCardActions" });
 
@@ -110,7 +111,7 @@ export function getKanbanTaskActionDate(task: TaskInfo): Date {
 		return parseDateToUTC(dateStr);
 	}
 
-	return createUTCDateFromLocalCalendarDate(new Date());
+	return createUTCDateFromLocalCalendarDate(vaultNow());
 }
 
 function showPriorityMenu(

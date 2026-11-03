@@ -1,4 +1,5 @@
 import type { PomodoroSession } from "../types";
+import { timeZoneOffsetMs, toVaultDate } from "./vaultTime";
 
 export const MAX_POMODORO_DURATION_SECONDS = 120 * 60;
 
@@ -89,8 +90,8 @@ export function getSessionCompletionTimeMs(
 }
 
 export function formatLocalTimestamp(timestampMs: number): string {
-	const date = new Date(timestampMs);
-	const timezoneOffset = -date.getTimezoneOffset();
+	const date = toVaultDate(timestampMs);
+	const timezoneOffset = Math.round(timeZoneOffsetMs(timestampMs) / 60000);
 	const sign = timezoneOffset >= 0 ? "+" : "-";
 	const pad = (value: number, width = 2) => String(Math.abs(value)).padStart(width, "0");
 

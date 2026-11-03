@@ -50,6 +50,7 @@ import {
 } from "../utils/pomodoroTime";
 import { isTaskInstanceCompleted } from "../utils/taskInstanceStatus";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/PomodoroService" });
 
@@ -815,7 +816,7 @@ export class PomodoroService {
 				}
 				const completedForToday = isTaskInstanceCompleted(
 					task,
-					new Date(),
+					vaultNow(),
 					this.plugin.statusManager,
 					this.plugin.settings.defaultTaskStatus
 				);

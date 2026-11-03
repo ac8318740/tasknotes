@@ -5,6 +5,7 @@ import {
 	moveGroupListValue,
 	normalizeGroupValue,
 } from "./groupPropertyMutation";
+import { getTodayString } from "../utils/dateUtils";
 
 export type KanbanTaskDragSource = {
 	taskPath: string;
@@ -553,7 +554,7 @@ export function planKanbanDropSideEffect({
 	if (changedValues.has("status") && !originalTask.recurrence) {
 		updatedTask.completedDate =
 			typeof statusValue === "string" && isCompletedStatus(statusValue)
-				? new Date().toISOString().split("T")[0]
+				? getTodayString()
 				: undefined;
 	}
 

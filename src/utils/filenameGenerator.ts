@@ -5,6 +5,7 @@ import { TaskNotesSettings } from "../types/settings";
 import { getProjectDisplayName } from "./linkUtils";
 import { createTaskNotesLogger } from "./tasknotesLogger";
 import { parseDateToLocal } from "./dateUtils";
+import { vaultNow } from "./vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Utils/FilenameGenerator" });
 
@@ -71,7 +72,7 @@ export function generateICSNoteFilename(
 		throw new Error("Title cannot be empty");
 	}
 
-	const now = context.date || new Date();
+	const now = context.date || vaultNow();
 
 	// Validate date
 	if (!(now instanceof Date) || isNaN(now.getTime())) {
@@ -157,7 +158,7 @@ export function generateTaskFilename(
 		throw new Error("Title cannot be empty");
 	}
 
-	const now = context.date || new Date();
+	const now = context.date || vaultNow();
 
 	// Validate date
 	if (!(now instanceof Date) || isNaN(now.getTime())) {
@@ -689,7 +690,7 @@ export function generateOccurrenceFilename(
 		return generateCustomFilename(
 			context,
 			template,
-			context.date || new Date(),
+			context.date || vaultNow(),
 			occurrenceVariables
 		);
 	} catch (error) {

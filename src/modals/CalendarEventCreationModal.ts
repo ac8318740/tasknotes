@@ -11,6 +11,7 @@ import {
 import type { InterpolationValues, MessageDescriptor } from "../i18n";
 import { format } from "date-fns";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { getVaultTimeZone } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Modals/CalendarEventCreationModal" });
 
@@ -209,7 +210,7 @@ export class CalendarEventCreationModal extends Modal {
 
 		try {
 			const { start, end, allDay } = this.options;
-			const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			const timeZone = getVaultTimeZone();
 
 			const eventData: CalendarEventData = {
 				summary: title,

@@ -365,6 +365,7 @@ export async function initializeAfterLayoutReady(plugin: TaskNotesPlugin): Promi
 			await plugin.ensureBasesViewFiles();
 		}
 		await plugin.ensureStarterNote();
+		void plugin.vaultTimeZoneRewriteService?.resume();
 
 		plugin.injectCustomStyles();
 		registerActiveViews(plugin);

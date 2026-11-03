@@ -18,6 +18,7 @@ import {
 	setCardSecondaryText,
 } from "../../components/CardComponent";
 import { createPropertyDescription, TranslateFn } from "./helpers";
+import { getTodayString } from "../../../utils/dateUtils";
 
 /**
  * Renders the Reminders property card with nested default reminders
@@ -399,7 +400,7 @@ function renderAbsoluteReminderConfig(
 ): CardRow[] {
 	const dateInput = createCardInput(
 		"date",
-		reminder.absoluteDate || new Date().toISOString().split("T")[0]
+		reminder.absoluteDate || getTodayString()
 	);
 	dateInput.addEventListener("input", () => {
 		updateItem({ absoluteDate: dateInput.value });

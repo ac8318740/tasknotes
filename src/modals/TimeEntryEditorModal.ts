@@ -13,6 +13,7 @@ import {
 	stampTimeEntryOccurrences,
 } from "../core/recurrence";
 import { formatTime, getTimeEntryMinutes } from "../utils/helpers";
+import { fromVaultDate, toVaultDate } from "../utils/vaultTime";
 
 export class TimeEntryEditorModal extends Modal {
 	private plugin: TaskNotesPlugin;
@@ -441,11 +442,11 @@ function hasClockTimes(entry: TimeEntry): boolean {
 function getEntryDay(entry: TimeEntry): string {
 	return /^\d{4}-\d{2}-\d{2}$/.test(entry.startTime)
 		? entry.startTime
-		: format(new Date(entry.startTime), "yyyy-MM-dd");
+		: format(toVaultDate(entry.startTime), "yyyy-MM-dd");
 }
 
 function getClockTime(timestamp: string): string {
-	return format(new Date(timestamp), "HH:mm");
+	return format(toVaultDate(timestamp), "HH:mm");
 }
 
 /** Minutes from one clock time to the next, ending the next day when the end is earlier. */
@@ -475,7 +476,7 @@ export function setEntryTimes(
 		return;
 	}
 	delete entry.minutes;
-	const startDate = new Date(`${day}T${start}`);
+	const startDate = fromVaultDate(new Date(`${day}T${start}`));
 	entry.startTime = startDate.toISOString();
 	entry.endTime =
 		minutes === null ? undefined : new Date(startDate.getTime() + minutes * 60000).toISOString();

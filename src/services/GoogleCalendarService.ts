@@ -20,6 +20,7 @@ import { CalendarProvider, findProviderCalendar, ProviderCalendar } from "./Cale
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { publishUserNotice } from "../core/userNotices";
 import { normalizeCalendarDescription } from "../utils/calendarDescription";
+import { getVaultTimeZone } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/GoogleCalendarService" });
 
@@ -1083,7 +1084,7 @@ export class GoogleCalendarService extends CalendarProvider {
 					body: JSON.stringify({
 						summary,
 						description,
-						timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+						timeZone: getVaultTimeZone(),
 					}),
 				});
 			}, "Create calendar");

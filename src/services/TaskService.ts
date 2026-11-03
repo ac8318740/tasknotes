@@ -104,6 +104,7 @@ import { resolveTaskPropertyFrontmatterField } from "./task-service/taskProperty
 import { processVaultFile, processVaultFrontMatter } from "./VaultMutationService";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { applyPropertyTaskIdentifier } from "../utils/taskIdentificationFrontmatter";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/TaskService" });
 
@@ -279,7 +280,7 @@ export class TaskService {
 	private processFolderTemplate(
 		folderTemplate: string,
 		taskData?: TaskCreationData,
-		date: Date = new Date(),
+		date: Date = vaultNow(),
 		currentNote?: FolderTemplateOptions["currentNote"]
 	): string {
 		// Convert TaskCreationData to TaskTemplateData

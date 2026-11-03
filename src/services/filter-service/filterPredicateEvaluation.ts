@@ -17,6 +17,7 @@ import {
 	coerceUserFieldTaskValue,
 	findUserFieldById,
 } from "./userFieldValues";
+import { vaultNow } from "../../utils/vaultTime";
 
 export interface FilterPredicateProjectSubtasks {
 	isTaskUsedAsProjectSync(path: string): boolean;
@@ -103,7 +104,7 @@ export function evaluateFilterCondition(
 	if (property === "status.isCompleted") {
 		const effectiveStatus = getEffectiveTaskStatus(
 			task,
-			targetDate || new Date(),
+			targetDate || vaultNow(),
 			context.getCompletedStatuses()[0]
 		);
 		taskValue = context.isCompletedStatus(effectiveStatus);
