@@ -455,11 +455,6 @@ msgctxt "settings.integrations.timeFormats.hoursAgo"
 msgid "{hours, plural, one {{hours, number} hour ago} other {{hours, number} hours ago}}"
 msgstr "{hours, plural, one {il y a {hours, number} heure} other {il y a {hours, number} heures}}"
 
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.totalTime"
-msgid "{hours}h {minutes}m total"
-msgstr "{hours}h {minutes}m au total"
-
 #: src/i18n/recurrence.ts
 msgctxt "monthly weekday recurrence"
 msgid "{interval, plural, =1 {{weekday, select, MO {{position, select, last {Monthly on the last Monday} every {Monthly on every Monday} other {{index, selectordinal, one {Monthly on the #st Monday} two {Monthly on the #nd Monday} few {Monthly on the #rd Monday} other {Monthly on the #th Monday}}}}} TU {{position, select, last {Monthly on the last Tuesday} every {Monthly on every Tuesday} other {{index, selectordinal, one {Monthly on the #st Tuesday} two {Monthly on the #nd Tuesday} few {Monthly on the #rd Tuesday} other {Monthly on the #th Tuesday}}}}} WE {{position, select, last {Monthly on the last Wednesday} every {Monthly on every Wednesday} other {{index, selectordinal, one {Monthly on the #st Wednesday} two {Monthly on the #nd Wednesday} few {Monthly on the #rd Wednesday} other {Monthly on the #th Wednesday}}}}} TH {{position, select, last {Monthly on the last Thursday} every {Monthly on every Thursday} other {{index, selectordinal, one {Monthly on the #st Thursday} two {Monthly on the #nd Thursday} few {Monthly on the #rd Thursday} other {Monthly on the #th Thursday}}}}} FR {{position, select, last {Monthly on the last Friday} every {Monthly on every Friday} other {{index, selectordinal, one {Monthly on the #st Friday} two {Monthly on the #nd Friday} few {Monthly on the #rd Friday} other {Monthly on the #th Friday}}}}} SA {{position, select, last {Monthly on the last Saturday} every {Monthly on every Saturday} other {{index, selectordinal, one {Monthly on the #st Saturday} two {Monthly on the #nd Saturday} few {Monthly on the #rd Saturday} other {Monthly on the #th Saturday}}}}} SU {{position, select, last {Monthly on the last Sunday} every {Monthly on every Sunday} other {{index, selectordinal, one {Monthly on the #st Sunday} two {Monthly on the #nd Sunday} few {Monthly on the #rd Sunday} other {Monthly on the #th Sunday}}}}} other {Monthly}}} other {{weekday, select, MO {{position, select, last {Every {interval, number} months on the last Monday} every {Every {interval, number} months on every Monday} other {{index, selectordinal, one {Every {interval, number} months on the #st Monday} two {Every {interval, number} months on the #nd Monday} few {Every {interval, number} months on the #rd Monday} other {Every {interval, number} months on the #th Monday}}}}} TU {{position, select, last {Every {interval, number} months on the last Tuesday} every {Every {interval, number} months on every Tuesday} other {{index, selectordinal, one {Every {interval, number} months on the #st Tuesday} two {Every {interval, number} months on the #nd Tuesday} few {Every {interval, number} months on the #rd Tuesday} other {Every {interval, number} months on the #th Tuesday}}}}} WE {{position, select, last {Every {interval, number} months on the last Wednesday} every {Every {interval, number} months on every Wednesday} other {{index, selectordinal, one {Every {interval, number} months on the #st Wednesday} two {Every {interval, number} months on the #nd Wednesday} few {Every {interval, number} months on the #rd Wednesday} other {Every {interval, number} months on the #th Wednesday}}}}} TH {{position, select, last {Every {interval, number} months on the last Thursday} every {Every {interval, number} months on every Thursday} other {{index, selectordinal, one {Every {interval, number} months on the #st Thursday} two {Every {interval, number} months on the #nd Thursday} few {Every {interval, number} months on the #rd Thursday} other {Every {interval, number} months on the #th Thursday}}}}} FR {{position, select, last {Every {interval, number} months on the last Friday} every {Every {interval, number} months on every Friday} other {{index, selectordinal, one {Every {interval, number} months on the #st Friday} two {Every {interval, number} months on the #nd Friday} few {Every {interval, number} months on the #rd Friday} other {Every {interval, number} months on the #th Friday}}}}} SA {{position, select, last {Every {interval, number} months on the last Saturday} every {Every {interval, number} months on every Saturday} other {{index, selectordinal, one {Every {interval, number} months on the #st Saturday} two {Every {interval, number} months on the #nd Saturday} few {Every {interval, number} months on the #rd Saturday} other {Every {interval, number} months on the #th Saturday}}}}} SU {{position, select, last {Every {interval, number} months on the last Sunday} every {Every {interval, number} months on every Sunday} other {{index, selectordinal, one {Every {interval, number} months on the #st Sunday} two {Every {interval, number} months on the #nd Sunday} few {Every {interval, number} months on the #rd Sunday} other {Every {interval, number} months on the #th Sunday}}}}} other {Every {interval, number} months}}}}"
@@ -590,6 +585,11 @@ msgctxt "pomodoro break notification"
 msgid "{length, select, long {Time for a long break 💤} other {Time for a short break ☕}}"
 msgstr "{length, select, long {C'est l'heure d'une longue pause 💤} other {C'est l'heure d'une courte pause ☕}}"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.total"
+msgid "{logged} logged in total"
+msgstr "{logged} enregistrés au total"
+
 #: src/templates/defaultBasesFiles.ts
 msgctxt "generated Bases compact minutes"
 msgid "{minutes, number}m"
@@ -604,11 +604,6 @@ msgstr "{minutes, plural, one {il y a {minutes, number} minute} other {il y a {m
 msgctxt "views.pomodoroStats.recents.duration"
 msgid "{minutes} min"
 msgstr "{minutes} min"
-
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.totalMinutes"
-msgid "{minutes}m total"
-msgstr "{minutes}m au total"
 
 #: src/bases/calendar-core.ts
 msgctxt "pinned timeblock tooltip title"
@@ -802,8 +797,18 @@ msgstr "{value1} de {startTime} à {endTime}"
 
 #: src/ui/taskCardProperties.ts
 msgctxt "ui/taskCardProperties: totalTrackedTime display"
-msgid "{value1} tracked"
-msgstr "Temps suivi : {value1}"
+msgid "{value1} logged"
+msgstr "{value1} enregistrés"
+
+#: src/ui/taskCardProperties.ts
+msgctxt "ui/taskCardProperties: totalTrackedTime display for a recurring task with an estimate"
+msgid "{value1} logged of {value2} estimated this occurrence"
+msgstr "{value1} enregistrés sur {value2} estimés pour cette occurrence"
+
+#: src/ui/taskCardProperties.ts
+msgctxt "ui/taskCardProperties: totalTrackedTime display for a recurring task"
+msgid "{value1} logged this occurrence"
+msgstr "{value1} enregistrés pour cette occurrence"
 
 #: src/ui/StatusBarService.ts
 msgctxt "ui/StatusBarService: StatusBarService.renderStatusBar display"
@@ -4306,6 +4311,11 @@ msgctxt "generated Bases column name"
 msgid "Date"
 msgstr "Date"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.date"
+msgid "Date"
+msgstr "Jour"
+
 #: src/settings/tabs/taskProperties/userFieldsCard.ts
 msgctxt "settings.taskProperties.customUserFields.types.date"
 msgid "Date"
@@ -4736,11 +4746,6 @@ msgctxt "modals.timeblockInfo.descriptionLabel"
 msgid "Description"
 msgstr "Description"
 
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.description"
-msgid "Description"
-msgstr "Description"
-
 #: src/modals/ReminderModal.ts
 msgctxt "modals.reminder.description"
 msgid "Description (optional)"
@@ -5069,6 +5074,16 @@ msgctxt "modals.task.tooltips.dueValue"
 msgid "Due: {value}"
 msgstr "Échéance : {value}"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.duration"
+msgid "Duration"
+msgstr "Durée"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.durationLabel"
+msgid "Duration in minutes"
+msgstr "Durée en minutes"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.googleCalendarExport.defaultDuration.description"
 msgid "Duration in minutes for timed events (used when task has no time estimate)."
@@ -5278,6 +5293,11 @@ msgctxt "settings.modalFields.manager.enabled"
 msgid "Enabled:"
 msgstr "Activé :"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.end"
+msgid "End"
+msgstr "Fin"
+
 #: src/components/RecurrenceContextMenu.ts
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.endAfterOccurrences"
 msgid "End after {count} occurrences"
@@ -5313,15 +5333,15 @@ msgctxt "modals.timeblockCreation.endTimeLabel"
 msgid "End time"
 msgstr "Heure de fin"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.endTime"
+msgid "End time"
+msgstr "Heure de fin"
+
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.endTime.name"
 msgid "End time"
 msgstr "Heure de fin"
-
-#: src/modals/TimeEntryEditorModal.ts
-msgctxt "modals.timeEntryEditor.endTime"
-msgid "End time (leave empty if still running)"
-msgstr "Heure de fin (laisser vide si toujours en cours)"
 
 #: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.validation.endBeforeStart"
@@ -7996,6 +8016,11 @@ msgctxt "modals.storageLocation.title.migrate"
 msgid "Migrate Pomodoro data?"
 msgstr "Migrer les données Pomodoro ?"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.minutesUnit"
+msgid "min"
+msgstr "minutes"
+
 #: src/views/StatsView.ts
 msgctxt "views.stats.filters.minTime"
 msgid "Min time (minutes)"
@@ -8640,6 +8665,11 @@ msgctxt "notices.audit.noNotes"
 msgid "No notes found for selected dates"
 msgstr "Aucune note trouvée pour les dates sélectionnées"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.group.noOccurrence"
+msgid "No occurrence · {logged} logged"
+msgstr "Sans occurrence · {logged} enregistrés"
+
 #: src/ui/TaskActionCoordinator.ts
 msgctxt "notices.interface.noOverdue"
 msgid "No overdue scheduled tasks to postpone"
@@ -9063,6 +9093,16 @@ msgstr "Notes d'occurrence : création manuelle"
 msgctxt "ui/taskCardProperties: occurrenceMaterialization display"
 msgid "Occurrence notes: rolling"
 msgstr "Notes d'occurrence : création glissante"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.group"
+msgid "Occurrence of {date} · {logged} logged"
+msgstr "Occurrence du {date} · {logged} enregistrés"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.group.withEstimate"
+msgid "Occurrence of {date} · {logged} logged of {estimate} estimated"
+msgstr "Occurrence du {date} · {logged} enregistrés sur {estimate} estimés"
 
 #: src/ui/taskCardMetadata.ts
 msgctxt "ui/taskCardMetadata: createOccurrenceMetadataPill display"
@@ -10685,6 +10725,11 @@ msgctxt "notices.audit.exportedRows"
 msgid "Rows exported: {count}"
 msgstr "Lignes exportées : {count}"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.running"
+msgid "running"
+msgstr "en cours"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.googleCalendarTimeblockExport.targetCalendar.sameAsTasks"
 msgid "Same as task calendar"
@@ -11510,6 +11555,11 @@ msgstr "Étendre les tâches entre la date planifiée et la date d''échéance"
 msgctxt "settings.modalFields.splitLayout.name"
 msgid "Split layout on wide screens"
 msgstr "Mise en page divisée sur grands écrans"
+
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.column.start"
+msgid "Start"
+msgstr "Début"
 
 #: src/components/RecurrenceContextMenu.ts
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.startDate"

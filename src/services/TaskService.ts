@@ -43,6 +43,7 @@ import {
 import {
 	addDTSTARTToRecurrenceRule,
 	getNextUncompletedOccurrence,
+	stampTimeEntryOccurrences,
 	updateToNextScheduledOccurrence,
 } from "../core/recurrence";
 import { processFolderTemplate, TaskTemplateData, FolderTemplateOptions } from "../utils/folderTemplateProcessor";
@@ -1756,7 +1757,7 @@ export class TaskService {
 			const timeTrackingPlan = buildStartTimeTrackingPlan(
 				persistedTask, getCurrentTimestamp(), new Date().toISOString()
 			);
-			const { newEntry } = timeTrackingPlan;
+			const [newEntry] = stampTimeEntryOccurrences(persistedTask, [timeTrackingPlan.newEntry]);
 			const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
 			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
 			applyStartTimeTrackingFrontmatterChange({

@@ -37,6 +37,26 @@ The auto-stop feature works by monitoring task status changes across all views a
 
 The feature integrates with the custom status system, so completion detection respects your configured workflow statuses rather than relying on hardcoded completion states.
 
+### Recurring tasks
+
+On a recurring task, each time entry counts toward one occurrence and records it in `occurrence`, the occurrence's rule date. By default, that is the occurrence whose period contains the entry's start. A period runs from one occurrence to the next: a day for a daily task, a week for a weekly one. For "after completion" rules, it is the occurrence the task currently shows. Logging time never completes an occurrence; only marking it done does.
+
+A recurring task's time estimate is the length of each occurrence. Its card shows progress for the occurrence the task shows, for example "1 hr logged of 5 hr estimated this occurrence". The time entry editor groups its entries by occurrence. To log time without clock times, clear an entry's start time and enter its duration. **Total tracked time** in Bases, Stats and the API stays the total across all occurrences.
+
+```yaml
+timeEntries:
+  - startTime: 2026-02-03T09:00:00Z
+    endTime: 2026-02-03T10:00:00Z
+    occurrence: 2026-02-02
+  # Time logged without clock times: start and end hold the same local midnight, and minutes holds the length
+  - startTime: 2026-02-04T00:00
+    endTime: 2026-02-04T00:00
+    minutes: 60
+    occurrence: 2026-02-02
+```
+
+Generated Bases files include `currentOccurrence` (the rule date of the occurrence a recurring task shows) and `timeTrackedThisOccurrence`. To sum a specific occurrence in your own formula, filter on its date, for example `list(timeEntries).filter(value.occurrence && date(value.occurrence).format("YYYY-MM-DD") == "2026-02-02")`.
+
 ## Pomodoro Timer
 
 TaskNotes also includes a Pomodoro timer, which is a tool for time management that uses a timer to break down work into intervals, separated by short breaks. The Pomodoro timer in TaskNotes has a dedicated view with controls to start, stop, and reset the timer.

@@ -1,5 +1,10 @@
 import type { FieldMappingKey, TaskInfo, TimeEntry } from "../../types";
-import { addDTSTARTToRecurrenceRule, updateToNextScheduledOccurrence } from "../../core/recurrence";
+import {
+	addDTSTARTToRecurrenceRule,
+	getMovedTimeEntryOccurrence,
+	stampTimeEntryOccurrences,
+	updateToNextScheduledOccurrence,
+} from "../../core/recurrence";
 import {
 	applyGoogleCalendarRecurringExceptionCleanup,
 	applyGoogleCalendarRecurringExceptionForScheduledChange,
@@ -83,14 +88,39 @@ export interface BuildUpdatedTaskFromPlanInput {
 	isCompletedStatus: (status: string) => boolean;
 }
 
-export function normalizeTaskUpdateInput(updates: TaskUpdateInput): TaskUpdateInput {
+export function normalizeTaskUpdateInput(
+	updates: TaskUpdateInput,
+	originalTask?: TaskInfo
+): TaskUpdateInput {
 	if (!Array.isArray(updates.timeEntries)) {
 		return { ...updates };
 	}
 
+	const task = { ...originalTask, ...updates } as TaskInfo;
+	const originalEntries = originalTask?.timeEntries ?? [];
+	// Edits that keep every entry in place (a calendar drag, an editor change) pair up by index.
+	const paired = originalEntries.length === updates.timeEntries.length;
+	const timeEntries = updates.timeEntries.map((entry, index) => {
+		const next = stripTimeEntryDuration(entry);
+		const before = paired ? originalEntries[index] : undefined;
+		// A length without clock times only holds while start and end are the same moment.
+		if (typeof next.minutes === "number" && next.startTime !== next.endTime) delete next.minutes;
+		// An entry moved to another time follows it to that time's occurrence, unless the
+		// caller set the occurrence itself.
+		if (
+			task.recurrence &&
+			before &&
+			next.startTime !== before.startTime &&
+			next.occurrence === before.occurrence
+		) {
+			next.occurrence = getMovedTimeEntryOccurrence(task, next);
+		}
+		return next;
+	});
 	return {
 		...updates,
-		timeEntries: updates.timeEntries.map(stripTimeEntryDuration),
+		// Entries on a recurring task record the occurrence they count toward.
+		timeEntries: originalTask ? stampTimeEntryOccurrences(task, timeEntries) : timeEntries,
 	};
 }
 

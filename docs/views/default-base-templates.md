@@ -59,10 +59,12 @@ The formula set is broad so views can reuse shared computed properties without c
 
 | Formula | Description | Expression |
 |---------|-------------|------------|
-| `timeRemaining` | Time estimate minus time tracked (in minutes), null if no estimate | `if(timeEstimate && timeEstimate > 0, timeEstimate - if(timeEntries, list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0), 0), null)` |
-| `efficiencyRatio` | Percentage of estimated time used (>100% = took longer, <100% = faster, null if no estimate) | `if(timeEstimate && timeEstimate > 0 && timeEntries, (list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) / timeEstimate * 100).round(), null)` |
-| `timeTrackedThisWeek` | Total minutes tracked in the last 7 days | `if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime) >= today() - "7d").map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round(), 0)` |
-| `timeTrackedToday` | Total minutes tracked today | `if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime).format("YYYY-MM-DD") == today().format("YYYY-MM-DD")).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round(), 0)` |
+| `timeRemaining` | Time estimate minus time tracked (in whole minutes), null if no estimate. For a recurring task, only the current occurrence's time counts | `if(timeEstimate && timeEstimate > 0, (timeEstimate - if(timeEntries, <tracked>, 0)).round(), null)`, where `<tracked>` sums the current occurrence's entries for a recurring task and all entries otherwise |
+| `efficiencyRatio` | Percentage of estimated time used (>100% = took longer, <100% = faster, null if no estimate). For a recurring task, only the current occurrence's time counts | `if(timeEstimate && timeEstimate > 0 && timeEntries, (<tracked> / timeEstimate * 100).round(), null)`, with `<tracked>` as in `timeRemaining` |
+| `timeTrackedThisWeek` | Total minutes tracked in the last 7 days | `if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime) >= today() - "7d").map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0).round(), 0)` |
+| `timeTrackedToday` | Total minutes tracked today | `if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime).format("YYYY-MM-DD") == today().format("YYYY-MM-DD")).map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0).round(), 0)` |
+| `currentOccurrence` | Rule date (YYYY-MM-DD) of the occurrence a recurring task shows, null if it does not recur | `if(formula.isRecurring, if(recurrence_original_date, date(recurrence_original_date).format("YYYY-MM-DD"), if((scheduled.isEmpty() == false), date(scheduled).format("YYYY-MM-DD"), null)), null)` |
+| `timeTrackedThisOccurrence` | Minutes tracked toward the current occurrence of a recurring task, null if it does not recur | `if(formula.currentOccurrence, if(timeEntries, list(timeEntries).filter(value.endTime && value.occurrence && date(value.occurrence).format("YYYY-MM-DD") == formula.currentOccurrence).map(...).reduce(acc + value, 0).round(), 0), null)` |
 
 ### Grouping formulas
 
@@ -110,7 +112,7 @@ These formulas work with either due date or scheduled date, useful for finding t
 
 | Formula | Description | Example values | Expression |
 |---------|-------------|----------------|------------|
-| `timeTrackedFormatted` | Total time tracked as readable text | "2h 30m", "45m", "0m" | `if(timeEntries, if(list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) >= 60, (list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) / 60).floor() + "h " + (list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) % 60).round() + "m", list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round() + "m"), "0m")` |
+| `timeTrackedFormatted` | Total time tracked as readable text | "2h 30m", "45m", "0m" | `if(timeEntries, if(list(timeEntries).filter(value.endTime).map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0) >= 60, (list(timeEntries).filter(value.endTime).map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0) / 60).floor() + "h " + (list(timeEntries).filter(value.endTime).map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0) % 60).round() + "m", list(timeEntries).filter(value.endTime).map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0).round() + "m"), "0m")` |
 | `dueDateDisplay` | Due date as relative text | "Today", "Tomorrow", "Yesterday", "3d ago", "Mon", "Dec 15" | `if(due.isEmpty(), "", if(date(due).format("YYYY-MM-DD") == today().format("YYYY-MM-DD"), "Today", if(date(due).format("YYYY-MM-DD") == (today() + "1 day").format("YYYY-MM-DD"), "Tomorrow", if(date(due).format("YYYY-MM-DD") == (today() - "1 day").format("YYYY-MM-DD"), "Yesterday", if(date(due) < today(), formula.daysUntilDue * -1 + "d ago", if(date(due).format("YYYY-MM-DD") <= (today() + "7 days").format("YYYY-MM-DD"), date(due).format("ddd"), date(due).format("MMM D")))))))` |
 
 ## Mini Calendar
@@ -144,10 +146,12 @@ formulas:
   isRecurring: 'recurrence && !recurrence.isEmpty()'
   hasTimeEstimate: 'timeEstimate && timeEstimate > 0'
   # Time tracking
-  timeRemaining: 'if(timeEstimate && timeEstimate > 0, timeEstimate - if(timeEntries, list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0), 0), null)'
-  efficiencyRatio: 'if(timeEstimate && timeEstimate > 0 && timeEntries, (list(timeEntries).filter(value.endTime).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0) / timeEstimate * 100).round(), null)'
-  timeTrackedThisWeek: 'if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime) >= today() - "7d").map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round(), 0)'
-  timeTrackedToday: 'if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime).format("YYYY-MM-DD") == today().format("YYYY-MM-DD")).map((number(date(value.endTime)) - number(date(value.startTime))) / 60000).reduce(acc + value, 0).round(), 0)'
+  timeRemaining: '...'  # Estimate minus tracked minutes; the current occurrence only for recurring tasks
+  efficiencyRatio: '...'  # Tracked minutes as a percentage of the estimate; the current occurrence only for recurring tasks
+  currentOccurrence: '...'  # Rule date of the occurrence a recurring task shows
+  timeTrackedThisOccurrence: '...'  # Minutes tracked toward the current occurrence
+  timeTrackedThisWeek: 'if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime) >= today() - "7d").map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0).round(), 0)'
+  timeTrackedToday: 'if(timeEntries, list(timeEntries).filter(value.endTime && date(value.startTime).format("YYYY-MM-DD") == today().format("YYYY-MM-DD")).map(if(value.minutes, value.minutes, (number(date(value.endTime)) - number(date(value.startTime))) / 60000)).reduce(acc + value, 0).round(), 0)'
   timeTrackedFormatted: '...'  # Formats total tracked time as "Xh Ym"
   # Grouping
   dueMonth: 'if((due.isEmpty() == false), date(due).format("YYYY-MM"), "No due date")'

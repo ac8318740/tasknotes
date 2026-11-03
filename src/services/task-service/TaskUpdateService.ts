@@ -112,7 +112,7 @@ export class TaskUpdateService {
 		const { runtime } = this.deps;
 
 		try {
-			const taskUpdates = normalizeTaskUpdateInput(updates);
+			const taskUpdates = normalizeTaskUpdateInput(updates, originalTask);
 			const file = runtime.app.vault.getAbstractFileByPath(originalTask.path);
 			if (!(file instanceof TFile)) {
 				throw new Error(`Cannot find task file: ${originalTask.path}`);

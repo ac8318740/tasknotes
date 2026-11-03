@@ -264,7 +264,9 @@ function areTimeEntriesEqual(a?: TimeEntry[], b?: TimeEntry[]): boolean {
 			entryA.startTime !== entryB.startTime ||
 			entryA.endTime !== entryB.endTime ||
 			entryA.description !== entryB.description ||
-			entryA.duration !== entryB.duration
+			entryA.duration !== entryB.duration ||
+			entryA.minutes !== entryB.minutes ||
+			entryA.occurrence !== entryB.occurrence
 		) {
 			return false;
 		}

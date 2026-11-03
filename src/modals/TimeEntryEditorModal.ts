@@ -1,11 +1,18 @@
 import { uiLocale } from "../i18n/runtime";
 import { msg } from "@lingui/core/macro";
-import { App, Modal, Notice, Setting, setIcon } from "obsidian";
+import { App, Modal, Notice, setIcon } from "obsidian";
 import type { EmbeddableMarkdownEditor } from "../editor/EmbeddableMarkdownEditor";
 import { TimeEntry, TaskInfo } from "../types";
 import type TaskNotesPlugin from "../main";
 import { MessageDescriptor } from "../i18n";
 import { createTaskModalMarkdownEditor } from "./taskModalEditorAdapter";
+import { format } from "date-fns";
+import {
+	getMovedTimeEntryOccurrence,
+	getTimeEntryOccurrence,
+	stampTimeEntryOccurrences,
+} from "../core/recurrence";
+import { formatTime, getTimeEntryMinutes } from "../utils/helpers";
 
 export class TimeEntryEditorModal extends Modal {
 	private plugin: TaskNotesPlugin;
@@ -16,6 +23,7 @@ export class TimeEntryEditorModal extends Modal {
 	private entriesContainerEl: HTMLElement;
 	private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
 	private totalEl: HTMLElement | null = null;
+	private groupHeaders: Array<{ el: HTMLElement; key: string }> = [];
 	private descriptionEditors: EmbeddableMarkdownEditor[] = [];
 
 	constructor(
@@ -28,7 +36,11 @@ export class TimeEntryEditorModal extends Modal {
 		this.plugin = plugin;
 		this.task = task;
 		// Create a working copy of time entries
-		this.timeEntries = JSON.parse(JSON.stringify(task.timeEntries || []));
+		// Stamped once here, so grouping reads the same occurrences that saving writes.
+		this.timeEntries = stampTimeEntryOccurrences(
+			task,
+			JSON.parse(JSON.stringify(task.timeEntries || [])) as TimeEntry[]
+		);
 		this.onSave = onSave;
 		this.translate = plugin.i18n.translate.bind(plugin.i18n);
 	}
@@ -38,6 +50,7 @@ export class TimeEntryEditorModal extends Modal {
 		this.cleanupDescriptionEditors();
 		contentEl.empty();
 		contentEl.addClass("time-entry-editor-modal");
+		this.modalEl.addClass("time-entry-editor-modal__dialog");
 
 		// Modal title
 		this.titleEl.setText(
@@ -67,8 +80,8 @@ export class TimeEntryEditorModal extends Modal {
 			cls: "time-entry-editor-modal__add-button-container",
 		});
 		const addButton = addButtonContainer.createEl("button", {
+			// Save is the one primary action, so adding an entry stays a plain button.
 			text: this.translate(msg({ message: "Add time entry", context: "modals.timeEntryEditor.addEntry" })),
-			cls: "mod-cta",
 		});
 		addButton.addEventListener("click", () => this.addNewEntry());
 
@@ -97,6 +110,7 @@ export class TimeEntryEditorModal extends Modal {
 	private renderEntries() {
 		this.cleanupDescriptionEditors();
 		this.entriesContainerEl.empty();
+		this.groupHeaders = [];
 
 		if (this.timeEntries.length === 0) {
 			this.entriesContainerEl.createDiv({
@@ -106,96 +120,140 @@ export class TimeEntryEditorModal extends Modal {
 			return;
 		}
 
-		// Sort entries by start time (newest first)
-		const sortedEntries = [...this.timeEntries].sort((a, b) => {
-			return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+		// Column labels, aligned with every row below
+		const labels = this.entriesContainerEl.createDiv({
+			cls: "time-entry-editor-modal__row time-entry-editor-modal__labels",
+			attr: { "aria-hidden": "true" },
 		});
+		labels.createSpan({ text: this.translate(msg({ message: "Date", context: "modals.timeEntryEditor.column.date" })) });
+		labels.createSpan({ text: this.translate(msg({ message: "Start", context: "modals.timeEntryEditor.column.start" })) });
+		labels.createSpan();
+		labels.createSpan({ text: this.translate(msg({ message: "End", context: "modals.timeEntryEditor.column.end" })) });
+		labels.createSpan({ text: this.translate(msg({ message: "Duration", context: "modals.timeEntryEditor.column.duration" })) });
 
-		sortedEntries.forEach((entry) => {
-			// Find original index in unsorted array
-			const idx = this.timeEntries.indexOf(entry);
-			this.renderEntry(entry, idx);
-		});
+		// Newest first
+		const sortedEntries = [...this.timeEntries].sort(
+			(a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+		);
+
+		if (!this.task.recurrence) {
+			sortedEntries.forEach((entry) => this.renderEntry(this.entriesContainerEl, entry));
+			return;
+		}
+
+		// A recurring task's entries are grouped by the occurrence they count toward.
+		const groups = new Map<string, TimeEntry[]>();
+		for (const entry of sortedEntries) {
+			const key = this.getOccurrenceKey(entry);
+			groups.set(key, [...(groups.get(key) ?? []), entry]);
+		}
+		const keys = [...groups.keys()].sort((a, b) => (a && b ? b.localeCompare(a) : a ? -1 : 1));
+		for (const key of keys) {
+			const groupEl = this.entriesContainerEl.createDiv({ cls: "time-entry-editor-modal__group" });
+			const headerEl = groupEl.createDiv({ cls: "time-entry-editor-modal__group-header" });
+			this.groupHeaders.push({ el: headerEl, key });
+			groups.get(key)?.forEach((entry) => this.renderEntry(groupEl, entry));
+		}
+		this.updateTotalDisplay();
 	}
 
-	private renderEntry(entry: TimeEntry, index: number) {
-		const entryEl = this.entriesContainerEl.createDiv({
-			cls: "time-entry-editor-modal__entry",
-		});
+	private getOccurrenceKey(entry: TimeEntry): string {
+		return entry.occurrence ?? "";
+	}
 
-		// Entry header with delete button
-		const headerEl = entryEl.createDiv({ cls: "time-entry-editor-modal__entry-header" });
+	private renderEntry(container: HTMLElement, entry: TimeEntry) {
+		const entryEl = container.createDiv({ cls: "time-entry-editor-modal__entry" });
+		const row = entryEl.createDiv({ cls: "time-entry-editor-modal__row" });
+		const isRunning = () => hasClockTimes(entry) && !entry.endTime;
 
-		const dateStr = new Date(entry.startTime).toLocaleDateString(uiLocale());
-		headerEl.createSpan({
-			cls: "time-entry-editor-modal__entry-date",
-			text: dateStr,
-		});
+		const dateInput = this.createInput(row, "date", msg({ message: "Date", context: "modals.timeEntryEditor.column.date" }));
+		const startInput = this.createInput(row, "time", msg({ message: "Start time", context: "modals.timeEntryEditor.startTime" }));
+		row.createSpan({ cls: "time-entry-editor-modal__dash", text: "\u2013" });
+		const endInput = this.createInput(row, "time", msg({ message: "End time", context: "modals.timeEntryEditor.endTime" }));
 
-		const deleteButton = headerEl.createEl("button", {
-			cls: "time-entry-editor-modal__delete-button",
+		const durationEl = row.createDiv({ cls: "time-entry-editor-modal__duration" });
+		const durationInput = this.createInput(durationEl, "number", msg({ message: "Duration in minutes", context: "modals.timeEntryEditor.durationLabel" }));
+		durationInput.min = "0";
+		durationInput.step = "1";
+		const unitEl = durationEl.createSpan({ cls: "time-entry-editor-modal__unit" });
+
+		const deleteButton = row.createEl("button", {
+			cls: "time-entry-editor-modal__delete-button clickable-icon",
 			attr: { "aria-label": this.translate(msg({ message: "Delete entry", context: "modals.timeEntryEditor.deleteEntry" })) },
 		});
 		setIcon(deleteButton, "trash-2");
-		deleteButton.addEventListener("click", () => this.deleteEntry(index));
+		deleteButton.addEventListener("click", () => this.deleteEntry(this.timeEntries.indexOf(entry)));
 
-		// Time inputs
-		const timeContainer = entryEl.createDiv({ cls: "time-entry-editor-modal__time-container" });
+		// The inputs always show the entry; every edit writes the entry, then syncs back.
+		const sync = () => {
+			dateInput.value = getEntryDay(entry);
+			startInput.value = hasClockTimes(entry) ? getClockTime(entry.startTime) : "";
+			endInput.value = hasClockTimes(entry) && entry.endTime ? getClockTime(entry.endTime) : "";
+			durationInput.value = String(this.calculateDuration(entry));
+			durationInput.disabled = isRunning();
+			unitEl.setText(
+				isRunning()
+					? this.translate(msg({ message: "running", context: "modals.timeEntryEditor.running" }))
+					: this.translate(msg({ message: "min", context: "modals.timeEntryEditor.minutesUnit" }))
+			);
+			this.updateTotalDisplay();
+		};
+		// A changed date or start keeps the entry's length, however long; a running entry keeps running.
+		const keptMinutes = () => (isRunning() ? null : this.calculateDuration(entry));
+		const moved = () => {
+			const before = entry.occurrence;
+			if (this.task.recurrence) entry.occurrence = getMovedTimeEntryOccurrence(this.task, entry);
+			if (entry.occurrence !== before) this.renderEntries();
+			else sync();
+		};
 
-		// Start time input
-		const startSetting = new Setting(timeContainer).setName(
-			this.translate(msg({ message: "Start time", context: "modals.timeEntryEditor.startTime" }))
-		);
-
-		const startInput = startSetting.controlEl.createEl("input", {
-			type: "datetime-local",
-			cls: "time-entry-editor-modal__datetime-input",
+		dateInput.addEventListener("change", () => {
+			if (!dateInput.value) return sync();
+			setEntryTimes(entry, dateInput.value, startInput.value, keptMinutes());
+			moved();
 		});
-		startInput.value = this.formatDateTimeForInput(new Date(entry.startTime));
 		startInput.addEventListener("change", () => {
-			const newDate = new Date(startInput.value);
-			if (!isNaN(newDate.getTime())) {
-				entry.startTime = newDate.toISOString();
-				this.updateTotalDisplay();
-			}
+			const minutes = startInput.value ? keptMinutes() : this.calculateDuration(entry);
+			setEntryTimes(entry, dateInput.value, startInput.value, minutes);
+			moved();
 		});
-
-		// End time input
-		const endSetting = new Setting(timeContainer).setName(
-			this.translate(msg({ message: "End time (leave empty if still running)", context: "modals.timeEntryEditor.endTime" }))
-		);
-
-		const endInput = endSetting.controlEl.createEl("input", {
-			type: "datetime-local",
-			cls: "time-entry-editor-modal__datetime-input",
-		});
-		if (entry.endTime) {
-			endInput.value = this.formatDateTimeForInput(new Date(entry.endTime));
-		}
 		endInput.addEventListener("change", () => {
-			if (endInput.value) {
-				const newDate = new Date(endInput.value);
-				if (!isNaN(newDate.getTime())) {
-					entry.endTime = newDate.toISOString();
-					this.updateTotalDisplay();
-				}
+			if (!endInput.value) {
+				// No end means still running; an entry without clock times has none to clear.
+				if (hasClockTimes(entry)) entry.endTime = undefined;
+			} else if (!startInput.value) {
+				// Clock times added to a length: it ends at the new end time.
+				const end = new Date(`${dateInput.value}T${endInput.value}`);
+				const start = new Date(end.getTime() - this.calculateDuration(entry) * 60000);
+				setEntryTimes(entry, format(start, "yyyy-MM-dd"), format(start, "HH:mm"), this.calculateDuration(entry));
 			} else {
-				entry.endTime = undefined;
-				this.updateTotalDisplay();
+				setEntryTimes(entry, dateInput.value, startInput.value, getClockMinutesBetween(startInput.value, endInput.value));
 			}
+			moved();
 		});
+		durationInput.addEventListener("change", () => {
+			const minutes = Math.max(0, Math.round(Number(durationInput.value) || 0));
+			setEntryTimes(entry, dateInput.value, startInput.value, minutes);
+			sync();
+		});
+		sync();
 
-		// Description
-		const descriptionSetting = new Setting(timeContainer).setName(
-			this.translate(msg({ message: "Description", context: "modals.timeEntryEditor.description" }))
-		);
-		descriptionSetting.settingEl.addClass("time-entry-editor-modal__description-setting");
-
-		const editorContainer = descriptionSetting.controlEl.createDiv({
+		const descriptionEl = entryEl.createDiv({
 			cls: "time-entry-editor-modal__description-editor-container",
 		});
+		this.renderLazyDescriptionEditor(entry, descriptionEl);
+	}
 
-		this.renderLazyDescriptionEditor(entry, editorContainer);
+	private createInput(
+		container: HTMLElement,
+		type: "date" | "time" | "number",
+		label: MessageDescriptor
+	): HTMLInputElement {
+		return container.createEl("input", {
+			type,
+			cls: `time-entry-editor-modal__input time-entry-editor-modal__input--${type}`,
+			attr: { "aria-label": this.translate(label) },
+		});
 	}
 
 	private renderLazyDescriptionEditor(entry: TimeEntry, editorContainer: HTMLElement): void {
@@ -271,43 +329,38 @@ export class TimeEntryEditorModal extends Modal {
 	}
 
 	private updateTotalDisplay(): void {
-		if (!this.totalEl) {
-			return;
+		for (const { el, key } of this.groupHeaders) {
+			const minutes = this.timeEntries
+				.filter((entry) => this.getOccurrenceKey(entry) === key)
+				.reduce((total, entry) => total + this.calculateDuration(entry), 0);
+			const logged = formatTime(minutes);
+			const date = key
+				? new Date(`${key}T00:00`).toLocaleDateString(uiLocale(), { weekday: "short", day: "numeric", month: "short" })
+				: "";
+			el.setText(
+				!key
+					? this.translate(msg({ message: "No occurrence \u00b7 {logged} logged", context: "modals.timeEntryEditor.group.noOccurrence" }), { logged })
+					: this.task.timeEstimate
+						? this.translate(msg({ message: "Occurrence of {date} \u00b7 {logged} logged of {estimate} estimated", context: "modals.timeEntryEditor.group.withEstimate" }), { date, logged, estimate: formatTime(this.task.timeEstimate) })
+						: this.translate(msg({ message: "Occurrence of {date} \u00b7 {logged} logged", context: "modals.timeEntryEditor.group" }), { date, logged })
+			);
 		}
 
-		const totalMinutes = this.calculateTotalMinutes();
-		const totalHours = Math.floor(totalMinutes / 60);
-		const remainingMinutes = totalMinutes % 60;
-		const totalText =
-			totalHours > 0
-				? this.translate(msg({ message: "{hours}h {minutes}m total", context: "modals.timeEntryEditor.totalTime" }), {
-						hours: totalHours.toString(),
-						minutes: remainingMinutes.toString(),
-					})
-				: this.translate(msg({ message: "{minutes}m total", context: "modals.timeEntryEditor.totalMinutes" }), {
-						minutes: totalMinutes.toString(),
-					});
-
-		this.totalEl.setText(totalText);
+		this.totalEl?.setText(
+			this.translate(msg({ message: "{logged} logged in total", context: "modals.timeEntryEditor.total" }), {
+				logged: formatTime(this.calculateTotalMinutes()),
+			})
+		);
 	}
 
 	private calculateDuration(entry: TimeEntry): number {
-		if (!entry.endTime) {
-			// Entry is still running, calculate from start to now
-			const now = new Date();
-			const start = new Date(entry.startTime);
-			return Math.round((now.getTime() - start.getTime()) / 60000);
-		}
-		const start = new Date(entry.startTime);
-		const end = new Date(entry.endTime);
-		return Math.round((end.getTime() - start.getTime()) / 60000);
+		if (typeof entry.minutes === "number") return getTimeEntryMinutes(entry);
+		const end = entry.endTime ? new Date(entry.endTime) : new Date();
+		return Math.max(0, Math.round((end.getTime() - new Date(entry.startTime).getTime()) / 60000));
 	}
 
 	private calculateTotalMinutes(): number {
-		return this.timeEntries.reduce((total, entry) => {
-			const duration = this.calculateDuration(entry);
-			return total + duration;
-		}, 0);
+		return this.timeEntries.reduce((total, entry) => total + this.calculateDuration(entry), 0);
 	}
 
 	private addNewEntry() {
@@ -319,6 +372,10 @@ export class TimeEntryEditorModal extends Modal {
 			endTime: now.toISOString(),
 			description: "",
 		};
+		const occurrence = this.task.recurrence
+			? getTimeEntryOccurrence(this.task, newEntry.startTime)
+			: null;
+		if (occurrence) newEntry.occurrence = occurrence;
 
 		this.timeEntries.push(newEntry);
 		this.renderEntries();
@@ -326,19 +383,10 @@ export class TimeEntryEditorModal extends Modal {
 	}
 
 	private deleteEntry(index: number) {
+		if (index < 0) return;
 		this.timeEntries.splice(index, 1);
 		this.renderEntries();
 		this.updateTotalDisplay();
-	}
-
-	private formatDateTimeForInput(date: Date): string {
-		// Format for datetime-local input: YYYY-MM-DDTHH:mm
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, "0");
-		const day = String(date.getDate()).padStart(2, "0");
-		const hours = String(date.getHours()).padStart(2, "0");
-		const minutes = String(date.getMinutes()).padStart(2, "0");
-		return `${year}-${month}-${day}T${hours}:${minutes}`;
 	}
 
 	private save() {
@@ -349,7 +397,8 @@ export class TimeEntryEditorModal extends Modal {
 				return;
 			}
 
-			if (entry.endTime) {
+			// An entry logged without clock times holds one date in both start and end.
+			if (entry.endTime && typeof entry.minutes !== "number") {
 				const start = new Date(entry.startTime);
 				const end = new Date(entry.endTime);
 				if (end <= start) {
@@ -381,4 +430,53 @@ export class TimeEntryEditorModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 	}
+}
+
+/** An entry logged with a start (and, unless running, an end) rather than only a duration. */
+function hasClockTimes(entry: TimeEntry): boolean {
+	return typeof entry.minutes !== "number";
+}
+
+/** The local day (YYYY-MM-DD) an entry belongs to; a date-only start is already one. */
+function getEntryDay(entry: TimeEntry): string {
+	return /^\d{4}-\d{2}-\d{2}$/.test(entry.startTime)
+		? entry.startTime
+		: format(new Date(entry.startTime), "yyyy-MM-dd");
+}
+
+function getClockTime(timestamp: string): string {
+	return format(new Date(timestamp), "HH:mm");
+}
+
+/** Minutes from one clock time to the next, ending the next day when the end is earlier. */
+function getClockMinutesBetween(start: string, end: string): number {
+	const toMinutes = (clock: string) => {
+		const [hours, minutes] = clock.split(":").map(Number);
+		return hours * 60 + minutes;
+	};
+	return (toMinutes(end) - toMinutes(start) + 1440) % 1440;
+}
+
+/**
+ * Writes the form's values onto an entry. With a start time it is a clock entry ending
+ * `minutes` later, or still running when `minutes` is null. Without one it holds only a
+ * length, on the day's local midnight so every reader places it on that day.
+ */
+export function setEntryTimes(
+	entry: TimeEntry,
+	day: string,
+	start: string,
+	minutes: number | null
+): void {
+	if (!start) {
+		entry.startTime = `${day}T00:00`;
+		entry.endTime = entry.startTime;
+		entry.minutes = minutes ?? 0;
+		return;
+	}
+	delete entry.minutes;
+	const startDate = new Date(`${day}T${start}`);
+	entry.startTime = startDate.toISOString();
+	entry.endTime =
+		minutes === null ? undefined : new Date(startDate.getTime() + minutes * 60000).toISOString();
 }
