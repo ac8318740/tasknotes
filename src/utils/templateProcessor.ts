@@ -2,6 +2,7 @@ import { formatStableDate } from "../i18n/formatters";
 import { format } from "date-fns";
 import YAML from "yaml";
 import { createTaskNotesLogger } from "./tasknotesLogger";
+import { vaultNow } from "./vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Utils/TemplateProcessor" });
 // YAML not needed in template processor
@@ -159,7 +160,7 @@ function processTemplateVariablesForYaml(
 	taskData: TemplateData | ICSTemplateData
 ): string {
 	let result = template;
-	const now = new Date();
+	const now = vaultNow();
 
 	// {{title}} - Task title (quote if contains special characters)
 	const title = taskData.title || "";
@@ -396,7 +397,7 @@ export function processTemplateVariables(
 	taskData: TemplateData | ICSTemplateData
 ): string {
 	let result = template;
-	const now = new Date();
+	const now = vaultNow();
 
 	// {{title}} - Task title
 	result = result.replace(/\{\{title\}\}/g, taskData.title || "");

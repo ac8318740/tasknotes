@@ -42,6 +42,7 @@ import {
 import { renderContextsValue, renderTagsValue, type TagServices } from "./renderers/tagRenderer";
 import { normalizeDependencyEntry, resolveDependencyEntry } from "../utils/dependencyUtils";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Ui/TaskCardProperties" });
 
@@ -827,7 +828,7 @@ function formatUserPropertyValue(value: unknown, userField: UserField): string {
 
 function getTaskCardDateFormat(dateString: string): string {
 	const year = Number(getDatePart(dateString).slice(0, 4));
-	return Number.isInteger(year) && year !== new Date().getFullYear() ? "MMM d, yyyy" : "MMM d";
+	return Number.isInteger(year) && year !== vaultNow().getFullYear() ? "MMM d, yyyy" : "MMM d";
 }
 
 function renderDueDateProperty(

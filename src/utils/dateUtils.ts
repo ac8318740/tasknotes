@@ -18,6 +18,7 @@ import {
 	// subDays, subWeeks, subMonths, subYears - removed unused imports
 } from "date-fns";
 import { createTaskNotesLogger } from "./tasknotesLogger";
+import { timeZoneOffsetMs, toVaultDate, vaultNow } from "./vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Utils/DateUtils" });
 
@@ -156,8 +157,8 @@ function parseDateToLocalInternal(dateString: string): Date {
 				throw error;
 			}
 
-			// Successfully parsed timezone-aware date
-			return parsed;
+			// A string with Z or an offset is a real moment; read it as vault wall-clock time
+			return /(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed) ? toVaultDate(parsed) : parsed;
 		} else {
 			// Date-only string - parse in local timezone
 			// Use direct Date constructor to avoid timezone issues
@@ -384,7 +385,7 @@ export function isBeforeDateSafe(date1: string, date2: string): boolean {
  * Get today in appropriate format for comparison
  */
 export function getTodayString(): string {
-	return format(new Date(), "yyyy-MM-dd");
+	return format(vaultNow(), "yyyy-MM-dd");
 }
 
 /**
@@ -392,7 +393,7 @@ export function getTodayString(): string {
  * This represents "today" from the user's perspective.
  */
 export function getTodayLocal(): Date {
-	const now = new Date();
+	const now = vaultNow();
 	return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
@@ -596,7 +597,7 @@ export function addYearsToDateString(dateString: string, years: number): string 
  */
 export function getStartOfWeekString(weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 1): string {
 	try {
-		const result = startOfWeek(new Date(), { weekStartsOn });
+		const result = startOfWeek(vaultNow(), { weekStartsOn });
 		return format(result, "yyyy-MM-dd");
 	} catch (error) {
 		tasknotesLogger.error("Error getting start of week:", {
@@ -613,7 +614,7 @@ export function getStartOfWeekString(weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 1
  */
 export function getEndOfWeekString(weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 1): string {
 	try {
-		const result = endOfWeek(new Date(), { weekStartsOn });
+		const result = endOfWeek(vaultNow(), { weekStartsOn });
 		return format(result, "yyyy-MM-dd");
 	} catch (error) {
 		tasknotesLogger.error("Error getting end of week:", {
@@ -630,7 +631,7 @@ export function getEndOfWeekString(weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 1):
  */
 export function getStartOfMonthString(): string {
 	try {
-		const result = startOfMonth(new Date());
+		const result = startOfMonth(vaultNow());
 		return format(result, "yyyy-MM-dd");
 	} catch (error) {
 		tasknotesLogger.error("Error getting start of month:", {
@@ -647,7 +648,7 @@ export function getStartOfMonthString(): string {
  */
 export function getEndOfMonthString(): string {
 	try {
-		const result = endOfMonth(new Date());
+		const result = endOfMonth(vaultNow());
 		return format(result, "yyyy-MM-dd");
 	} catch (error) {
 		tasknotesLogger.error("Error getting end of month:", {
@@ -664,7 +665,7 @@ export function getEndOfMonthString(): string {
  */
 export function getStartOfYearString(): string {
 	try {
-		const result = startOfYear(new Date());
+		const result = startOfYear(vaultNow());
 		return format(result, "yyyy-MM-dd");
 	} catch (error) {
 		tasknotesLogger.error("Error getting start of year:", {
@@ -681,7 +682,7 @@ export function getStartOfYearString(): string {
  */
 export function getEndOfYearString(): string {
 	try {
-		const result = endOfYear(new Date());
+		const result = endOfYear(vaultNow());
 		return format(result, "yyyy-MM-dd");
 	} catch (error) {
 		tasknotesLogger.error("Error getting end of year:", {
@@ -761,8 +762,8 @@ export function formatDateForDisplay(dateString: string, formatString = "MMM d, 
  * Get current timestamp in local timezone ISO format for consistent timestamp generation
  */
 export function getCurrentTimestamp(): string {
-	const now = new Date();
-	const tzOffset = -now.getTimezoneOffset();
+	const now = vaultNow();
+	const tzOffset = Math.round(timeZoneOffsetMs(Date.now()) / 60000);
 	const diff = tzOffset >= 0 ? "+" : "-";
 	const pad = (num: number) => String(Math.abs(num)).padStart(2, "0");
 
@@ -787,7 +788,7 @@ export function getCurrentTimestamp(): string {
 export function getCurrentDateString(): string {
 	// For user actions (task completion), use local date extraction
 	// This ensures completion is recorded as user's local calendar day
-	const now = new Date();
+	const now = vaultNow();
 	const year = now.getFullYear();
 	const month = String(now.getMonth() + 1).padStart(2, "0");
 	const day = String(now.getDate()).padStart(2, "0");
@@ -841,7 +842,7 @@ export function formatTimestampForDisplay(
 			// Use custom format if provided, otherwise use time format preference
 			const finalFormat =
 				formatString || (timeFormat === "12" ? "MMM d, yyyy h:mm a" : "MMM d, yyyy HH:mm");
-			return formatUIDate(parsed, finalFormat);
+			return formatUIDate(toVaultDate(parsed), finalFormat);
 		}
 		return timestampString;
 	} catch (error) {
@@ -1197,7 +1198,7 @@ export function isOverdueTimeAware(
 	}
 
 	try {
-		const now = new Date();
+		const now = vaultNow();
 		const taskDateUTC = parseDateToUTC(dateString); // Task's UTC anchor
 
 		if (hasTimeComponent(dateString)) {
@@ -1230,7 +1231,7 @@ export function isTodayTimeAware(dateString: string): boolean {
 		const taskDate = hasTimeComponent(dateString)
 			? parseDateToLocalInternal(dateString)
 			: parseDateAsLocal(dateString);
-		const now = new Date();
+		const now = vaultNow();
 
 		return isSameDay(taskDate, now);
 	} catch (error) {
@@ -1327,7 +1328,7 @@ export function validateCompleteInstances(instances: unknown[]): string[] {
  * Get current date+time in local timezone as YYYY-MM-DDTHH:mm format
  */
 export function getCurrentDateTimeString(): string {
-	const now = new Date();
+	const now = vaultNow();
 	return format(now, "yyyy-MM-dd'T'HH:mm");
 }
 

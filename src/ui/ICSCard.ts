@@ -6,6 +6,7 @@ import { ICSEventContextMenu } from "../components/ICSEventContextMenu";
 import { formatTime } from "../utils/dateUtils";
 import { ICSEventInfoModal } from "../modals/ICSEventInfoModal";
 import { findProviderCalendar } from "../services/CalendarProvider";
+import { toVaultDate } from "../utils/vaultTime";
 
 export interface ICSCardOptions {
 	showDate: boolean;
@@ -70,14 +71,14 @@ function getEventSourceName(
 function formatTimeRange(icsEvent: ICSEvent, plugin: TaskNotesPlugin): string {
 	try {
 		if (!icsEvent.start) return "";
-		const start = new Date(icsEvent.start);
+		const start = toVaultDate(icsEvent.start);
 		if (icsEvent.allDay) {
 			return plugin.i18n.translate(msg({ message: "All day", context: "ui.icsCard.allDay" }));
 		}
 		const timeFormat = plugin.settings.calendarViewSettings.timeFormat;
 		const startText = formatTime(start, timeFormat);
 		if (icsEvent.end) {
-			const end = new Date(icsEvent.end);
+			const end = toVaultDate(icsEvent.end);
 			const endText = formatTime(end, timeFormat);
 			return `${startText} – ${endText}`;
 		}

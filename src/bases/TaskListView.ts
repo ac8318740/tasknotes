@@ -30,6 +30,7 @@ import {
 	getCurrentTimestamp,
 	parseDateToUTC,
 	createUTCDateFromLocalCalendarDate,
+	getTodayString,
 } from "../utils/dateUtils";
 import { stringifyUnknown } from "../utils/stringUtils";
 import { VirtualScroller } from "../utils/VirtualScroller";
@@ -114,6 +115,7 @@ import {
 	type TaskParentAssignmentState,
 } from "../services/taskParentAssignment";
 import { openTaskSelector } from "../modals/TaskSelectorWithCreateModal";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/TaskListView" });
 
@@ -191,7 +193,7 @@ export class TaskListView extends BasesViewBase {
 	private lastCardRenderSignature = "";
 	private taskInfoCache = new Map<string, TaskInfo>();
 	private clickTimeouts = new Map<string, number>();
-	private currentTargetDate = createUTCDateFromLocalCalendarDate(new Date());
+	private currentTargetDate = createUTCDateFromLocalCalendarDate(vaultNow());
 	private containerListenersRegistered = false;
 	private virtualScroller: VirtualScroller<TaskListVirtualItem> | null = null; // Can render TaskInfo or group headers
 	private useVirtualScrolling = false;
@@ -1707,7 +1709,7 @@ export class TaskListView extends BasesViewBase {
 									isCompletedStatus: (status) =>
 										this.plugin.statusManager.isCompletedStatus(status),
 									getTimestamp: getCurrentTimestamp,
-									getCompletedDate: () => new Date().toISOString().split("T")[0],
+									getCompletedDate: () => getTodayString(),
 									coerceGroupKeyForTask: (property, value) =>
 										this.coerceGroupKeyForFrontmatter(property, value),
 									getClearedTaskValue: (property) =>
@@ -2440,7 +2442,7 @@ export class TaskListView extends BasesViewBase {
 							isCompletedStatus: (status) =>
 								this.plugin.statusManager.isCompletedStatus(status),
 							getTimestamp: getCurrentTimestamp,
-							getCompletedDate: () => new Date().toISOString().split("T")[0],
+							getCompletedDate: () => getTodayString(),
 							coerceGroupKeyForTask: (property, value) =>
 								this.coerceGroupKeyForFrontmatter(property, value),
 							getClearedTaskValue: (property) =>
@@ -2507,7 +2509,7 @@ export class TaskListView extends BasesViewBase {
 		// Note: taskNotes are already sorted by Bases according to sort configuration
 		// No manual sorting needed - Bases provides pre-sorted data
 
-		const targetDate = createUTCDateFromLocalCalendarDate(new Date());
+		const targetDate = createUTCDateFromLocalCalendarDate(vaultNow());
 		this.currentTargetDate = targetDate;
 
 		const cardOptions = this.getCardOptions(targetDate);
@@ -2704,7 +2706,7 @@ export class TaskListView extends BasesViewBase {
 			return;
 		}
 
-		const targetDate = createUTCDateFromLocalCalendarDate(new Date());
+		const targetDate = createUTCDateFromLocalCalendarDate(vaultNow());
 		this.currentTargetDate = targetDate;
 		const cardOptions = this.getCardOptions(targetDate);
 
@@ -2782,7 +2784,7 @@ export class TaskListView extends BasesViewBase {
 			return;
 		}
 
-		const targetDate = createUTCDateFromLocalCalendarDate(new Date());
+		const targetDate = createUTCDateFromLocalCalendarDate(vaultNow());
 		this.currentTargetDate = targetDate;
 		const cardOptions = this.getCardOptions(targetDate);
 		this.applyGroupingSnapshot(this.createGroupedHierarchySnapshot(groups, renderTasks));

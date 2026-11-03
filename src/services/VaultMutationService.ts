@@ -8,5 +8,6 @@ export {
 	processVaultFrontMatter,
 	processVaultFrontMatterWithinMutation,
 	renameVaultFile,
+	setBeforeVaultFileMutation,
 	withVaultFileMutation,
 } from "../core/VaultMutationService";

@@ -207,7 +207,7 @@ describe('MicrosoftCalendarService', () => {
 			});
 			expect(events[0].allDay).toBe(false);
 			expect(events[1].allDay).toBe(true);
-			const expectedStart = format(parseISO('2025-10-21T16:00:00Z'), "yyyy-MM-dd'T'HH:mm:ss");
+			const expectedStart = '2025-10-21T16:00:00.000Z';
 			expect(events[0].start).toBe(expectedStart);
 			expect(events[1].start).toBe('2025-10-25');
 		});

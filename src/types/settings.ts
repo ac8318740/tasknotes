@@ -91,6 +91,13 @@ export interface ProjectAutosuggestSettings {
 	propertyValue?: string; // Expected value for the property (empty = property must exist)
 }
 
+export interface VaultTimeZoneRewrite {
+	from: string; // IANA zone the pending files are still written in
+	to: string; // IANA zone they are being rewritten into
+	deviceId: string; // Only this device rewrites; others just read the list
+	pending: string[]; // Vault paths not yet rewritten
+}
+
 export interface TaskNotesSettings {
 	tasksFolder: string; // Now just a default location for new tasks
 	moveArchivedTasks: boolean; // Whether to move tasks to archive folder when archived
@@ -141,6 +148,8 @@ export interface TaskNotesSettings {
 	nlpEnterToSubmit: boolean; // Enter saves from the NLP input; Shift+Enter inserts a newline
 	nlpLanguage: string; // Language code for natural language processing (e.g., 'en', 'es', 'fr')
 	uiLanguage: string; // 'system' or supported locale code for UI translations
+	vaultTimeZone: string; // IANA zone TaskNotes reads times in; empty means the device zone
+	vaultTimeZoneRewrite?: VaultTimeZoneRewrite; // Files still to rewrite after a vault zone change
 
 	// NLP status suggestion trigger (empty to disable) - DEPRECATED: Use nlpTriggers instead
 	statusSuggestionTrigger: string;

@@ -6824,6 +6824,11 @@ msgctxt "settings.integrations.oauth.forgotten"
 msgid "Forgot OAuth credentials for {provider}"
 msgstr "Identifiants OAuth de {provider} supprimés"
 
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.limit"
+msgid "Formulas in Bases and other plugins still use this device's time zone."
+msgstr "Les formules des Bases et les autres plugins utilisent toujours le fuseau horaire de cet appareil."
+
 #: src/components/RecurrenceContextMenu.ts
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.weekPositions.fourth"
 msgid "fourth"
@@ -12550,6 +12555,11 @@ msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Calendar"
 msgstr "Calendrier TaskNotes"
 
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.busy"
+msgid "TaskNotes is still updating times for the last time zone change. Try again when it finishes."
+msgstr "TaskNotes met encore à jour les heures suite au dernier changement de fuseau horaire. Réessayez une fois terminé."
+
 #: src/bases/registration.ts
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Kanban"
@@ -12559,6 +12569,11 @@ msgstr "Tableau kanban TaskNotes"
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Mini Calendar"
 msgstr "Mini-calendrier TaskNotes"
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.description"
+msgid "TaskNotes reads and writes task times, reminders and timeblocks in this time zone on every device. When you change it, stored times are updated so they keep the same moment."
+msgstr "TaskNotes lit et écrit les heures des tâches, les rappels et les blocs de temps dans ce fuseau horaire sur chaque appareil. Lorsque vous le changez, les heures enregistrées sont mises à jour pour conserver le même instant."
 
 #: src/ui/NotificationService.ts
 msgctxt "ui/NotificationService: NotificationService.deliverNotification display"
@@ -12715,6 +12730,11 @@ msgstr "troisième"
 msgctxt "common.cannotUndo"
 msgid "This action cannot be undone."
 msgstr "Cette action est irréversible."
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.device"
+msgid "This device's time zone ({zone})"
+msgstr "Fuseau horaire de cet appareil ({zone})"
 
 #: src/ui/NotificationService.ts
 msgctxt "ui/NotificationService: NotificationService.sendTestReminderNotification display"
@@ -12988,6 +13008,11 @@ msgctxt "modals.actionPalette.trackingStopped"
 msgid "Time tracking stopped"
 msgstr "Suivi du temps arrêté"
 
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.header"
+msgid "Time zone"
+msgstr "Fuseau horaire"
+
 #: src/modals/ReminderModal.ts
 #: src/settings/tabs/taskProperties/remindersPropertyCard.ts
 #: src/settings/tabs/taskPropertiesTab.ts
@@ -13069,6 +13094,11 @@ msgstr "Les blocs de temps doivent avoir des heures spécifiques. Veuillez séle
 msgctxt "views.pomodoro.timer.inputLabel"
 msgid "Timer duration"
 msgstr "Durée du minuteur"
+
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.done"
+msgid "Times updated for the new time zone."
+msgstr "Heures mises à jour pour le nouveau fuseau horaire."
 
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.calendarSubscriptions.filenameFormat.options.timestamp"
@@ -13835,6 +13865,11 @@ msgid "Updated default Bases files ({count}):\n"
 msgstr "Fichiers Bases par défaut mis à jour ({count}) :\n"
 "{files}"
 
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.progress"
+msgid "Updating times for the new time zone: {done} of {total} notes"
+msgstr "Mise à jour des heures pour le nouveau fuseau horaire : {done} notes sur {total}"
+
 #: src/modals/ICSEventInfoModal.ts
 msgctxt "modals.icsEventInfo.urlLabel"
 msgid "URL"
@@ -13989,6 +14024,11 @@ msgstr "Valeur : L''identifiant interne stocké dans vos fichiers de tâches. Ut
 msgctxt "modals.icsNoteCreation.vaultRoot"
 msgid "Vault root"
 msgstr "Racine du coffre"
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.name"
+msgid "Vault time zone"
+msgstr "Fuseau horaire du coffre"
 
 #: src/i18n/messages.ts
 msgctxt "views.basesCalendar.settings.groups.view"

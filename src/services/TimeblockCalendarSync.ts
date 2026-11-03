@@ -14,6 +14,7 @@ import { validateTimeBlock } from "../utils/helpers";
 import { parseDateToLocal } from "../utils/dateUtils";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { withPluginDataWriteLock } from "../utils/pluginDataWriteLock";
+import { getVaultTimeZone } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/TimeblockCalendarSync" });
 
@@ -1086,7 +1087,7 @@ export class TimeblockCalendarSync {
 		timeblock: TimeBlock
 	): TimeblockEventPayload {
 		const settings = this.plugin.settings.googleCalendarExport;
-		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+		const timeZone = getVaultTimeZone();
 		const startsAfterMidnight = timeblock.startTime !== "00:00";
 		const endsAtNextMidnight =
 			timeblock.endTime === "24:00" || (timeblock.endTime === "00:00" && startsAfterMidnight);

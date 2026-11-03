@@ -21,6 +21,7 @@ import { createTaskCard } from "../ui/TaskCard";
 import { convertInternalToUserProperties } from "../utils/propertyMapping";
 import { getProjectDisplayName, parseLinkToPath } from "../utils/linkUtils";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Views/StatsView" });
 
@@ -438,7 +439,7 @@ export class StatsView extends ItemView {
 				if (task.timeEntries && task.timeEntries.length > 0) {
 					return task.timeEntries.some((entry) => {
 						if (!entry.startTime) return false;
-						const entryDate = new Date(entry.startTime);
+						const entryDate = toVaultDate(entry.startTime);
 
 						if (dateRange.start && entryDate < dateRange.start) return false;
 						if (dateRange.end && entryDate > dateRange.end) return false;
@@ -457,7 +458,7 @@ export class StatsView extends ItemView {
 
 				// Check creation date as fallback
 				if (task.dateCreated) {
-					const createdDate = new Date(task.dateCreated);
+					const createdDate = toVaultDate(task.dateCreated);
 					if (dateRange.start && createdDate < dateRange.start) return false;
 					if (dateRange.end && createdDate > dateRange.end) return false;
 					return true;
@@ -706,7 +707,7 @@ export class StatsView extends ItemView {
 			if (task.timeEntries && task.timeEntries.length > 0) {
 				return task.timeEntries.some((entry) => {
 					if (!entry.startTime) return false;
-					const entryDate = new Date(entry.startTime);
+					const entryDate = toVaultDate(entry.startTime);
 					return entryDate >= startDate && entryDate <= endDate;
 				});
 			}
@@ -719,7 +720,7 @@ export class StatsView extends ItemView {
 
 			// Include tasks created in this range
 			if (task.dateCreated) {
-				const createdDate = new Date(task.dateCreated);
+				const createdDate = toVaultDate(task.dateCreated);
 				return createdDate >= startDate && createdDate <= endDate;
 			}
 
@@ -1410,7 +1411,7 @@ export class StatsView extends ItemView {
 					if (task.timeEntries) {
 						for (const entry of task.timeEntries) {
 							if (entry.startTime) {
-								const entryDate = format(new Date(entry.startTime), "yyyy-MM-dd");
+								const entryDate = format(toVaultDate(entry.startTime), "yyyy-MM-dd");
 								if (entryDate === dateStr) {
 									dailyTime += calculateTotalTimeSpent([entry]);
 								}
@@ -1656,7 +1657,7 @@ export class StatsView extends ItemView {
 				// Check time entries
 				if (task.timeEntries) {
 					const dayEntries = task.timeEntries.filter(
-						(entry) => format(new Date(entry.startTime), "yyyy-MM-dd") === dateStr
+						(entry) => format(toVaultDate(entry.startTime), "yyyy-MM-dd") === dateStr
 					);
 					if (dayEntries.length > 0) {
 						dayTime += calculateTotalTimeSpent(dayEntries);
@@ -1672,7 +1673,7 @@ export class StatsView extends ItemView {
 					dayCompleted++;
 					if (
 						!task.timeEntries?.some(
-							(entry) => format(new Date(entry.startTime), "yyyy-MM-dd") === dateStr
+							(entry) => format(toVaultDate(entry.startTime), "yyyy-MM-dd") === dateStr
 						)
 					) {
 						dayTasks++;

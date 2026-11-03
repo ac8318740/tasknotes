@@ -4,6 +4,7 @@ import type TaskNotesPlugin from "../main";
 import { createI18nService, type MessageDescriptor, type InterpolationValues } from "../i18n";
 import { NaturalLanguageParser, type ParsedTaskData } from "../services/NaturalLanguageParser";
 import { attachDateInputBehavior } from "../ui/dateInputBehavior";
+import { vaultNow } from "../utils/vaultTime";
 
 export interface DateTimePickerOptions {
 	currentDate?: string | null;
@@ -142,7 +143,7 @@ export class DateTimePickerModal extends Modal {
 	}
 
 	private renderQuickActions(container: HTMLElement): void {
-		const today = new Date();
+		const today = vaultNow();
 		const quickActions = [
 			{ label: this.translate(msg({ message: "Today", context: "views.agenda.today" })), date: today },
 			{

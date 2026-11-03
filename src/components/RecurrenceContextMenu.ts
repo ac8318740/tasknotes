@@ -10,6 +10,7 @@ import TaskNotesPlugin from "../main";
 import { ContextMenu } from "./ContextMenu";
 import { showCoordinatedMenu } from "./ContextMenuCoordinator";
 import { attachDateInputBehavior } from "../ui/dateInputBehavior";
+import { vaultNow } from "../utils/vaultTime";
 
 export interface RecurrenceOption {
 	label: string;
@@ -188,7 +189,7 @@ export function buildWeekdaysOnlyRecurrenceRule(dtstart: string, locale?: string
 	return `DTSTART:${dtstart};FREQ=WEEKLY;BYDAY=${getWeekdayOnlyRRuleCodes(locale).join(",")}`;
 }
 
-export function getRecurrenceStartDate(scheduledDate?: string, fallbackDate = new Date()): Date {
+export function getRecurrenceStartDate(scheduledDate?: string, fallbackDate = vaultNow()): Date {
 	const dateMatch = scheduledDate?.match(/^(\d{4})-(\d{2})-(\d{2})/);
 	if (!dateMatch) {
 		return fallbackDate;
@@ -426,7 +427,7 @@ export function buildCustomRecurrenceRule(input: CustomRecurrenceRuleInput): str
 
 			if (input.monthlyType === "bydate") {
 				const dayOfMonth =
-					input.byMonthDay.length > 0 ? input.byMonthDay[0] : new Date().getDate();
+					input.byMonthDay.length > 0 ? input.byMonthDay[0] : vaultNow().getDate();
 				parts.push(`BYMONTHDAY=${dayOfMonth}`);
 			} else if (input.monthlyType === "byday" && input.byDay.length > 0) {
 				const setPos = input.bySetPos || 1;
@@ -441,14 +442,14 @@ export function buildCustomRecurrenceRule(input: CustomRecurrenceRuleInput): str
 
 			if (input.yearlyType === "bydate") {
 				const month =
-					input.byMonth.length > 0 ? input.byMonth[0] : new Date().getMonth() + 1;
+					input.byMonth.length > 0 ? input.byMonth[0] : vaultNow().getMonth() + 1;
 				const dayOfMonth =
-					input.byMonthDay.length > 0 ? input.byMonthDay[0] : new Date().getDate();
+					input.byMonthDay.length > 0 ? input.byMonthDay[0] : vaultNow().getDate();
 				parts.push(`BYMONTH=${month}`);
 				parts.push(`BYMONTHDAY=${dayOfMonth}`);
 			} else if (input.yearlyType === "byday") {
 				const month =
-					input.byMonth.length > 0 ? input.byMonth[0] : new Date().getMonth() + 1;
+					input.byMonth.length > 0 ? input.byMonth[0] : vaultNow().getMonth() + 1;
 				parts.push(`BYMONTH=${month}`);
 
 				if (input.byDay.length > 0) {

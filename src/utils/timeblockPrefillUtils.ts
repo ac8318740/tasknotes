@@ -4,6 +4,7 @@ import {
 	hasTimeComponent,
 	parseDateToLocal,
 } from "./dateUtils";
+import { vaultNow } from "./vaultTime";
 
 export interface TimeblockPrefill {
 	date: string;
@@ -36,7 +37,7 @@ export function buildTimeblockPrefillForTask(
 	}
 
 	if (isNaN(startDate.getTime())) {
-		startDate = new Date();
+		startDate = vaultNow();
 	}
 
 	if (!task.scheduled || !hasTimeComponent(task.scheduled)) {

@@ -16,6 +16,7 @@ import {
 } from "./calendarMutationPlanning";
 import { processVaultFrontMatter } from "../services/VaultMutationService";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { getVaultTimeZone, toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/CalendarMutations" });
 export interface CalendarMutationContext {
@@ -45,7 +46,7 @@ export async function handleCalendarEventDrop(
 			info.revert();
 			return;
 		}
-		const originalDate = format(info.oldEvent.start, "yyyy-MM-dd");
+		const originalDate = format(toVaultDate(info.oldEvent.start), "yyyy-MM-dd");
 		await handleTimeblockDrop(
 			info,
 			timeblock,
@@ -120,10 +121,10 @@ export async function handleCalendarEventDrop(
 			try {
 				const { calendarId, eventId } = provider.extractEventIds(icsEvent);
 				const providerUpdate = buildProviderEventDateUpdate({
-					start: info.event.start,
-					end: info.event.end,
+					start: info.event.start && toVaultDate(info.event.start),
+					end: info.event.end && toVaultDate(info.event.end),
 					allDay: info.event.allDay,
-					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+					timezone: getVaultTimeZone(),
 				});
 				if (providerUpdate.kind === "revert") {
 					info.revert();
@@ -169,7 +170,7 @@ export async function handleCalendarEventResize(
 			info.revert();
 			return;
 		}
-		const originalDate = format(info.event.start, "yyyy-MM-dd");
+		const originalDate = format(toVaultDate(info.event.start), "yyyy-MM-dd");
 		await handleTimeblockResize(info, timeblock, originalDate, context.plugin);
 		return;
 	}
@@ -187,7 +188,7 @@ export async function handleCalendarEventResize(
 			const endProp = getCalendarFrontmatterPropertyName(endDateProperty);
 			const plan = planPropertyEventResize({
 				endProperty: endProp,
-				newEnd: info.event.end,
+				newEnd: info.event.end && toVaultDate(info.event.end),
 				allDay: info.event.allDay,
 			});
 			if (plan.kind === "revert") {
@@ -225,10 +226,10 @@ export async function handleCalendarEventResize(
 			try {
 				const { calendarId, eventId } = provider.extractEventIds(icsEvent);
 				const providerUpdate = buildProviderEventDateUpdate({
-					start: info.event.start,
-					end: info.event.end,
+					start: info.event.start && toVaultDate(info.event.start),
+					end: info.event.end && toVaultDate(info.event.end),
 					allDay: info.event.allDay,
-					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+					timezone: getVaultTimeZone(),
 					requireEnd: true,
 				});
 				if (providerUpdate.kind === "revert") {

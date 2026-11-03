@@ -2,6 +2,8 @@
 import { TaskManager } from "../utils/TaskManager";
 import { TaskInfo } from "../types";
 import { StatusManager } from "./StatusManager";
+import { getTodayString } from "../utils/dateUtils";
+import { vaultNow } from "../utils/vaultTime";
 
 export interface TaskStats {
 	total: number;
@@ -32,7 +34,7 @@ export class TaskStatsService {
 		let withTimeEntries = 0;
 		let totalTrackedMinutes = 0;
 
-		const today = new Date().toISOString().split("T")[0];
+		const today = getTodayString();
 
 		for (const task of tasks) {
 			statusCounts[task.status] = (statusCounts[task.status] || 0) + 1;
@@ -117,7 +119,7 @@ export class TaskStatsService {
 			return range;
 		}
 
-		const now = new Date();
+		const now = vaultNow();
 		const start = new Date(now);
 		const end = new Date(now);
 

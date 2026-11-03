@@ -2,6 +2,8 @@ import { uiData } from "../i18n/dataText";
 import { TaskInfo } from "../types";
 import { format, parseISO } from "date-fns";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { getTodayString } from "../utils/dateUtils";
+import { fromVaultDate, toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/CalendarExportService" });
 
@@ -386,8 +388,7 @@ export class CalendarExportService {
 		const { startISO, endISO } = this.getTaskDateRange(task, useScheduledAsDue);
 
 		const formatYahoo = (isoString: string): string => {
-			const date = new Date(isoString);
-			return format(date, "yyyyMMdd'T'HHmmss");
+			return format(toVaultDate(isoString), "yyyyMMdd'T'HHmmss");
 		};
 
 		return {
@@ -476,13 +477,11 @@ export class CalendarExportService {
 	private static parseTaskDate(dateStr: string): Date {
 		const normalizedDate = dateStr.trim().replace(" ", "T");
 		// Handle different date formats
-		if (this.hasTimeComponent(normalizedDate)) {
-			// ISO format or local datetime
-			return parseISO(normalizedDate);
-		} else {
-			// Date only - assume start of day
-			return parseISO(`${normalizedDate}T00:00:00`);
-		}
+		// Values without an offset are vault wall-clock times
+		if (/(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalizedDate)) return parseISO(normalizedDate);
+		return fromVaultDate(
+			parseISO(this.hasTimeComponent(normalizedDate) ? normalizedDate : `${normalizedDate}T00:00:00`)
+		);
 	}
 
 	private static hasTimeComponent(dateStr: string): boolean {
@@ -725,7 +724,7 @@ export class CalendarExportService {
 			return null;
 		}
 
-		const date = new Date().toISOString().split("T")[0];
+		const date = getTodayString();
 		return {
 			content: this.generateMultipleTasksICSContent(exportTasks, options),
 			filename: `tasknotes-all-tasks-${date}.ics`,

@@ -11,6 +11,7 @@ import { getActiveTimeEntry } from "../utils/helpers";
 import { getOverdueScheduledRolloverCandidates } from "../utils/scheduledRollover";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { showNotice } from "../ui/notifications";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/TaskActionCoordinator" });
 
@@ -41,7 +42,7 @@ export class TaskActionCoordinator {
 		const { openTaskSelectorWithCreate } = await import(
 			"../modals/TaskSelectorWithCreateModal"
 		);
-		const targetDate = new Date();
+		const targetDate = vaultNow();
 		const result = await openTaskSelectorWithCreate(this.plugin, { targetDate });
 
 		if (result.type === "selected" || result.type === "created") {
@@ -170,7 +171,7 @@ export class TaskActionCoordinator {
 
 	async openTaskSelectorForTimeTracking(): Promise<void> {
 		try {
-			const targetDate = new Date();
+			const targetDate = vaultNow();
 			const allTasks = await this.plugin.cacheManager.getAllTasks();
 			const availableTasks = allTasks
 				.filter((task) => !task.archived)

@@ -27,6 +27,7 @@ import {
 } from "../utils/pomodoroTime";
 import { formatTime } from "../utils/dateUtils";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Views/PomodoroView" });
 
@@ -777,7 +778,7 @@ export class PomodoroView extends ItemView {
 
 		try {
 			const unarchivedTasks = getCachedUnarchivedPomodoroTasks(this.plugin);
-			const targetDate = new Date();
+			const targetDate = vaultNow();
 
 			if (unarchivedTasks.length === 0) {
 				new Notice(this.t(msg({ message: "No unarchived tasks found. Create some tasks first.", context: "views.pomodoro.notices.noTasks" })));
@@ -864,7 +865,7 @@ export class PomodoroView extends ItemView {
 						this.plugin
 					)
 				: undefined;
-			const targetDate = new Date();
+			const targetDate = vaultNow();
 			const displayTask = getTaskWithInstanceStatus(
 				task,
 				targetDate,
@@ -902,7 +903,7 @@ export class PomodoroView extends ItemView {
 					task &&
 					!isTaskInstanceCompleted(
 						task,
-						new Date(),
+						vaultNow(),
 						this.plugin.statusManager,
 						this.plugin.settings.defaultTaskStatus
 					) &&

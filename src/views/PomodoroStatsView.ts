@@ -11,6 +11,7 @@ import { getTodayLocal, createUTCDateFromLocalCalendarDate } from "../utils/date
 import { getSessionDuration } from "../utils/pomodoroUtils";
 import { calculatePomodoroStats } from "../utils/pomodoroStats";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Views/PomodoroStatsView" });
 
@@ -256,7 +257,7 @@ export class PomodoroStatsView extends ItemView {
 			});
 			const timeFormat = this.plugin.settings.calendarViewSettings.timeFormat;
 			dateEl.textContent = formatUIDate(
-				new Date(session.startTime),
+				toVaultDate(session.startTime),
 				timeFormat === "12" ? "MMM d, h:mm a" : "MMM d, HH:mm"
 			);
 

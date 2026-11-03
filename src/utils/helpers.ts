@@ -36,6 +36,7 @@ import { normalizeFrontmatterTag } from "./taskIdentificationFrontmatter";
 import { normalizeThemeColor } from "./themeColors";
 import { createTaskNotesLogger } from "./tasknotesLogger";
 import { modifyVaultFile } from "../core/VaultMutationService";
+import { vaultNow, toVaultDate } from "./vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Utils/Helpers" });
 
@@ -241,7 +242,7 @@ export function calculateDefaultDate(
 		return "";
 	}
 
-	const today = new Date();
+	const today = vaultNow();
 	let targetDate: Date;
 
 	switch (defaultOption) {
@@ -562,7 +563,14 @@ export function extractNoteInfo(
 	}
 
 	// Look for first heading in the content as a fallback title
-	if (!title || title === uiData("Untitled", "Canonical Obsidian filename seed, never a translated display sentinel")) {
+	if (
+		!title ||
+		title ===
+			uiData(
+				"Untitled",
+				"Canonical Obsidian filename seed, never a translated display sentinel"
+			)
+	) {
 		const headingMatch = content.match(/^#\s+(.+)$/m);
 		if (headingMatch && headingMatch[1]) {
 			title = headingMatch[1].trim();
@@ -571,7 +579,7 @@ export function extractNoteInfo(
 
 	// If no creation date in frontmatter, use file creation time
 	if (!createdDate && file) {
-		createdDate = format(new Date(file.stat.ctime), "yyyy-MM-dd'T'HH:mm:ss");
+		createdDate = format(toVaultDate(file.stat.ctime), "yyyy-MM-dd'T'HH:mm:ss");
 	}
 
 	// Normalize date format for consistent comparison
@@ -975,7 +983,7 @@ async function removeTimeblockFromDailyNote(
 /**
  * Adds a timeblock to a daily note (creating the note if needed)
  */
-async function addTimeblockToDailyNote(
+export async function addTimeblockToDailyNote(
 	app: App,
 	date: string,
 	timeblock: TimeBlock

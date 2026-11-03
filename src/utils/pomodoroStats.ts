@@ -1,6 +1,7 @@
 import { PomodoroHistoryStats, PomodoroSessionHistory } from "../types";
 import { formatDateForStorage } from "./dateUtils";
 import { getSessionDuration } from "./pomodoroUtils";
+import { toVaultDate } from "./vaultTime";
 
 export function sortPomodoroSessions(
 	sessions: PomodoroSessionHistory[]
@@ -16,7 +17,7 @@ export function getPomodoroTimestampDateKey(timestamp: string): string {
 		return storedCalendarDate;
 	}
 
-	const date = new Date(timestamp);
+	const date = toVaultDate(timestamp);
 	if (isNaN(date.getTime())) {
 		return "";
 	}

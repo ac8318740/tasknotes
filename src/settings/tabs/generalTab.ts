@@ -16,6 +16,7 @@ import { languagePackConfig } from "../../i18n/languagePackConfig";
 import { showConfirmationModal } from "../../modals/ConfirmationModal";
 import type { HideIdentifyingTagsMode } from "../../types/settings";
 import { createTaskNotesLogger } from "../../utils/tasknotesLogger";
+import { getDeviceTimeZone, supportedTimeZones } from "../../utils/vaultTime";
 import { hasUsablePropertyTaskIdentification } from "../../utils/taskIdentification";
 import {
 	createVaultFile,
@@ -699,6 +700,34 @@ export function renderGeneralTab(
 							}
 						}));
 				}
+			});
+		}
+	);
+
+	createSettingGroup(
+		container,
+		{
+			heading: translate(msg({ message: "Time zone", context: "settings.general.vaultTimeZone.header" })),
+			description: translate(msg({ message: "TaskNotes reads and writes task times, reminders and timeblocks in this time zone on every device. When you change it, stored times are updated so they keep the same moment.", context: "settings.general.vaultTimeZone.description" })),
+		},
+		(group) => {
+			group.addSetting((setting) => {
+				configureDropdownSetting(setting, {
+					name: translate(msg({ message: "Vault time zone", context: "settings.general.vaultTimeZone.name" })),
+					desc: translate(msg({ message: "Formulas in Bases and other plugins still use this device's time zone.", context: "settings.general.vaultTimeZone.limit" })),
+					options: [
+						{
+							value: "",
+							label: uiText(msg({ message: "This device's time zone ({zone})", context: "settings.general.vaultTimeZone.device" }), { zone: uiData(getDeviceTimeZone(), "IANA time zone identifier") }),
+						},
+						...supportedTimeZones().map((zone) => ({ value: zone, label: uiData(zone, "IANA time zone identifier") })),
+					],
+					getValue: () => plugin.settings.vaultTimeZone ?? "",
+					setValue: async (value: string) => {
+						await plugin.vaultTimeZoneRewriteService.changeTimeZone(value);
+						renderGeneralTab(container, plugin, save);
+					},
+				});
 			});
 		}
 	);

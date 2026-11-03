@@ -16,6 +16,7 @@ import {
 	getTodayString,
 	parseDateToUTC,
 } from "../utils/dateUtils";
+import { toVaultDate } from "../utils/vaultTime";
 
 type AddDTSTARTTaskInput = Parameters<typeof addDTSTARTToRecurrenceRuleModel>[0];
 type AddDTSTARTWithDraggedTimeTaskInput = Parameters<
@@ -184,7 +185,7 @@ export function getTimeEntryOccurrence(
 	// A date-only value is already a local day; a timestamp is read in local time.
 	const day = /^\d{4}-\d{2}-\d{2}$/.test(timestamp)
 		? timestamp
-		: format(new Date(timestamp), "yyyy-MM-dd");
+		: format(toVaultDate(timestamp), "yyyy-MM-dd");
 	const periodStart = getRecurrencePeriodStart(task, parseDateToUTC(day));
 	return periodStart ? formatDateForStorage(periodStart) : null;
 }

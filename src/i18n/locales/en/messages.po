@@ -6824,6 +6824,11 @@ msgctxt "settings.integrations.oauth.forgotten"
 msgid "Forgot OAuth credentials for {provider}"
 msgstr "Forgot OAuth credentials for {provider}"
 
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.limit"
+msgid "Formulas in Bases and other plugins still use this device's time zone."
+msgstr "Formulas in Bases and other plugins still use this device's time zone."
+
 #: src/components/RecurrenceContextMenu.ts
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.weekPositions.fourth"
 msgid "fourth"
@@ -12550,6 +12555,11 @@ msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Calendar"
 msgstr "TaskNotes Calendar"
 
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.busy"
+msgid "TaskNotes is still updating times for the last time zone change. Try again when it finishes."
+msgstr "TaskNotes is still updating times for the last time zone change. Try again when it finishes."
+
 #: src/bases/registration.ts
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Kanban"
@@ -12559,6 +12569,11 @@ msgstr "TaskNotes Kanban"
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration name"
 msgid "TaskNotes Mini Calendar"
 msgstr "TaskNotes Mini Calendar"
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.description"
+msgid "TaskNotes reads and writes task times, reminders and timeblocks in this time zone on every device. When you change it, stored times are updated so they keep the same moment."
+msgstr "TaskNotes reads and writes task times, reminders and timeblocks in this time zone on every device. When you change it, stored times are updated so they keep the same moment."
 
 #: src/ui/NotificationService.ts
 msgctxt "ui/NotificationService: NotificationService.deliverNotification display"
@@ -12715,6 +12730,11 @@ msgstr "third"
 msgctxt "common.cannotUndo"
 msgid "This action cannot be undone."
 msgstr "This action cannot be undone."
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.device"
+msgid "This device's time zone ({zone})"
+msgstr "This device's time zone ({zone})"
 
 #: src/ui/NotificationService.ts
 msgctxt "ui/NotificationService: NotificationService.sendTestReminderNotification display"
@@ -12988,6 +13008,11 @@ msgctxt "modals.actionPalette.trackingStopped"
 msgid "Time tracking stopped"
 msgstr "Time tracking stopped"
 
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.header"
+msgid "Time zone"
+msgstr "Time zone"
+
 #: src/modals/ReminderModal.ts
 #: src/settings/tabs/taskProperties/remindersPropertyCard.ts
 #: src/settings/tabs/taskPropertiesTab.ts
@@ -13069,6 +13094,11 @@ msgstr "Timeblocks must have specific times. Please select a time range in week 
 msgctxt "views.pomodoro.timer.inputLabel"
 msgid "Timer duration"
 msgstr "Timer duration"
+
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.done"
+msgid "Times updated for the new time zone."
+msgstr "Times updated for the new time zone."
 
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.calendarSubscriptions.filenameFormat.options.timestamp"
@@ -13835,6 +13865,11 @@ msgid "Updated default Bases files ({count}):\n"
 msgstr "Updated default Bases files ({count}):\n"
 "{files}"
 
+#: src/ui/VaultTimeZoneRewriteService.ts
+msgctxt "services.vaultTimeZone.progress"
+msgid "Updating times for the new time zone: {done} of {total} notes"
+msgstr "Updating times for the new time zone: {done} of {total} notes"
+
 #: src/modals/ICSEventInfoModal.ts
 msgctxt "modals.icsEventInfo.urlLabel"
 msgid "URL"
@@ -13989,6 +14024,11 @@ msgstr "Value: The internal identifier stored in your task files. Use prefixes l
 msgctxt "modals.icsNoteCreation.vaultRoot"
 msgid "Vault root"
 msgstr "Vault root"
+
+#: src/settings/tabs/generalTab.ts
+msgctxt "settings.general.vaultTimeZone.name"
+msgid "Vault time zone"
+msgstr "Vault time zone"
 
 #: src/i18n/messages.ts
 msgctxt "views.basesCalendar.settings.groups.view"

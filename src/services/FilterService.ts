@@ -41,6 +41,7 @@ import {
 } from "./filter-service/filterQueryState";
 import type { TaskNotesSettings } from "../types/settings";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/FilterService" });
 
@@ -578,7 +579,7 @@ export class FilterService extends EventEmitter {
 	static shouldIncludeOverdueForRange(dates: Date[], showOverdue: boolean): boolean {
 		if (!showOverdue) return false;
 
-		const today = new Date();
+		const today = vaultNow();
 		const todayStr = format(today, "yyyy-MM-dd");
 		return dates.some((date) => format(date, "yyyy-MM-dd") === todayStr);
 	}

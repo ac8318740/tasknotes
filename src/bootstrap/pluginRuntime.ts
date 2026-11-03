@@ -14,6 +14,7 @@ import {
 	registerTaskNotesIcon,
 } from "./pluginBootstrap";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+import { VaultTimeZoneRewriteService } from "../ui/VaultTimeZoneRewriteService";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bootstrap/PluginRuntime" });
 
@@ -24,6 +25,7 @@ export async function initializePluginRuntime(plugin: TaskNotesPlugin): Promise<
 	plugin.workspaceNavigationService = new WorkspaceNavigationService(plugin);
 	plugin.taskActionCoordinator = new TaskActionCoordinator(plugin);
 	plugin.settingsLifecycleService = new SettingsLifecycleService(plugin);
+	plugin.vaultTimeZoneRewriteService = new VaultTimeZoneRewriteService(plugin);
 	plugin.commandRegistry = new TranslatedCommandRegistry(plugin);
 	plugin.settingsLifecycleService.captureCurrentSettings();
 
@@ -88,6 +90,7 @@ export async function cleanupPluginRuntime(plugin: TaskNotesPlugin): Promise<voi
 	plugin.domReconciler?.destroy();
 	plugin.uiStateManager?.destroy();
 	plugin.settingsLifecycleService?.destroy();
+	plugin.vaultTimeZoneRewriteService?.destroy();
 	plugin.performanceProfiler?.destroy();
 
 	if (typeof perfMonitor !== "undefined") {

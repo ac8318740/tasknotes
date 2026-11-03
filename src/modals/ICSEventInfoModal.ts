@@ -10,6 +10,7 @@ import { SafeAsync } from "../utils/safeAsync";
 import { MessageDescriptor } from "../i18n";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { showNotice } from "../ui/notifications";
+import { toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Modals/ICSEventInfoModal" });
 
@@ -65,7 +66,7 @@ export class ICSEventInfoModal extends Modal {
 			this.icsEvent.allDay && /^\d{4}-\d{2}-\d{2}$/.test(this.icsEvent.start)
 				? this.icsEvent.start + "T00:00:00"
 				: this.icsEvent.start;
-		const startDate = new Date(startDateStr);
+		const startDate = toVaultDate(startDateStr);
 		const dateFormatter = new Intl.DateTimeFormat(uiLocale(), {
 			dateStyle: "full",
 			...(this.icsEvent.allDay ? {} : { timeStyle: "short" as const, hour12: this.plugin.settings.calendarViewSettings.timeFormat === "12" }),
@@ -73,7 +74,7 @@ export class ICSEventInfoModal extends Modal {
 		let dateText = dateFormatter.format(startDate);
 		if (!this.icsEvent.allDay && this.icsEvent.end) {
 			const endDateStr = /^\d{4}-\d{2}-\d{2}$/.test(this.icsEvent.end) ? this.icsEvent.end + "T00:00:00" : this.icsEvent.end;
-			const endDate = new Date(endDateStr);
+			const endDate = toVaultDate(endDateStr);
 			if (Number.isFinite(endDate.getTime()) && endDate >= startDate) dateText = dateFormatter.formatRange(startDate, endDate);
 		}
 

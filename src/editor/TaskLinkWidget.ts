@@ -5,6 +5,7 @@ import { dispatchTaskUpdate } from "./TaskLinkOverlay";
 import { createTaskCard } from "../ui/TaskCard";
 import { convertInternalToUserProperties } from "../utils/propertyMapping";
 import { createUTCDateFromLocalCalendarDate, formatDateForStorage } from "../utils/dateUtils";
+import { vaultNow } from "../utils/vaultTime";
 
 export class TaskLinkWidget extends WidgetType {
 	private taskInfo: TaskInfo;
@@ -19,7 +20,7 @@ export class TaskLinkWidget extends WidgetType {
 		plugin: TaskNotesPlugin,
 		originalText: string,
 		displayText?: string,
-		targetDate: Date = createUTCDateFromLocalCalendarDate(new Date()),
+		targetDate: Date = createUTCDateFromLocalCalendarDate(vaultNow()),
 		private subpath?: string
 	) {
 		super();

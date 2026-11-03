@@ -87,6 +87,7 @@ import { CALENDAR_END_TIME_MAX_HOUR, normalizeCalendarTimeValue } from "../utils
 import { filterEmptyProjects, sanitizeForCssClass } from "../utils/helpers";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { getDateFromFile } from "obsidian-daily-notes-interface";
+import { getVaultTimeZone, toVaultDate } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/CalendarView" });
 
@@ -260,7 +261,7 @@ export class CalendarView extends BasesViewBase {
 	private currentTasks: TaskInfo[] = [];
 	private identityTasks: TaskInfo[] = [];
 	private nonTaskEvents: CalendarEventInput[] = [];
-	private readonly calendarTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+	private readonly calendarTimezone = getVaultTimeZone();
 	private readonly taskProjection = new CalendarTaskProjection({
 		timezone: this.calendarTimezone, now: new Date().toISOString(),
 	}, (task, error) => tasknotesLogger.warn("Invalid calendar task", {
@@ -1285,7 +1286,7 @@ export class CalendarView extends BasesViewBase {
 					this.calendar?.changeView("month", arg.dateStr);
 					return;
 				}
-				this.openDailyNoteFromDateLink(arg.date);
+				this.openDailyNoteFromDateLink(toVaultDate(arg.date));
 			},
 			onItemClick: (arg) => {
 				void this.handleEventClick(arg);
@@ -1999,6 +2000,9 @@ export class CalendarView extends BasesViewBase {
 		}
 		// Determine what type of event to create based on view
 		const menu = new Menu();
+		// The calendar reports real moments; task, timeblock and event creation read vault wall-clock fields.
+		const start = toVaultDate(info.start);
+		const end = toVaultDate(info.end);
 
 		menu.addItem((item) => {
 			item.setTitle(this.plugin.i18n.translate(msg({ message: "Create task", context: "modals.taskCreation.title" })))
@@ -2010,8 +2014,8 @@ export class CalendarView extends BasesViewBase {
 						parseInt(slotDurationParts[0]) * 60 + parseInt(slotDurationParts[1] || "0");
 
 					const values = calculateTaskCreationValues(
-						info.start,
-						info.end,
+						start,
+						end,
 						info.allDay,
 						slotDurationMinutes
 					);
@@ -2033,8 +2037,8 @@ export class CalendarView extends BasesViewBase {
 					.setIcon("clock")
 					.onClick(async () => {
 						await handleTimeblockCreation(
-							info.start,
-							info.end,
+							start,
+							end,
 							info.allDay,
 							this.plugin,
 							(result) => this.refetchWhenCreatedTimeblockIsIndexed(result)
@@ -2068,8 +2072,8 @@ export class CalendarView extends BasesViewBase {
 								this.plugin.app,
 								this.plugin,
 								{
-									start: info.start,
-									end: info.end,
+									start,
+									end,
 									allDay: info.allDay,
 									onEventCreated: () => {
 										this.expectImmediateUpdate();

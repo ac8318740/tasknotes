@@ -103,6 +103,9 @@ import {
 	type TaskNotesTaskPatch,
 	type UncompleteTaskOptions,
 } from "./runtime-api";
+import { getTodayString } from "../utils/dateUtils";
+import { toVaultDate, vaultNow } from "../utils/vaultTime";
+import { format } from "date-fns";
 
 export * from "./runtime-api";
 
@@ -1756,7 +1759,7 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 		TaskContextMenu.addToMenu(menu, {
 			task,
 			plugin: this.plugin,
-			targetDate: options.targetDate ?? new Date(),
+			targetDate: options.targetDate ?? vaultNow(),
 			promoteOccurrenceControls: options.promoteOccurrenceControls,
 			onUpdate: options.onUpdate ?? this.defaultTaskMenuUpdateHandler(),
 		});
@@ -1769,7 +1772,7 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 		return new TaskContextMenu({
 			task,
 			plugin: this.plugin,
-			targetDate: options.targetDate ?? new Date(),
+			targetDate: options.targetDate ?? vaultNow(),
 			promoteOccurrenceControls: options.promoteOccurrenceControls,
 			onUpdate: options.onUpdate ?? this.defaultTaskMenuUpdateHandler(),
 		});
@@ -1809,7 +1812,7 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 		let archived = 0;
 		let withTimeEntries = 0;
 		let totalTrackedMinutes = 0;
-		const today = new Date().toISOString().split("T")[0] ?? "";
+		const today = getTodayString() ?? "";
 
 		for (const task of tasks) {
 			statusCounts[task.status] = (statusCounts[task.status] ?? 0) + 1;
@@ -3252,7 +3255,7 @@ function stringifyUnknownValue(value: unknown): string {
 	}
 }
 
-function dateAddRuntimeValue(value: {
+export function dateAddRuntimeValue(value: {
 	fn: "dateAdd";
 	value: TaskNotesRuntimeValue;
 	amount: number;
@@ -3261,14 +3264,14 @@ function dateAddRuntimeValue(value: {
 	const baseValue = toFilterConditionValue(value.value);
 	const base =
 		baseValue === "today"
-			? new Date()
+			? vaultNow()
 			: typeof baseValue === "string"
-				? new Date(baseValue)
-				: new Date();
+				? toVaultDate(/^\d{4}-\d{2}-\d{2}$/.test(baseValue) ? `${baseValue}T00:00:00` : baseValue)
+				: vaultNow();
 	if (value.unit === "day") base.setDate(base.getDate() + value.amount);
 	if (value.unit === "week") base.setDate(base.getDate() + value.amount * 7);
 	if (value.unit === "month") base.setMonth(base.getMonth() + value.amount);
-	return base.toISOString().slice(0, 10);
+	return format(base, "yyyy-MM-dd");
 }
 
 function invertRuntimePredicate(

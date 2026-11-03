@@ -99,6 +99,7 @@ import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { TASK_PATH_DRAG_TYPE } from "../utils/DragDropManager";
 import { isSupportedColorValue, normalizeThemeColor } from "../utils/themeColors";
 import { processVaultFrontMatter } from "../services/VaultMutationService";
+import { vaultNow } from "../utils/vaultTime";
 
 const SWIMLANE_DRAG_TYPE = "text/x-kanban-swimlane";
 
@@ -3020,7 +3021,7 @@ export class KanbanView extends BasesViewBase {
 			}
 
 			// Show single task context menu
-			void showTaskContextMenu(e, task.path, this.plugin, new Date());
+			void showTaskContextMenu(e, task.path, this.plugin, vaultNow());
 		});
 
 		cardWrapper.addEventListener("dragover", (e: DragEvent) => {
@@ -4523,7 +4524,7 @@ export class KanbanView extends BasesViewBase {
 	 */
 	private getCardOptions(): TaskCardOptions {
 		// Use UTC-anchored "today" for correct recurring task completion status
-		const now = new Date();
+		const now = vaultNow();
 		const targetDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 
 		// Hide status indicators on cards when consolidation is enabled and grouped by status

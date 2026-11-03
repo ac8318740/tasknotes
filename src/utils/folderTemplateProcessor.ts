@@ -1,6 +1,7 @@
 import { formatStableDate } from "../i18n/formatters";
 import { format } from "date-fns";
 import { createTaskNotesLogger } from "./tasknotesLogger";
+import { vaultNow } from "./vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Utils/FolderTemplateProcessor" });
 
@@ -252,7 +253,7 @@ export function processFolderTemplate(
 	}
 
 	const {
-		date = new Date(),
+		date = vaultNow(),
 		taskData,
 		icsData,
 		extractProjectBasename,

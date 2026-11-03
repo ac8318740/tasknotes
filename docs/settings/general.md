@@ -2,7 +2,6 @@
 
 These settings control the foundational aspects of the plugin, such as task identification, file storage, and click behavior.
 
-
 ![General Settings](../assets/settings-general.png)
 
 ## Task Storage
@@ -53,6 +52,33 @@ Use **Excluded folders** to omit paths from Notes tab indexing and keep large ar
 TaskNotes uses Obsidian Bases files (`.base`) to power its task views. By default, missing view files are created automatically on startup.
 
 Use **Create files** to generate missing default files in `TaskNotes/Views/` without overwriting existing files. Use **Update files** to overwrite the configured default files with templates generated from your current TaskNotes settings.
+
+## Time zone
+
+**Vault time zone** sets the time zone TaskNotes uses for this vault on every device. Leave it on **This device's time zone** to follow each device, as before. Pick a zone when you sync one vault between devices in different time zones, or when you travel and want your tasks to stay where they are.
+
+With a vault time zone set, TaskNotes uses it for:
+
+- today, overdue and other day boundaries
+- times written into task notes and daily notes, and how stored times are read
+- calendar views, reminders, time tracking and statistics
+- Google and Microsoft calendar events, calendar export, and the API
+
+When you change the setting, TaskNotes updates stored times so they keep the same moment. A task due at 9:00 in Sydney becomes due at 22:00 the day before in London. It updates:
+
+- timed `due` and `scheduled` values on tasks that do not repeat
+- absolute reminders
+- timeblocks in daily notes. A timeblock that moves to another day goes to that day's daily note, which is created if needed
+
+It leaves alone:
+
+- dates without a time, such as `due: 2026-11-03`
+- recurring tasks, which keep their clock time
+- times with an explicit offset, such as `dateCreated`, `dateModified` and time entries
+
+The update runs in the background on the device where you changed the setting and continues after a restart. To undo it, change the setting back.
+
+Bases formulas such as `today()` and other plugins still use the device's time zone. If the vault and device zones differ, they can disagree with TaskNotes about the date near midnight.
 
 ## Frontmatter
 
