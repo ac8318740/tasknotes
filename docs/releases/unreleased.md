@@ -93,5 +93,5 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 
 ## Fixed
 
-- Fixed open calendars not showing timeblock changes made outside TaskNotes (for example by a sync tool or a hand edit to a daily note) until refreshed.
-- Fixed the timeblock edit modal dropping attachments written as links without `.md` (for example `[[Tasks/Write report]]`) when saving. Existing links now keep their original text.
+- (#2482) Fixed open calendars not showing timeblock changes made outside TaskNotes (for example by a sync tool or a hand edit to a daily note) until refreshed.
+- (#2481) Fixed the timeblock edit modal dropping attachments written as links without `.md` (for example `[[Tasks/Write report]]`) when saving. Existing links now keep their original text.
