@@ -12,6 +12,7 @@ import {
 	getFrontMatterInfo,
 	parseLinktext,
 } from "obsidian";
+import type TaskNotesPlugin from "../main";
 import { format } from "date-fns";
 import { TimeInfo, TaskInfo, TimeEntry, TimeBlock, DailyNoteFrontmatter } from "../types";
 import { FieldMapper } from "../core/FieldMapper";
@@ -900,6 +901,52 @@ async function updateTimeblockTimes(
 export function resolveTimeblockAttachment(app: App, attachment: string) {
 	const linktext = attachment.replace(/^\[\[|\]\]$/g, "").split("|")[0];
 	return app.metadataCache.getFirstLinkpathDest(parseLinktext(linktext).path, "");
+}
+
+/**
+ * Whether any attachment links a task note. Only these timeblocks can be pinned.
+ */
+export function timeblockLinksTask(
+	plugin: Pick<TaskNotesPlugin, "app" | "cacheManager">,
+	attachments?: string[]
+): boolean {
+	return (attachments ?? []).some((attachment) => {
+		const file = resolveTimeblockAttachment(plugin.app, attachment);
+		return !!file && plugin.cacheManager.getCachedTaskInfoSync(file.path) !== null;
+	});
+}
+
+/**
+ * Pins or unpins a timeblock in its daily note. Unpinning removes the key.
+ */
+export async function setTimeblockPinned(
+	app: App,
+	date: string,
+	timeblockId: string,
+	pinned: boolean
+): Promise<void> {
+	const { getDailyNote, getAllDailyNotes } = await import("obsidian-daily-notes-interface");
+	const dailyNote = getDailyNote(getWindowMoment(date), getAllDailyNotes());
+	if (!dailyNote) {
+		throw new Error(`Daily note for ${date} not found`);
+	}
+
+	const content = await app.vault.read(dailyNote);
+	const frontmatter =
+		(extractFrontmatter(content) as DailyNoteFrontmatterWithTimeblocks | null) || {};
+	const timeblock = Array.isArray(frontmatter.timeblocks)
+		? frontmatter.timeblocks.find((tb) => tb.id === timeblockId)
+		: undefined;
+	if (!timeblock) {
+		throw new Error(`Timeblock ${timeblockId} not found`);
+	}
+
+	if (pinned) {
+		timeblock.pinned = true;
+	} else {
+		delete timeblock.pinned;
+	}
+	await updateDailyNoteFrontmatter(app, dailyNote, frontmatter, content);
 }
 
 /**

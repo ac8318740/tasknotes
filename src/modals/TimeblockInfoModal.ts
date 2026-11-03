@@ -29,7 +29,7 @@ import type { InterpolationValues, MessageDescriptor } from "../i18n";
 import { modifyVaultFile } from "../services/VaultMutationService";
 import { TaskInfo } from "../types";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
-import { resolveTimeblockAttachment } from "../utils/helpers";
+import { resolveTimeblockAttachment, timeblockLinksTask } from "../utils/helpers";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Modals/TimeblockInfoModal" });
 
@@ -57,6 +57,7 @@ export interface TimeBlock {
 	attachments?: string[];
 	color?: string;
 	id?: string;
+	pinned?: true;
 }
 
 /**
@@ -79,6 +80,10 @@ export class TimeblockInfoModal extends Modal {
 	private selectedAttachments: TAbstractFile[] = [];
 	/** Original link text per attachment path, so saving does not rewrite existing links */
 	private attachmentLinks = new Map<string, string>();
+	/** Whether the timeblock linked a task when the modal opened */
+	private linkedAtOpen = false;
+	/** Whether this edit changed the pin, so saving leaves pins set elsewhere alone */
+	private pinChanged = false;
 	private attachmentsList: HTMLElement;
 	private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
 
@@ -168,6 +173,20 @@ export class TimeblockInfoModal extends Modal {
 				);
 				configureThemeColorInput(this.colorInput);
 			});
+
+		// Pinned: offered for timeblocks linked to a task, and always shown when already pinned so it can be cleared
+		this.linkedAtOpen = timeblockLinksTask(this.plugin, this.timeblock.attachments);
+		if (this.timeblock.pinned || this.linkedAtOpen) {
+			new Setting(contentEl)
+				.setName(this.translate(msg({ message: "Pinned", context: "modals.timeblockInfo.pinnedLabel" })))
+				.setDesc(this.translate(msg({ message: "Keep this timeblock at its current time", context: "modals.timeblockInfo.pinnedDesc" })))
+				.addToggle((toggle) =>
+					toggle.setValue(this.timeblock.pinned === true).onChange((value) => {
+						this.timeblock.pinned = value ? true : undefined;
+						this.pinChanged = true;
+					})
+				);
+		}
 
 		// Attachments (editable)
 		new Setting(contentEl)
@@ -477,6 +496,15 @@ export class TimeblockInfoModal extends Modal {
 				(file) => this.attachmentLinks.get(file.path) ?? `[[${file.path}]]`
 			);
 			this.timeblock.attachments = attachments.length > 0 ? attachments : undefined;
+			// Removing the block's last task link in this edit also clears its pin.
+			if (
+				this.timeblock.pinned &&
+				this.linkedAtOpen &&
+				!timeblockLinksTask(this.plugin, attachments)
+			) {
+				this.timeblock.pinned = undefined;
+				this.pinChanged = true;
+			}
 
 			// Save to daily note
 			await this.updateTimeblockInDailyNote();
@@ -546,7 +574,18 @@ export class TimeblockInfoModal extends Modal {
 			);
 
 			if (index >= 0) {
-				frontmatter.timeblocks[index] = this.timeblock;
+				// Write only the fields this modal edits onto the current entry, so changes made
+				// while it was open (a move, or another tool setting a pin) are kept.
+				const merged: Record<string, unknown> = { ...frontmatter.timeblocks[index] };
+				for (const key of ["title", "description", "color", "attachments"] as const) {
+					if (this.timeblock[key] === undefined) delete merged[key];
+					else merged[key] = this.timeblock[key];
+				}
+				if (this.pinChanged) {
+					if (this.timeblock.pinned) merged.pinned = true;
+					else delete merged.pinned;
+				}
+				frontmatter.timeblocks[index] = merged;
 			} else {
 				throw new Error("Timeblock not found in daily note");
 			}
