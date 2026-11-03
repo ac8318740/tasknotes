@@ -35,7 +35,7 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 
 ## Added
 
-- You can now pin timeblocks linked to a task: right-click a timeblock in the calendar, or use the **Pinned** toggle in its edit modal. TaskNotes shows a pin icon and stores `pinned: true` on the timeblock in the daily note. See [Pinned timeblocks](https://tasknotes.dev/features/calendar-integration/#pinned-timeblocks).
+- (#2479) You can now pin timeblocks linked to a task: right-click a timeblock in the calendar, or use the **Pinned** toggle in its edit modal. TaskNotes shows a pin icon and stores `pinned: true` on the timeblock in the daily note. See [Pinned timeblocks](https://tasknotes.dev/features/calendar-integration/#pinned-timeblocks).
 
 - (#2474) Added recurring tasks that need one occurrence per week or month on any day (`recurrence_anchor: period`), such as "water the plants once a week". Completing on any day of the period counts for that period, missed periods are not carried forward, and a `due` date stays on the period's last day. Choose **Once a week, any day** or **Once a month, any day** in the recurrence menu. See [Once per period, any day](https://tasknotes.dev/features/recurring-tasks/#once-per-period-any-day).
 
