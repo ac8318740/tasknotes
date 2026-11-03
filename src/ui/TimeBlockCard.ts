@@ -3,7 +3,7 @@ import { msg } from "@lingui/core/macro";
 import { setIcon } from "obsidian";
 import TaskNotesPlugin from "../main";
 import { TimeBlock } from "../types";
-import { showTimeblockInfoModal } from "../bases/calendar-core";
+import { prependTimeblockPinIcon, showTimeblockInfoModal } from "../bases/calendar-core";
 
 export interface TimeBlockCardOptions {
 	showDescription: boolean;
@@ -110,10 +110,11 @@ export function createTimeBlockCard(
 	// Title with time range
 	const titleText = timeblock.title || uiText(msg({ message: "Timeblock", context: "ui/TimeBlockCard: createTimeBlockCard display" }));
 	const timeRange = `${timeblock.startTime} - ${timeblock.endTime}`;
-	content.createDiv({
+	const titleEl = content.createDiv({
 		cls: "task-card__title",
 		text: titleText,
 	});
+	if (timeblock.pinned) prependTimeblockPinIcon(titleEl);
 
 	// Metadata line: time range
 	const metadata = content.createDiv({ cls: "task-card__metadata" });

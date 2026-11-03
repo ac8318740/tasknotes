@@ -35,6 +35,8 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 
 ## Added
 
+- (#2479) You can now pin timeblocks linked to a task: right-click a timeblock in the calendar, or use the **Pinned** toggle in its edit modal. TaskNotes shows a pin icon and stores `pinned: true` on the timeblock in the daily note. See [Pinned timeblocks](https://tasknotes.dev/features/calendar-integration/#pinned-timeblocks).
+
 - (#2474) Added recurring tasks that need one occurrence per week or month on any day (`recurrence_anchor: period`), such as "water the plants once a week". Completing on any day of the period counts for that period, missed periods are not carried forward, and a `due` date stays on the period's last day. Choose **Once a week, any day** or **Once a month, any day** in the recurrence menu. See [Once per period, any day](https://tasknotes.dev/features/recurring-tasks/#once-per-period-any-day).
 
 - (Discussion #2435) Added an arbitrary date/time picker to batch Scheduled date and Due date menus in Task List, Kanban, and Calendar. Calendar tasks can be selected and rescheduled as a group, with non-interactive drag previews, relative dates/times preserved, and Undo for successful moves. Recurring templates, span bars, tracked time and external events are excluded from calendar task selection. See [Calendar selection](https://tasknotes.dev/views/calendar-views/#selecting-and-rescheduling-multiple-tasks).
@@ -88,3 +90,8 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 - (#1370) A recurring series now moves to the **Next status** set on your first completed status when its current occurrence is completed or skipped, so an in-progress status does not carry over to the next occurrence. Series keep their status when no next status is set. See [Recurring Tasks](https://tasknotes.dev/features/recurring-tasks/#completion-tracking).
   - Thanks to @martin-forge for the implementation in PR #2441
 - Task List group and subgroup headers stay visible while scrolling, including virtualized lists. Thanks to @christenbc for the contribution in #2168.
+
+## Fixed
+
+- (#2482) Fixed open calendars not showing timeblock changes made outside TaskNotes (for example by a sync tool or a hand edit to a daily note) until refreshed.
+- (#2481) Fixed the timeblock edit modal dropping attachments written as links without `.md` (for example `[[Tasks/Write report]]`) when saving. Existing links now keep their original text.

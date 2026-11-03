@@ -549,6 +549,7 @@ export interface TimeBlock {
 	attachments?: string[]; // Optional array of markdown links to tasks/notes
 	color?: string; // Optional hex color for display
 	description?: string; // Optional description
+	pinned?: true; // Pinned in place; absent means not pinned
 }
 
 // Note types

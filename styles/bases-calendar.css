@@ -111,6 +111,20 @@
     height: 12px;
 }
 
+.tn-timeblock-pin-indicator {
+    display: inline-flex;
+    align-items: center;
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+    vertical-align: text-bottom;
+}
+
+.tn-timeblock-pin-indicator svg {
+    width: 12px;
+    height: 12px;
+}
+
 /* Hovering one of a task's events (scheduled, due, span) highlights the others. */
 .advanced-calendar-view .tnc-item.fc-task-event--hover-source,
 .advanced-calendar-view .tnc-item.fc-task-event--related-hover {

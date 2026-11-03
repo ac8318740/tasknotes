@@ -110,6 +110,12 @@ Time blocks are stored in the frontmatter of daily notes and can be linked to sp
 
 Enable time blocking under `Settings -> TaskNotes -> Features` (Timeblocking section).
 
+### Pinned timeblocks
+
+You can pin a timeblock linked to a task to mark it as fixed at its current time. Right-click it in the calendar and choose **Pin timeblock** or **Unpin timeblock**, or use the **Pinned** toggle in its edit modal. Pinned timeblocks show a pin icon before their title.
+
+TaskNotes stores the pin as `pinned: true` on the timeblock in the daily note and removes the key when unpinned. It only marks the block: other tools that read daily notes, such as an external scheduler, can use the flag.
+
 ### Syncing Timeblocks to Google Calendar
 
 TaskNotes can create Google Calendar events for your timeblocks. This is off by default. Under **Settings → TaskNotes → Integrations → Export timeblocks to Google Calendar**:

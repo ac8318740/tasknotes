@@ -610,6 +610,11 @@ msgctxt "modals.timeEntryEditor.totalMinutes"
 msgid "{minutes}m total"
 msgstr "{minutes}м всего"
 
+#: src/bases/calendar-core.ts
+msgctxt "pinned timeblock tooltip title"
+msgid "{name} (pinned)"
+msgstr "{name} (закреплён)"
+
 #: src/bases/MiniCalendarView.ts
 msgctxt "bases/MiniCalendarView: MiniCalendarView.createNotePreviewText display"
 msgid "{noteCount, plural, one {{eventCount, plural, one {{noteCount, number} note, {eventCount, number} event} other {{noteCount, number} note, {eventCount, number} events}}} other {{eventCount, plural, one {{noteCount, number} notes, {eventCount, number} event} other {{noteCount, number} notes, {eventCount, number} events}}}}"
@@ -6515,6 +6520,11 @@ msgctxt "modals.taskEdit.notices.updateFailure"
 msgid "Failed to update task: {message}"
 msgstr "Не удалось обновить задачу: {message}"
 
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.notices.timeblockPinFailed"
+msgid "Failed to update timeblock: {message}"
+msgstr "Не удалось обновить временной блок: {message}"
+
 #: src/modals/TimeblockInfoModal.ts
 msgctxt "notices.timeblockUpdateFailed"
 msgid "Failed to update timeblock. Check console for details."
@@ -7483,6 +7493,11 @@ msgstr "Продолжить редактирование"
 msgctxt "settings.features.recurring.maintainOffsetDesc"
 msgid "Keep the offset between due date and scheduled date when recurring tasks are completed"
 msgstr "Сохранять смещение между сроком выполнения и запланированной датой при завершении повторяющихся задач"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedDesc"
+msgid "Keep this timeblock at its current time"
+msgstr "Оставить этот временной блок в текущее время"
 
 #: src/settings/components/FieldManagerComponent.ts
 msgctxt "settings.modalFields.manager.fieldKey"
@@ -9619,6 +9634,21 @@ msgstr "Выбрать дату {field}"
 msgctxt "contextMenus.date.pickDateTime"
 msgid "Pick date & time…"
 msgstr "Выбрать дату и время…"
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.pinTimeblock"
+msgid "Pin timeblock"
+msgstr "Закрепить временной блок"
+
+#: src/modals/TimeblockInfoModal.ts
+msgctxt "modals.timeblockInfo.pinnedLabel"
+msgid "Pinned"
+msgstr "Закреплён"
+
+#: src/bases/calendar-core.ts
+msgctxt "timeblock pinned indicator"
+msgid "Pinned"
+msgstr "Закреплён"
 
 #: src/bases/registration.ts
 msgctxt "bases/registration: registerBasesTaskList.attemptRegistration.options displayName"
@@ -13611,6 +13641,11 @@ msgstr "Безымянное поле"
 msgctxt "settings.defaults.reminders.unnamedReminder"
 msgid "Unnamed reminder"
 msgstr "Безымянное напоминание"
+
+#: src/bases/calendarMenus.ts
+msgctxt "views.advancedCalendar.contextMenu.unpinTimeblock"
+msgid "Unpin timeblock"
+msgstr "Открепить временной блок"
 
 #: src/modals/TaskEditModal.ts
 msgctxt "modals.task.unsavedChanges.title"

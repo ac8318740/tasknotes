@@ -19,7 +19,7 @@ import {
 	updateTimeblockInDailyNote,
 	copyTimeblockToDailyNote,
 } from "../utils/helpers";
-import { Notice, TFile } from "obsidian";
+import { Notice, TFile, setIcon } from "obsidian";
 import {
 	getAllDailyNotes,
 	getDailyNote,
@@ -35,6 +35,7 @@ import { TimeblockInfoModal } from "../modals/TimeblockInfoModal";
 import { colorWithAlpha, isCssVariableColor, normalizeThemeColor } from "../utils/themeColors";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { getAttachmentCountLabel } from "../ui/taskCardHelpers";
+import { createElementInDocument } from "../utils/documentDom";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/CalendarCore" });
 
@@ -858,6 +859,17 @@ export async function showTimeblockInfoModal(
 	modal.open();
 }
 
+/** Pin icon before a pinned timeblock's title. */
+export function prependTimeblockPinIcon(titleEl: Element): void {
+	if (titleEl.querySelector(".tn-timeblock-pin-indicator")) return;
+	const iconEl = createElementInDocument(titleEl.ownerDocument, "span");
+	iconEl.classList.add("tn-timeblock-pin-indicator");
+	iconEl.setAttribute("role", "img");
+	iconEl.setAttribute("aria-label", uiText(msg({ message: "Pinned", context: "timeblock pinned indicator" })));
+	setIcon(iconEl, "pin");
+	titleEl.prepend(iconEl);
+}
+
 /**
  * Apply timeblock event styling
  */
@@ -870,6 +882,9 @@ export function applyTimeblockStyling(element: HTMLElement, timeblock: TimeBlock
 	element.classList.add("tn-static-border-style-solid-11080b69");
 	element.classList.add("tn-static-border-width-2px-a1222254");
 	element.classList.add("fc-timeblock-event");
+
+	const titleEl = element.querySelector(".tnc-item-title");
+	if (timeblock.pinned && titleEl) prependTimeblockPinIcon(titleEl);
 }
 
 /**
@@ -877,7 +892,10 @@ export function applyTimeblockStyling(element: HTMLElement, timeblock: TimeBlock
  */
 export function generateTimeblockTooltip(timeblock: TimeBlock): string {
 	const attachmentCount = timeblock.attachments?.length || 0;
-	const title = timeblock.title || uiText(msg({ message: "Timeblock", context: "unnamed timeblock tooltip" }));
+	const name = timeblock.title || uiText(msg({ message: "Timeblock", context: "unnamed timeblock tooltip" }));
+	const title = timeblock.pinned
+		? uiText(msg({ message: "{name} (pinned)", context: "pinned timeblock tooltip title" }), { name })
+		: name;
 	if (timeblock.description) {
 		return uiText(msg({ message: "{count, plural, =0 {{title} - {description}} one {{title} - {description} (# attachment)} other {{title} - {description} (# attachments)}}", context: "timeblock tooltip with description" }), { count: attachmentCount, title, description: timeblock.description });
 	}
