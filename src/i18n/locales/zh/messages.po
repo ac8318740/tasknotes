@@ -567,8 +567,8 @@ msgstr "{length, plural, other {{length, number} 条提醒}}"
 
 #: src/ui/taskCardProperties.ts
 msgctxt "ui/taskCardProperties: timeEntries display"
-msgid "{length, plural, one {{value1} logged ({length, number} entry)} other {{value1} logged ({length, number} entries)}}"
-msgstr "{length, plural, other {已记录 {value1}（{length, number} 条记录）}}"
+msgid "{length, plural, one {{value1} tracked ({length, number} entry)} other {{value1} tracked ({length, number} entries)}}"
+msgstr "{length, plural, other {已跟踪 {value1}（{length, number} 条记录）}}"
 
 #: src/ui/taskCardProperties.ts
 msgctxt "ui/taskCardProperties: icsEventId display"

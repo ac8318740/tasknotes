@@ -518,7 +518,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 		if (Array.isArray(value) && value.length > 0) {
 			const totalTime = calculateTotalTimeSpent(value);
 			if (totalTime > 0) {
-				element.textContent = uiText(msg({ message: "{length, plural, one {{value1} logged ({length, number} entry)} other {{value1} logged ({length, number} entries)}}", context: "ui/taskCardProperties: timeEntries display" }), { value1: plugin.formatTime(totalTime), length: value.length });
+				element.textContent = uiText(msg({ message: "{length, plural, one {{value1} tracked ({length, number} entry)} other {{value1} tracked ({length, number} entries)}}", context: "ui/taskCardProperties: timeEntries display" }), { value1: plugin.formatTime(totalTime), length: value.length });
 			}
 		}
 	},

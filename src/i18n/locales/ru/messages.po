@@ -567,7 +567,7 @@ msgstr "{length, plural, one {{length, number} напоминание} few {{len
 
 #: src/ui/taskCardProperties.ts
 msgctxt "ui/taskCardProperties: timeEntries display"
-msgid "{length, plural, one {{value1} logged ({length, number} entry)} other {{value1} logged ({length, number} entries)}}"
+msgid "{length, plural, one {{value1} tracked ({length, number} entry)} other {{value1} tracked ({length, number} entries)}}"
 msgstr "{length, plural, one {Учтено {value1} ({length, number} запись)} few {Учтено {value1} ({length, number} записи)} many {Учтено {value1} ({length, number} записей)} other {Учтено {value1} ({length, number} записи)}}"
 
 #: src/ui/taskCardProperties.ts
