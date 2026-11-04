@@ -34,6 +34,8 @@ export interface RecurrenceOccurrenceOptions {
 type TimeEntryOccurrenceTask = PeriodTaskInput & {
 	recurrence_anchor?: string;
 	recurrence_original_date?: string;
+	complete_instances?: string[];
+	skipped_instances?: string[];
 };
 
 interface RecurrenceWindowInput {
@@ -200,16 +202,78 @@ export function getShownOccurrence(task: TimeEntryOccurrenceTask): string | null
 	return shown ? getDatePart(shown) : null;
 }
 
-/**
- * The occurrence of an entry whose start moved: derived again from the new start, except that
- * "after completion" rules keep the one recorded, since every new start maps to the shown one.
- */
-export function getMovedTimeEntryOccurrence(
+export class TimeEntryOccurrenceError extends Error {
+	readonly code = "TIME_ENTRY_OCCURRENCE_REQUIRED";
+
+	constructor(
+		readonly task: TimeEntryOccurrenceTask,
+		readonly entry: { startTime: string; occurrence?: string }
+	) {
+		super(
+			"Time on a recurring task needs a valid occurrence. Choose an occurrence or fix the task's recurrence and scheduled date, then retry."
+		);
+		this.name = "TimeEntryOccurrenceError";
+	}
+}
+
+function isOccurrenceDate(value: string): boolean {
+	return (
+		/^\d{4}-\d{2}-\d{2}$/.test(value) &&
+		Number.isFinite(Date.parse(value)) &&
+		new Date(value).toISOString().slice(0, 10) === value
+	);
+}
+
+/** Historical completion dates remain selectable even when today's rule has changed. */
+export function isTimeEntryOccurrence(task: TimeEntryOccurrenceTask, occurrence: string): boolean {
+	if (!task.recurrence || !isOccurrenceDate(occurrence)) return false;
+	if (
+		task.complete_instances?.includes(occurrence) ||
+		task.skipped_instances?.includes(occurrence)
+	)
+		return true;
+	if (task.recurrence_anchor === "completion") return occurrence === getShownOccurrence(task);
+	const day = parseDateToUTC(occurrence);
+	return generateRecurringInstances(task, day, day).some(
+		(date) => formatDateForStorage(date) === occurrence
+	);
+}
+
+/** Validates new allocations only; callers preserve unchanged historical entries separately. */
+export function allocateTimeEntry<T extends { startTime: string; occurrence?: string }>(
 	task: TimeEntryOccurrenceTask,
-	entry: { startTime: string; occurrence?: string }
-): string | undefined {
-	if (task.recurrence_anchor === "completion" && entry.occurrence) return entry.occurrence;
-	return getTimeEntryOccurrence(task, entry.startTime) ?? undefined;
+	entry: T
+): T {
+	if (!task.recurrence) return entry;
+	const occurrence = entry.occurrence ?? getTimeEntryOccurrence(task, entry.startTime);
+	if (!occurrence || !isTimeEntryOccurrence(task, occurrence))
+		throw new TimeEntryOccurrenceError(task, entry);
+	return { ...entry, occurrence };
+}
+
+/** The picker also accepts an exact date, so a bounded suggestion list does not limit allocation. */
+export function getTimeEntryOccurrenceChoices(
+	task: TimeEntryOccurrenceTask,
+	reference: string
+): string[] {
+	if (!task.recurrence) return [];
+	const dates = new Set([...(task.complete_instances ?? []), ...(task.skipped_instances ?? [])]);
+	const shown = getShownOccurrence(task);
+	if (shown) dates.add(shown);
+	if (task.recurrence_anchor !== "completion") {
+		const day = isOccurrenceDate(reference)
+			? parseDateToUTC(reference)
+			: parseDateToUTC(getTodayString());
+		const span = getRecurrenceSearchDays(task.recurrence) * DAY_MS;
+		for (const date of generateRecurringInstances(
+			task,
+			new Date(day.getTime() - span),
+			new Date(day.getTime() + span)
+		)) {
+			dates.add(formatDateForStorage(date));
+		}
+	}
+	return [...dates].filter((date) => isTimeEntryOccurrence(task, date)).sort();
 }
 
 /** Fills in `occurrence` on a recurring task's entries that lack one; other entries are unchanged. */

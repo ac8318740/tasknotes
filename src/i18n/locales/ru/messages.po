@@ -2697,6 +2697,11 @@ msgctxt "settings.modalFields.reset.cancelText"
 msgid "Cancel"
 msgstr "Отмена"
 
+#: src/modals/TimeEntryOccurrenceModal.ts
+msgctxt "modals.timeEntryOccurrence.cancel"
+msgid "Cancel without saving"
+msgstr "Отменить без сохранения"
+
 #: src/i18n/messages.ts
 msgctxt "views.taskList.movement.parentCycle"
 msgid "Cannot add a task under one of its descendants."
@@ -2834,6 +2839,11 @@ msgctxt "settings.integrations.subscriptionsList.titleFilter.help"
 msgid "Case-insensitive text, not regex; empty shows all events"
 msgstr "Текст без учёта регистра, не регулярное выражение; пустое поле показывает все события"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.changeOccurrence"
+msgid "Change occurrence"
+msgstr "Изменить экземпляр"
+
 #: src/modals/TaskActionPaletteModal.ts
 msgctxt "modals.actionPalette.statusAction"
 msgid "Change status to \"{label}\""
@@ -2898,6 +2908,11 @@ msgstr "Выберите, как повторять ежемесячно"
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.yearlyRecurrenceDesc"
 msgid "Choose how to repeat yearly"
 msgstr "Выберите, как повторять ежегодно"
+
+#: src/modals/TimeEntryOccurrenceModal.ts
+msgctxt "modals.timeEntryOccurrence.placeholder"
+msgid "Choose occurrence (YYYY-MM-DD), or fix the task's recurrence if no dates are available"
+msgstr "Выберите экземпляр (YYYY-MM-DD) или исправьте повторение задачи, если нет доступных дат"
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.chooseTask"
@@ -6366,7 +6381,7 @@ msgctxt "settings.integrations.subscriptionsList.notices.passwordSaveFailure"
 msgid "Failed to save the calendar password"
 msgstr "Не удалось сохранить пароль календаря"
 
-#: src/ui/TaskActionCoordinator.ts
+#: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.saveFailed"
 msgid "Failed to save time entries"
 msgstr "Не удалось сохранить записи времени"
@@ -8675,6 +8690,11 @@ msgctxt "notices.audit.noNotes"
 msgid "No notes found for selected dates"
 msgstr "Для выбранных дат заметки не найдены"
 
+#: src/ui/StatusBarService.ts
+msgctxt "ui/StatusBarService.noOccurrence"
+msgid "No occurrence"
+msgstr "Без экземпляра"
+
 #: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.group.noOccurrence"
 msgid "No occurrence · {logged} logged"
@@ -9129,6 +9149,7 @@ msgctxt "settings.taskProperties.titleCard.occurrenceFilenameProperty"
 msgid "Occurrence template override property"
 msgstr "Свойство переопределения шаблона экземпляра"
 
+#: src/ui/StatusBarService.ts
 #: src/ui/taskCardMetadata.ts
 msgctxt "ui/taskCardMetadata: createOccurrenceMetadataPill text"
 msgid "Occurrence: {dateLabel}"
@@ -10227,6 +10248,11 @@ msgstr "Связанные заметки повторяющихся событ�
 msgctxt "settings.integrations.webhooks.events.recurringCompleted.label"
 msgid "Recurring instance completed"
 msgstr "Экземпляр повторения завершен"
+
+#: src/cli/commands/startTimeTrackingCommand.ts
+msgctxt "cli/commands/startTimeTrackingCommand.occurrence"
+msgid "Recurring occurrence date for the time entry"
+msgstr "Дата повторяющегося экземпляра для записи времени"
 
 #: src/ui/occurrenceNoteActions.ts
 msgctxt "notices.interface.parentMissing"
@@ -11671,11 +11697,6 @@ msgstr "Начать учёт времени этой задачи"
 msgctxt "modals.icsNoteCreation.startLabel"
 msgid "Start: "
 msgstr "Начало: "
-
-#: src/ui/TaskActionCoordinator.ts
-msgctxt "modals.timeTracking.started"
-msgid "Started tracking time for: {taskTitle}"
-msgstr "Учёт времени начат для задачи «{taskTitle}»"
 
 #: src/settings/tabs/taskProperties/projectsPropertyCard.ts
 msgctxt "settings.appearance.projectAutosuggest.quickReference.staticText"

@@ -23,7 +23,25 @@ export const startTimeTrackingCliCommand: CliCommandDefinition = {
 		},
 		query: {
 			value: "<text>",
-			get description() { return uiText(msg({ message: "Substring match against task title or path", context: "cli/commands/startTimeTrackingCommand: defaults description" })); },
+			get description() {
+				return uiText(
+					msg({
+						message: "Substring match against task title or path",
+						context: "cli/commands/startTimeTrackingCommand: defaults description",
+					})
+				);
+			},
+		},
+		occurrence: {
+			value: "<YYYY-MM-DD>",
+			get description() {
+				return uiText(
+					msg({
+						message: "Recurring occurrence date for the time entry",
+						context: "cli/commands/startTimeTrackingCommand.occurrence",
+					})
+				);
+			},
 		},
 		description: {
 			value: "<text>",
@@ -36,7 +54,12 @@ export const startTimeTrackingCliCommand: CliCommandDefinition = {
 			title: params.title,
 			query: params.query,
 		});
-		const updatedTask = await startTimeTrackingForTask(plugin, task, params.description);
+		const updatedTask = await startTimeTrackingForTask(
+			plugin,
+			task,
+			params.description,
+			params.occurrence
+		);
 		return formatCliJson(formatTimeTrackingResult(updatedTask));
 	},
 };

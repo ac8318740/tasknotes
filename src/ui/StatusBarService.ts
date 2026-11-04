@@ -238,15 +238,26 @@ export class StatusBarService {
 
 		if (count === 1) {
 			const task = trackedTasks[0];
-			const truncatedTitle =
+			const shortTitle =
 				task.title.length > 30 ? task.title.substring(0, 30) + "..." : task.title;
+			const allocation = this.getOccurrenceLabel(task);
+			const truncatedTitle = allocation ? `${shortTitle} · ${allocation}` : shortTitle;
 			const elapsed = this.formatElapsedDuration(this.getActiveElapsedMs(task));
 			textEl.setText(uiText(msg({ message: "Tracking: {truncatedTitle} ({elapsed})", context: "ui/StatusBarService: StatusBarService.renderStatusBar display" }), { truncatedTitle: truncatedTitle, elapsed: elapsed }));
 
 			// Add tooltip with full title
 			setTooltip(
 				this.statusBarElement,
-				uiText(msg({ message: "Currently tracking: {title}\nElapsed: {elapsed}", context: "ui/StatusBarService: StatusBarService.renderStatusBar display" }), { title: task.title, elapsed: elapsed }),
+				uiText(
+					msg({
+						message: "Currently tracking: {title}\nElapsed: {elapsed}",
+						context: "ui/StatusBarService: StatusBarService.renderStatusBar display",
+					}),
+					{
+						title: allocation ? `${task.title} · ${allocation}` : task.title,
+						elapsed: elapsed,
+					}
+				),
 				{
 					placement: "top",
 				}
@@ -262,7 +273,7 @@ export class StatusBarService {
 				.slice(0, 5) // Show max 5 in tooltip
 				.map(
 					(task) =>
-						`${task.title} - ${this.formatElapsedDuration(this.getActiveElapsedMs(task))}`
+						`${task.title} - ${this.formatElapsedDuration(this.getActiveElapsedMs(task))}${this.getOccurrenceLabel(task) ? ` · ${this.getOccurrenceLabel(task)}` : ""}`
 				)
 				.join("\n");
 			const tooltipText = count > 5 ? uiText(msg({ message: "{value2, plural, one {{taskTitles}\n... and {value2, number} more} other {{taskTitles}\n... and {value2, number} more}}", context: "ui/StatusBarService: StatusBarService.renderStatusBar display" }), { taskTitles: taskTitles, value2: count - 5 }) : taskTitles;
@@ -326,6 +337,22 @@ export class StatusBarService {
 			"tn-static-min-height-800px-997b4c8c"
 		);
 		element.style.removeProperty("display");
+	}
+
+	private getOccurrenceLabel(task: TaskInfo): string {
+		if (!task.recurrence) return "";
+		const date = this.plugin.getActiveTimeSession(task)?.occurrence;
+		return date
+			? uiText(
+					msg({
+						message: "Occurrence: {dateLabel}",
+						context: "ui/taskCardMetadata: createOccurrenceMetadataPill text",
+					}),
+					{ dateLabel: date }
+				)
+			: uiText(
+					msg({ message: "No occurrence", context: "ui/StatusBarService.noOccurrence" })
+				);
 	}
 
 	private getActiveElapsedMs(task: TaskInfo): number {

@@ -2694,6 +2694,11 @@ msgctxt "settings.modalFields.reset.cancelText"
 msgid "Cancel"
 msgstr "キャンセル"
 
+#: src/modals/TimeEntryOccurrenceModal.ts
+msgctxt "modals.timeEntryOccurrence.cancel"
+msgid "Cancel without saving"
+msgstr "保存せずにキャンセル"
+
 #: src/i18n/messages.ts
 msgctxt "views.taskList.movement.parentCycle"
 msgid "Cannot add a task under one of its descendants."
@@ -2831,6 +2836,11 @@ msgctxt "settings.integrations.subscriptionsList.titleFilter.help"
 msgid "Case-insensitive text, not regex; empty shows all events"
 msgstr "大文字・小文字を区別しない文字列（正規表現不可）。空欄ですべてのイベントを表示"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.changeOccurrence"
+msgid "Change occurrence"
+msgstr "対象回を変更"
+
 #: src/modals/TaskActionPaletteModal.ts
 msgctxt "modals.actionPalette.statusAction"
 msgid "Change status to \"{label}\""
@@ -2895,6 +2905,11 @@ msgstr "月次繰り返し方法を選択"
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.yearlyRecurrenceDesc"
 msgid "Choose how to repeat yearly"
 msgstr "年次繰り返し方法を選択"
+
+#: src/modals/TimeEntryOccurrenceModal.ts
+msgctxt "modals.timeEntryOccurrence.placeholder"
+msgid "Choose occurrence (YYYY-MM-DD), or fix the task's recurrence if no dates are available"
+msgstr "対象回を選択してください（YYYY-MM-DD）。日付がない場合はタスクの繰り返し設定を修正してください"
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.chooseTask"
@@ -6363,7 +6378,7 @@ msgctxt "settings.integrations.subscriptionsList.notices.passwordSaveFailure"
 msgid "Failed to save the calendar password"
 msgstr "カレンダーのパスワードを保存できませんでした"
 
-#: src/ui/TaskActionCoordinator.ts
+#: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.saveFailed"
 msgid "Failed to save time entries"
 msgstr "時間エントリの保存に失敗しました"
@@ -8674,6 +8689,11 @@ msgctxt "notices.audit.noNotes"
 msgid "No notes found for selected dates"
 msgstr "選択した日付のノートが見つかりません"
 
+#: src/ui/StatusBarService.ts
+msgctxt "ui/StatusBarService.noOccurrence"
+msgid "No occurrence"
+msgstr "対象回なし"
+
 #: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.group.noOccurrence"
 msgid "No occurrence · {logged} logged"
@@ -9128,6 +9148,7 @@ msgctxt "settings.taskProperties.titleCard.occurrenceFilenameProperty"
 msgid "Occurrence template override property"
 msgstr "繰り返し回のテンプレートを上書きするプロパティ"
 
+#: src/ui/StatusBarService.ts
 #: src/ui/taskCardMetadata.ts
 msgctxt "ui/taskCardMetadata: createOccurrenceMetadataPill text"
 msgid "Occurrence: {dateLabel}"
@@ -10226,6 +10247,11 @@ msgstr "繰り返しイベントの関連ノート"
 msgctxt "settings.integrations.webhooks.events.recurringCompleted.label"
 msgid "Recurring instance completed"
 msgstr "繰り返し回の完了"
+
+#: src/cli/commands/startTimeTrackingCommand.ts
+msgctxt "cli/commands/startTimeTrackingCommand.occurrence"
+msgid "Recurring occurrence date for the time entry"
+msgstr "時間エントリを割り当てる繰り返しの対象日"
 
 #: src/ui/occurrenceNoteActions.ts
 msgctxt "notices.interface.parentMissing"
@@ -11670,11 +11696,6 @@ msgstr "このタスクの時間追跡を開始"
 msgctxt "modals.icsNoteCreation.startLabel"
 msgid "Start: "
 msgstr "開始："
-
-#: src/ui/TaskActionCoordinator.ts
-msgctxt "modals.timeTracking.started"
-msgid "Started tracking time for: {taskTitle}"
-msgstr "時間追跡を開始しました：{taskTitle}"
 
 #: src/settings/tabs/taskProperties/projectsPropertyCard.ts
 msgctxt "settings.appearance.projectAutosuggest.quickReference.staticText"

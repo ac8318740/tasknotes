@@ -2,6 +2,11 @@ import { setEntryTimes, TimeEntryEditorModal } from "../../../src/modals/TimeEnt
 import { createTaskModalMarkdownEditor } from "../../../src/modals/taskModalEditorAdapter";
 import { PluginFactory, TaskFactory, TimeEntryFactory } from "../../helpers/mock-factories";
 
+jest.mock("rrule", () => jest.requireActual("rrule/dist/es5/rrule.js"));
+jest.mock("../../../src/modals/TimeEntryOccurrenceModal", () => ({
+	chooseTimeEntryOccurrence: jest.fn().mockResolvedValue(null),
+}));
+
 jest.mock("../../../src/modals/taskModalEditorAdapter", () => ({
 	createTaskModalMarkdownEditor: jest.fn(),
 }));
@@ -27,6 +32,71 @@ describe("TimeEntryEditorModal", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
+	});
+
+	it("waits for persistence before closing and blocks duplicate saves", async () => {
+		const plugin = PluginFactory.createMockPlugin();
+		let finish!: () => void;
+		const onSave = jest.fn(
+			() =>
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				})
+		);
+		const modal = new TimeEntryEditorModal(
+			plugin.app as any,
+			plugin as any,
+			TaskFactory.createTask(),
+			onSave
+		);
+		const close = jest.spyOn(modal, "close");
+		const pending = (modal as any).save();
+		await (modal as any).save();
+		expect(onSave).toHaveBeenCalledTimes(1);
+		expect(close).not.toHaveBeenCalled();
+		finish();
+		await pending;
+		expect(close).toHaveBeenCalledTimes(1);
+	});
+
+	it("keeps unsaved entries open when persistence fails", async () => {
+		const plugin = PluginFactory.createMockPlugin();
+		const onSave = jest.fn().mockRejectedValue(new Error("write failed"));
+		const modal = new TimeEntryEditorModal(
+			plugin.app as any,
+			plugin as any,
+			TaskFactory.createTask(),
+			onSave
+		);
+		const close = jest.spyOn(modal, "close");
+		await (modal as any).save();
+		expect(close).not.toHaveBeenCalled();
+	});
+
+	it("does not append a new unallocated entry when occurrence selection is cancelled", async () => {
+		const plugin = PluginFactory.createMockPlugin();
+		const task = TaskFactory.createTask({
+			recurrence: "DTSTART:20990105;FREQ=WEEKLY;BYDAY=MO",
+			scheduled: "2099-01-05",
+			timeEntries: [],
+		});
+		const modal = new TimeEntryEditorModal(plugin.app as any, plugin as any, task, jest.fn());
+		await (modal as any).addNewEntry();
+		expect((modal as any).timeEntries).toEqual([]);
+	});
+
+	it("retains occurrence when clock dates change", () => {
+		const plugin = PluginFactory.createMockPlugin();
+		const task = TaskFactory.createTask({
+			recurrence: "FREQ=WEEKLY;BYDAY=MO",
+			timeEntries: [TimeEntryFactory.createEntry({ occurrence: "2026-02-02" })],
+		});
+		const modal = new TimeEntryEditorModal(plugin.app as any, plugin as any, task, jest.fn());
+		modal.onOpen();
+		const date = modal.contentEl.querySelector<HTMLInputElement>('input[type="date"]')!;
+		date.value = "2026-03-04";
+		date.dispatchEvent(new Event("change"));
+		expect((modal as any).timeEntries[0].occurrence).toBe("2026-02-02");
 	});
 
 	it("saves description updates from the lightweight description field", () => {

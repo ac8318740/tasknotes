@@ -43,7 +43,7 @@ import {
 import {
 	addDTSTARTToRecurrenceRule,
 	getNextUncompletedOccurrence,
-	stampTimeEntryOccurrences,
+	allocateTimeEntry,
 	updateToNextScheduledOccurrence,
 } from "../core/recurrence";
 import { processFolderTemplate, TaskTemplateData, FolderTemplateOptions } from "../utils/folderTemplateProcessor";
@@ -1734,11 +1734,13 @@ export class TaskService {
 		}
 	}
 
-	async startTimeTracking(task: TaskInfo): Promise<TaskInfo> {
-		return this.withTimeTrackingLock(task.path, () => this.startTimeTrackingLocked(task));
+	async startTimeTracking(task: TaskInfo, occurrence?: string): Promise<TaskInfo> {
+		return this.withTimeTrackingLock(task.path, () =>
+			this.startTimeTrackingLocked(task, occurrence)
+		);
 	}
 
-	private async startTimeTrackingLocked(task: TaskInfo): Promise<TaskInfo> {
+	private async startTimeTrackingLocked(task: TaskInfo, occurrence?: string): Promise<TaskInfo> {
 		const file = this.plugin.app.vault.getAbstractFileByPath(task.path);
 		if (!(file instanceof TFile)) {
 			throw new Error(`Cannot find task file: ${task.path}`);
@@ -1758,7 +1760,10 @@ export class TaskService {
 			const timeTrackingPlan = buildStartTimeTrackingPlan(
 				persistedTask, getCurrentTimestamp(), new Date().toISOString()
 			);
-			const [newEntry] = stampTimeEntryOccurrences(persistedTask, [timeTrackingPlan.newEntry]);
+			const newEntry = allocateTimeEntry(persistedTask, {
+				...timeTrackingPlan.newEntry,
+				occurrence,
+			});
 			const timeEntriesField = this.plugin.fieldMapper.toUserField("timeEntries");
 			const dateModifiedField = this.plugin.fieldMapper.toUserField("dateModified");
 			applyStartTimeTrackingFrontmatterChange({

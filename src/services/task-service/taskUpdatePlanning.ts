@@ -1,8 +1,7 @@
 import type { FieldMappingKey, TaskInfo, TimeEntry } from "../../types";
 import {
 	addDTSTARTToRecurrenceRule,
-	getMovedTimeEntryOccurrence,
-	stampTimeEntryOccurrences,
+	allocateTimeEntry,
 	updateToNextScheduledOccurrence,
 } from "../../core/recurrence";
 import {
@@ -98,29 +97,36 @@ export function normalizeTaskUpdateInput(
 
 	const task = { ...originalTask, ...updates } as TaskInfo;
 	const originalEntries = originalTask?.timeEntries ?? [];
-	// Edits that keep every entry in place (a calendar drag, an editor change) pair up by index.
-	const paired = originalEntries.length === updates.timeEntries.length;
+	const used = new Set<TimeEntry>();
+	// Reserve unchanged rows before matching clock edits by their unchanged allocation.
+	const originals = updates.timeEntries.map((entry) => {
+		const before = originalEntries.find(
+			(previous) =>
+				!used.has(previous) &&
+				previous.startTime === entry.startTime &&
+				previous.occurrence === entry.occurrence
+		);
+		if (before) used.add(before);
+		return before;
+	});
 	const timeEntries = updates.timeEntries.map((entry, index) => {
 		const next = stripTimeEntryDuration(entry);
-		const before = paired ? originalEntries[index] : undefined;
+		const before =
+			originals[index] ??
+			originalEntries.find(
+				(previous) => !used.has(previous) && previous.occurrence === next.occurrence
+			);
+		if (before) used.add(before);
 		// A length without clock times only holds while start and end are the same moment.
-		if (typeof next.minutes === "number" && next.startTime !== next.endTime) delete next.minutes;
-		// An entry moved to another time follows it to that time's occurrence, unless the
-		// caller set the occurrence itself.
-		if (
-			task.recurrence &&
-			before &&
-			next.startTime !== before.startTime &&
-			next.occurrence === before.occurrence
-		) {
-			next.occurrence = getMovedTimeEntryOccurrence(task, next);
-		}
-		return next;
+		if (typeof next.minutes === "number" && next.startTime !== next.endTime)
+			delete next.minutes;
+		// Keep historical allocations, including unresolved ones, until explicitly changed.
+		if (before) return next;
+		return originalTask ? allocateTimeEntry(task, next) : next;
 	});
 	return {
 		...updates,
-		// Entries on a recurring task record the occurrence they count toward.
-		timeEntries: originalTask ? stampTimeEntryOccurrences(task, timeEntries) : timeEntries,
+		timeEntries,
 	};
 }
 

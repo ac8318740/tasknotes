@@ -12,9 +12,10 @@ function pluginGetActiveSession(task: TaskInfo) {
 export async function startTimeTrackingForTask(
 	plugin: TaskNotesPlugin,
 	task: TaskInfo,
-	description?: string
+	description?: string,
+	occurrence?: string
 ): Promise<TaskInfo> {
-	let updatedTask = await plugin.taskService.startTimeTracking(task);
+	let updatedTask = await plugin.taskService.startTimeTracking(task, occurrence);
 
 	const trimmedDescription = description?.trim();
 	if (trimmedDescription && updatedTask.timeEntries && updatedTask.timeEntries.length > 0) {
@@ -67,6 +68,7 @@ export function formatTimeTrackingResult(task: TaskInfo): Record<string, unknown
 			? {
 					startTime: activeEntry.startTime,
 					description: activeEntry.description,
+					occurrence: activeEntry.occurrence,
 				}
 			: null,
 		totalTimeEntries: task.timeEntries?.length ?? 0,

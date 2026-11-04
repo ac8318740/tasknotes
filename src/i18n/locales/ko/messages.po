@@ -2694,6 +2694,11 @@ msgctxt "settings.modalFields.reset.cancelText"
 msgid "Cancel"
 msgstr "취소"
 
+#: src/modals/TimeEntryOccurrenceModal.ts
+msgctxt "modals.timeEntryOccurrence.cancel"
+msgid "Cancel without saving"
+msgstr "저장하지 않고 취소"
+
 #: src/i18n/messages.ts
 msgctxt "views.taskList.movement.parentCycle"
 msgid "Cannot add a task under one of its descendants."
@@ -2831,6 +2836,11 @@ msgctxt "settings.integrations.subscriptionsList.titleFilter.help"
 msgid "Case-insensitive text, not regex; empty shows all events"
 msgstr "대소문자를 구분하지 않는 일반 텍스트입니다. 정규식은 지원하지 않으며 비워 두면 모든 이벤트가 표시됩니다"
 
+#: src/modals/TimeEntryEditorModal.ts
+msgctxt "modals.timeEntryEditor.changeOccurrence"
+msgid "Change occurrence"
+msgstr "반복 회차 변경"
+
 #: src/modals/TaskActionPaletteModal.ts
 msgctxt "modals.actionPalette.statusAction"
 msgid "Change status to \"{label}\""
@@ -2895,6 +2905,11 @@ msgstr "매월 반복 방법 선택"
 msgctxt "components.recurrenceContextMenu.customRecurrenceModal.yearlyRecurrenceDesc"
 msgid "Choose how to repeat yearly"
 msgstr "매년 반복 방법 선택"
+
+#: src/modals/TimeEntryOccurrenceModal.ts
+msgctxt "modals.timeEntryOccurrence.placeholder"
+msgid "Choose occurrence (YYYY-MM-DD), or fix the task's recurrence if no dates are available"
+msgstr "반복 회차를 선택하세요(YYYY-MM-DD). 날짜가 없으면 작업의 반복 설정을 수정하세요"
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.chooseTask"
@@ -6363,7 +6378,7 @@ msgctxt "settings.integrations.subscriptionsList.notices.passwordSaveFailure"
 msgid "Failed to save the calendar password"
 msgstr "캘린더 비밀번호를 저장하지 못했습니다"
 
-#: src/ui/TaskActionCoordinator.ts
+#: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.saveFailed"
 msgid "Failed to save time entries"
 msgstr "시간 기록 저장 실패"
@@ -8674,6 +8689,11 @@ msgctxt "notices.audit.noNotes"
 msgid "No notes found for selected dates"
 msgstr "선택한 날짜에 노트가 없습니다"
 
+#: src/ui/StatusBarService.ts
+msgctxt "ui/StatusBarService.noOccurrence"
+msgid "No occurrence"
+msgstr "반복 회차 없음"
+
 #: src/modals/TimeEntryEditorModal.ts
 msgctxt "modals.timeEntryEditor.group.noOccurrence"
 msgid "No occurrence · {logged} logged"
@@ -9128,6 +9148,7 @@ msgctxt "settings.taskProperties.titleCard.occurrenceFilenameProperty"
 msgid "Occurrence template override property"
 msgstr "회차 템플릿 재정의 속성"
 
+#: src/ui/StatusBarService.ts
 #: src/ui/taskCardMetadata.ts
 msgctxt "ui/taskCardMetadata: createOccurrenceMetadataPill text"
 msgid "Occurrence: {dateLabel}"
@@ -10226,6 +10247,11 @@ msgstr "반복 이벤트 관련 노트"
 msgctxt "settings.integrations.webhooks.events.recurringCompleted.label"
 msgid "Recurring instance completed"
 msgstr "반복 회차 완료됨"
+
+#: src/cli/commands/startTimeTrackingCommand.ts
+msgctxt "cli/commands/startTimeTrackingCommand.occurrence"
+msgid "Recurring occurrence date for the time entry"
+msgstr "시간 기록에 할당할 반복 회차 날짜"
 
 #: src/ui/occurrenceNoteActions.ts
 msgctxt "notices.interface.parentMissing"
@@ -11670,11 +11696,6 @@ msgstr "이 작업의 시간 추적 시작"
 msgctxt "modals.icsNoteCreation.startLabel"
 msgid "Start: "
 msgstr "시작: "
-
-#: src/ui/TaskActionCoordinator.ts
-msgctxt "modals.timeTracking.started"
-msgid "Started tracking time for: {taskTitle}"
-msgstr "{taskTitle}에 대한 시간 추적이 시작되었습니다"
 
 #: src/settings/tabs/taskProperties/projectsPropertyCard.ts
 msgctxt "settings.appearance.projectAutosuggest.quickReference.staticText"
