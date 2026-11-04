@@ -1,8 +1,12 @@
+jest.mock("rrule", () => jest.requireActual("rrule/dist/es5/rrule.js"));
+
 import { parse } from "yaml";
 import {
 	getShownOccurrence,
 	getTimeEntryOccurrence,
 	stampTimeEntryOccurrences,
+	allocateTimeEntry,
+	getTimeEntryOccurrenceChoices,
 } from "../../../src/core/recurrence";
 import { normalizeTaskUpdateInput } from "../../../src/services/task-service/taskUpdatePlanning";
 import { generateBasesFileTemplate } from "../../../src/templates/defaultBasesFiles";
@@ -64,15 +68,136 @@ describe("time entry occurrences", () => {
 		expect(getShownOccurrence(weeklyTask({ recurrence: undefined }))).toBeNull();
 	});
 
-	it("an entry moved to another week follows it, unless the caller set its occurrence", () => {
+	it("an entry moved to another week keeps its allocation unless explicitly changed", () => {
 		const timeEntries: TimeEntry[] = [
 			{ startTime: "2026-02-03T09:00:00Z", endTime: "2026-02-03T10:00:00Z", occurrence: "2026-02-02" },
 		];
 		const task = weeklyTask({ timeEntries });
-		const moved = { ...timeEntries[0], startTime: "2026-02-10T09:00:00Z", endTime: "2026-02-10T10:00:00Z" };
-		expect(normalizeTaskUpdateInput({ timeEntries: [moved] }, task).timeEntries?.[0].occurrence).toBe("2026-02-09");
+		const moved = {
+			...timeEntries[0],
+			startTime: "2026-02-10T09:00:00Z",
+			endTime: "2026-02-10T10:00:00Z",
+		};
+		expect(
+			normalizeTaskUpdateInput({ timeEntries: [moved] }, task).timeEntries?.[0].occurrence
+		).toBe("2026-02-02");
 		const explicit = { ...moved, occurrence: "2026-01-26" };
-		expect(normalizeTaskUpdateInput({ timeEntries: [explicit] }, task).timeEntries?.[0].occurrence).toBe("2026-01-26");
+		expect(
+			normalizeTaskUpdateInput({ timeEntries: [explicit] }, task).timeEntries?.[0].occurrence
+		).toBe("2026-01-26");
+	});
+
+	it("rejects new unallocatable entries without mutating the input", () => {
+		const entry = { startTime: "2025-12-01" };
+		expect(() => allocateTimeEntry(weeklyTask(), entry)).toThrow(/occurrence/i);
+		expect(entry).toEqual({ startTime: "2025-12-01" });
+		expect(() => normalizeTaskUpdateInput({ timeEntries: [entry] }, weeklyTask())).toThrow(
+			/occurrence/i
+		);
+	});
+
+	it("validates explicit allocations independently of the clock date", () => {
+		expect(
+			allocateTimeEntry(weeklyTask(), { startTime: "2025-12-01", occurrence: "2026-02-02" })
+				.occurrence
+		).toBe("2026-02-02");
+		for (const occurrence of ["2026-02-03", "2026-02-30", "not-a-date", "2025-12-29"]) {
+			expect(() =>
+				allocateTimeEntry(weeklyTask(), { startTime: "2026-02-04", occurrence })
+			).toThrow(/occurrence/i);
+		}
+	});
+
+	it("keeps legacy allocations and unassigned time when appending or removing entries", () => {
+		const legacy = { startTime: "2025-12-01", endTime: "2025-12-01", minutes: 30 };
+		const old = {
+			startTime: "2026-02-04",
+			endTime: "2026-02-04",
+			minutes: 45,
+			occurrence: "2026-02-03",
+		};
+		const task = weeklyTask({ timeEntries: [legacy, old] });
+		const added = { startTime: "2026-02-11", endTime: "2026-02-11", minutes: 20 };
+		expect(
+			normalizeTaskUpdateInput({ timeEntries: [legacy, old, added] }, task).timeEntries
+		).toEqual([legacy, old, { ...added, occurrence: "2026-02-09" }]);
+		expect(normalizeTaskUpdateInput({ timeEntries: [old] }, task).timeEntries).toEqual([old]);
+		expect(normalizeTaskUpdateInput({ title: "Renamed" }, task).timeEntries).toBeUndefined();
+		expect(() =>
+			normalizeTaskUpdateInput({ timeEntries: [{ ...old, occurrence: "2026-02-10" }] }, task)
+		).toThrow(/occurrence/i);
+	});
+
+	it("keeps historical allocations through combined clock edits, additions, and deletions", () => {
+		const legacy = { startTime: "2026-02-04", endTime: "2026-02-04", minutes: 20 };
+		const old = { ...legacy, occurrence: "2026-02-03" };
+		const removed = { ...legacy, startTime: "2026-02-06", occurrence: "2026-01-26" };
+		const movedLegacy = { ...legacy, startTime: "2026-02-05", endTime: "2026-02-05" };
+		const movedOld = { ...old, startTime: "2026-02-12", endTime: "2026-02-12" };
+		const added = {
+			...legacy,
+			startTime: "2026-02-11",
+			endTime: "2026-02-11",
+			occurrence: "2026-02-09",
+		};
+		const task = weeklyTask({ timeEntries: [legacy, old, removed] });
+		expect(
+			normalizeTaskUpdateInput({ timeEntries: [movedLegacy, movedOld, added] }, task)
+				.timeEntries
+		).toEqual([movedLegacy, movedOld, added]);
+		expect(
+			normalizeTaskUpdateInput({ timeEntries: [movedLegacy, movedOld] }, task).timeEntries
+		).toEqual([movedLegacy, movedOld]);
+	});
+
+	it("reserves unchanged rows before matching clock edits and rejects extra historical allocations", () => {
+		const legacy = { startTime: "2025-12-01", endTime: "2025-12-01", minutes: 20 };
+		const added = { ...legacy, startTime: "2026-02-04", endTime: "2026-02-04" };
+		expect(
+			normalizeTaskUpdateInput(
+				{ timeEntries: [added, legacy] },
+				weeklyTask({ timeEntries: [legacy] })
+			).timeEntries
+		).toEqual([{ ...added, occurrence: "2026-02-02" }, legacy]);
+		const old = { ...legacy, occurrence: "2026-02-03" };
+		expect(() =>
+			normalizeTaskUpdateInput(
+				{ timeEntries: [old, { ...old, startTime: "2026-03-01" }] },
+				weeklyTask({ timeEntries: [old] })
+			)
+		).toThrow(/occurrence/i);
+	});
+
+	it("accepts completion history and shown dates, not invented completion dates", () => {
+		const task = weeklyTask({
+			recurrence_anchor: "completion",
+			scheduled: "2026-02-03",
+			complete_instances: ["2026-01-28"],
+			skipped_instances: ["2026-01-20"],
+		});
+		for (const occurrence of ["2026-02-03", "2026-01-28", "2026-01-20"]) {
+			expect(
+				allocateTimeEntry(task, { startTime: "2026-02-04", occurrence }).occurrence
+			).toBe(occurrence);
+		}
+		expect(() =>
+			allocateTimeEntry(task, { startTime: "2026-02-04", occurrence: "2026-02-02" })
+		).toThrow(/occurrence/i);
+		expect(getTimeEntryOccurrenceChoices(task, "2026-02-04")).toEqual(
+			expect.arrayContaining(["2026-02-03", "2026-01-28", "2026-01-20"])
+		);
+	});
+
+	it("provides future choices before the first occurrence and guards period anchors too", () => {
+		expect(getTimeEntryOccurrenceChoices(weeklyTask(), "2025-12-01")).toContain("2026-01-05");
+		expect(
+			allocateTimeEntry(weeklyTask({ recurrence_anchor: "period" }), {
+				startTime: "2026-02-04",
+			}).occurrence
+		).toBe("2026-02-02");
+		expect(
+			allocateTimeEntry(weeklyTask({ recurrence: undefined }), { startTime: "2025-12-01" })
+		).toEqual({ startTime: "2025-12-01" });
 	});
 
 	it("a length without clock times is dropped once start and end differ", () => {

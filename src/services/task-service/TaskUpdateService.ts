@@ -8,6 +8,7 @@ import {
 	sanitizeForFilename,
 } from "../../utils/filenameGenerator";
 import { getCurrentDateString, getCurrentTimestamp } from "../../utils/dateUtils";
+import { TimeEntryOccurrenceError } from "../../core/recurrence";
 import {
 	applyTaskUpdateFrontmatterChange,
 	buildTaskUpdateRecurrenceUpdates,
@@ -17,7 +18,11 @@ import {
 	type TaskUpdateFieldMapper,
 } from "./taskUpdatePlanning";
 import { createTaskNotesLogger } from "../../utils/tasknotesLogger";
-import { processVaultFile, processVaultFrontMatter } from "../VaultMutationService";
+import {
+	processVaultFileWithinMutation,
+	processVaultFrontMatterWithinMutation,
+	withVaultFileMutation,
+} from "../VaultMutationService";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/TaskService/TaskUpdateService" });
 
@@ -111,7 +116,7 @@ export class TaskUpdateService {
 		const { runtime } = this.deps;
 
 		try {
-			const taskUpdates = normalizeTaskUpdateInput(updates, originalTask);
+			let taskUpdates = normalizeTaskUpdateInput(updates);
 			const file = runtime.app.vault.getAbstractFileByPath(originalTask.path);
 			if (!(file instanceof TFile)) {
 				throw new Error(`Cannot find task file: ${originalTask.path}`);
@@ -131,12 +136,6 @@ export class TaskUpdateService {
 					runtime.app.vault
 				);
 				newPath = parentPath ? `${parentPath}/${newFilename}.md` : `${newFilename}.md`;
-			}
-
-			// Rename before changing frontmatter so a failed rename leaves the old
-			// title (and all other fields) untouched.
-			if (isRenameNeeded) {
-				await runtime.app.fileManager.renameFile(file, newPath);
 			}
 
 			let recurrenceUpdates: Partial<TaskInfo> = {};
@@ -170,6 +169,7 @@ export class TaskUpdateService {
 					archived: false,
 					...current,
 				};
+				taskUpdates = normalizeTaskUpdateInput(updates, originalTask);
 				recurrenceUpdates = buildTaskUpdateRecurrenceUpdates({
 					originalTask,
 					updates: taskUpdates,
@@ -207,24 +207,74 @@ export class TaskUpdateService {
 				finalTags = frontmatterResult.finalTags;
 			};
 
-			if (normalizedDetails !== null) {
-				// Commit fields and body together. A failed body write must not leave
-				// attachment links behind when the modal rolls back imported files.
-				await processVaultFile(runtime.app, file, (currentContent) => {
-					const info = getFrontMatterInfo(currentContent);
-					const parsed: unknown = info.exists ? parseYaml(info.frontmatter) : {};
-					const frontmatter = parsed ?? {};
-					if (typeof frontmatter !== "object" || Array.isArray(frontmatter)) {
-						throw new Error("Task frontmatter must be a mapping");
+			await withVaultFileMutation(file, async () => {
+				if (isRenameNeeded) {
+					// Validate the fresh allocation before a rename changes paths or links.
+					if (Array.isArray(updates.timeEntries)) {
+						const content = await runtime.app.vault.read(file);
+						const info = getFrontMatterInfo(content);
+						const parsed: unknown = info.exists ? parseYaml(info.frontmatter) : {};
+						if (
+							parsed !== null &&
+							(typeof parsed !== "object" || Array.isArray(parsed))
+						) {
+							throw new Error("Task frontmatter must be a mapping");
+						}
+						normalizeTaskUpdateInput(updates, {
+							...originalTask,
+							...runtime.fieldMapper.mapFromFrontmatter(
+								parsed ?? {},
+								originalTask.path,
+								runtime.settings.storeTitleInFilename
+							),
+						});
 					}
-					updateFrontmatter(frontmatter as Record<string, unknown>);
-					const bodyContent = normalizedDetails.trimEnd();
-					const finalBody = bodyContent.length > 0 ? `${bodyContent}\n` : "";
-					return `---\n${stringifyYaml(frontmatter)}---\n\n${finalBody}`;
-				});
-			} else {
-				await processVaultFrontMatter(runtime.app, file, updateFrontmatter);
-			}
+					// A failed rename must still leave the old title and other fields untouched.
+					await runtime.app.fileManager.renameFile(file, newPath);
+				}
+				try {
+					if (normalizedDetails !== null) {
+						// Commit fields and body together. A failed body write must not leave
+						// attachment links behind when the modal rolls back imported files.
+						await processVaultFileWithinMutation(
+							runtime.app,
+							file,
+							(currentContent) => {
+								const info = getFrontMatterInfo(currentContent);
+								const parsed: unknown = info.exists
+									? parseYaml(info.frontmatter)
+									: {};
+								const frontmatter = parsed ?? {};
+								if (typeof frontmatter !== "object" || Array.isArray(frontmatter)) {
+									throw new Error("Task frontmatter must be a mapping");
+								}
+								updateFrontmatter(frontmatter as Record<string, unknown>);
+								const bodyContent = normalizedDetails.trimEnd();
+								const finalBody = bodyContent.length > 0 ? `${bodyContent}\n` : "";
+								return `---\n${stringifyYaml(frontmatter)}---\n\n${finalBody}`;
+							}
+						);
+					} else {
+						await processVaultFrontMatterWithinMutation(
+							runtime.app,
+							file,
+							updateFrontmatter
+						);
+					}
+				} catch (error) {
+					// External writes can change the rule during the rename; undo that rename on rejection.
+					if (isRenameNeeded && error instanceof TimeEntryOccurrenceError) {
+						try {
+							await runtime.app.fileManager.renameFile(file, originalTask.path);
+						} catch (rollbackError) {
+							throw new Error(
+								`Occurrence validation failed, and the task could not be renamed back from ${newPath}: ${String(rollbackError)}`
+							);
+						}
+					}
+					throw error;
+				}
+			});
 
 			const updatedTask = buildUpdatedTaskFromPlan({
 				originalTask,
@@ -330,6 +380,7 @@ export class TaskUpdateService {
 			await this.handleAutoArchive(originalTask, updatedTask, taskUpdates.status);
 			return updatedTask;
 		} catch (error) {
+			if (error instanceof TimeEntryOccurrenceError) throw error;
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			tasknotesLogger.error("Error updating task:", {
 				category: "validation",

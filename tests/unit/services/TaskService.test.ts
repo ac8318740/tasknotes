@@ -16,6 +16,8 @@ import { MockObsidian, TFile } from '../../helpers/obsidian-runtime';
 import { TaskCreationData, TaskService } from '../../../src/services/TaskService';
 import { TaskInfo, TimeEntry } from '../../../src/types';
 
+jest.mock('rrule', () => jest.requireActual('rrule/dist/es5/rrule.js'));
+
 // Mock external dependencies
 jest.mock('../../../src/utils/dateUtils', () => {
   const actual = jest.requireActual('../../../src/utils/dateUtils');
@@ -1352,6 +1354,19 @@ describe('TaskService', () => {
         .rejects.toThrow('Time tracking is already active for this task');
     });
 
+    it('rejects an unallocatable recurring timer using fresh frontmatter without changing it', async () => {
+      const persisted = { ...task, recurrence: 'DTSTART:20260202;FREQ=WEEKLY;BYDAY=MO', scheduled: '2026-02-02', timeEntries: [] };
+      const before = JSON.stringify(persisted);
+      mockPlugin.app.fileManager.processFrontMatter.mockImplementation(async (_file, fn) => fn(persisted));
+      // The caller still thinks this is a one-off task.
+      await expect(taskService.startTimeTracking(task)).rejects.toThrow('needs a valid occurrence');
+      expect(JSON.stringify(persisted)).toBe(before);
+      expect(mockPlugin.cacheManager.updateTaskInfoInCache).not.toHaveBeenCalled();
+
+      const result = await taskService.startTimeTracking(task, '2026-02-02');
+      expect(result.timeEntries![0].occurrence).toBe('2026-02-02');
+    });
+
     it('should handle file not found error', async () => {
       mockPlugin.app.vault.getAbstractFileByPath.mockReturnValue(null);
 
@@ -1401,6 +1416,14 @@ describe('TaskService', () => {
       });
     });
 
+    it('stops a legacy recurring timer without inventing an allocation', async () => {
+      task.recurrence = 'DTSTART:20260202;FREQ=WEEKLY;BYDAY=MO';
+      task.scheduled = '2026-02-02';
+      const result = await taskService.stopTimeTracking(task);
+      expect(result.timeEntries![0].endTime).toBe('2025-01-01T12:00:00.000Z');
+      expect(result.timeEntries![0].occurrence).toBeUndefined();
+    });
+
     it('should prevent stopping when not tracking', async () => {
       task.timeEntries = [];
 
@@ -1438,6 +1461,38 @@ describe('TaskService', () => {
 
       expect(result).toMatchObject(updates);
       expect(result.dateModified).toBe('2025-01-01T12:00:00Z');
+    });
+
+    it('preserves the occurrence error for editor recovery using fresh frontmatter', async () => {
+      const persisted = { ...task, recurrence: 'DTSTART:20990105;FREQ=WEEKLY;BYDAY=MO', scheduled: '2099-01-05', timeEntries: [] };
+      mockPlugin.app.fileManager.processFrontMatter.mockImplementation(async (_file, fn) => fn(persisted));
+      await expect(taskService.updateTask(task, { timeEntries: [{ startTime: '2025-01-01', endTime: '2025-01-01', minutes: 20 }] }))
+        .rejects.toMatchObject({ name: 'TimeEntryOccurrenceError', code: 'TIME_ENTRY_OCCURRENCE_REQUIRED' });
+      expect(persisted.timeEntries).toEqual([]);
+    });
+
+    it('rejects an invalid allocation before renaming a note', async () => {
+      mockPlugin.settings.storeTitleInFilename = true;
+      mockPlugin.app.fileManager.renameFile = jest.fn().mockResolvedValue(undefined);
+      mockPlugin.app.vault.read.mockResolvedValue('---\nrecurrence: "DTSTART:20990105;FREQ=WEEKLY;BYDAY=MO"\nscheduled: 2099-01-05\n---\n');
+      await expect(taskService.updateTask(task, { title: 'New title', timeEntries: [{ startTime: '2025-01-01', endTime: '2025-01-01', minutes: 20 }] }))
+        .rejects.toMatchObject({ name: 'TimeEntryOccurrenceError' });
+      expect(mockPlugin.app.fileManager.renameFile).not.toHaveBeenCalled();
+      expect(mockPlugin.app.fileManager.processFrontMatter).not.toHaveBeenCalled();
+    });
+
+    it('renames back when the rule changes between preflight and write', async () => {
+      mockPlugin.settings.storeTitleInFilename = true;
+      mockPlugin.app.fileManager.renameFile = jest.fn().mockResolvedValue(undefined);
+      mockPlugin.app.vault.read.mockResolvedValue('---\ntitle: Test\n---\n');
+      const persisted = { recurrence: 'DTSTART:20990105;FREQ=WEEKLY;BYDAY=MO', scheduled: '2099-01-05', timeEntries: [] };
+      mockPlugin.app.fileManager.processFrontMatter.mockImplementation(async (_file, fn) => fn(persisted));
+      await expect(taskService.updateTask(task, { title: 'New title', timeEntries: [{ startTime: '2025-01-01', endTime: '2025-01-01', minutes: 20 }] }))
+        .rejects.toMatchObject({ name: 'TimeEntryOccurrenceError' });
+      const renames = mockPlugin.app.fileManager.renameFile.mock.calls;
+      expect(renames).toHaveLength(2);
+      expect(renames[1][1]).toBe(task.path);
+      expect(persisted.timeEntries).toEqual([]);
     });
 
     it('should handle completion date for status changes', async () => {

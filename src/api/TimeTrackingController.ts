@@ -42,7 +42,8 @@ export class TimeTrackingController extends BaseController {
 				return;
 			}
 
-			const updatedTask = await this.taskService.startTimeTracking(task);
+			const body = await this.parseRequestBody<{ occurrence?: string }>(req);
+			const updatedTask = await this.taskService.startTimeTracking(task, body.occurrence);
 
 			this.sendResponse(res, 200, this.successResponse(updatedTask));
 		} catch (error: unknown) {
@@ -98,11 +99,13 @@ export class TimeTrackingController extends BaseController {
 				return;
 			}
 
-			const body = await this.parseRequestBody<{ description?: string }>(req);
+			const body = await this.parseRequestBody<{ description?: string; occurrence?: string }>(
+				req
+			);
 			const description = body.description ?? "";
 
 			// Start time tracking using the existing service method
-			let updatedTask = await this.taskService.startTimeTracking(task);
+			let updatedTask = await this.taskService.startTimeTracking(task, body.occurrence);
 
 			// If description was provided, update the latest time entry
 			if (description && updatedTask.timeEntries && updatedTask.timeEntries.length > 0) {

@@ -7,19 +7,21 @@ import type TaskNotesPlugin from "../main";
 import { MessageDescriptor } from "../i18n";
 import { createTaskModalMarkdownEditor } from "./taskModalEditorAdapter";
 import { format } from "date-fns";
-import {
-	getMovedTimeEntryOccurrence,
-	getTimeEntryOccurrence,
-	stampTimeEntryOccurrences,
-} from "../core/recurrence";
+import { allocateTimeEntry, TimeEntryOccurrenceError } from "../core/recurrence";
+import { normalizeTaskUpdateInput } from "../services/task-service/taskUpdatePlanning";
+import { chooseTimeEntryOccurrence } from "./TimeEntryOccurrenceModal";
 import { formatTime, getTimeEntryMinutes } from "../utils/helpers";
 import { fromVaultDate, toVaultDate } from "../utils/vaultTime";
+import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+
+const tasknotesLogger = createTaskNotesLogger({ tag: "Modals/TimeEntryEditorModal" });
 
 export class TimeEntryEditorModal extends Modal {
 	private plugin: TaskNotesPlugin;
 	private task: TaskInfo;
 	private timeEntries: TimeEntry[];
-	private onSave: (timeEntries: TimeEntry[]) => void;
+	private onSave: (timeEntries: TimeEntry[]) => void | Promise<void>;
+	private saving = false;
 	private translate: (key: MessageDescriptor, variables?: Record<string, unknown>) => string;
 	private entriesContainerEl: HTMLElement;
 	private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -31,17 +33,13 @@ export class TimeEntryEditorModal extends Modal {
 		app: App,
 		plugin: TaskNotesPlugin,
 		task: TaskInfo,
-		onSave: (timeEntries: TimeEntry[]) => void
+		onSave: (timeEntries: TimeEntry[]) => void | Promise<void>
 	) {
 		super(app);
 		this.plugin = plugin;
 		this.task = task;
 		// Create a working copy of time entries
-		// Stamped once here, so grouping reads the same occurrences that saving writes.
-		this.timeEntries = stampTimeEntryOccurrences(
-			task,
-			JSON.parse(JSON.stringify(task.timeEntries || [])) as TimeEntry[]
-		);
+		this.timeEntries = (task.timeEntries ?? []).map((entry) => ({ ...entry }));
 		this.onSave = onSave;
 		this.translate = plugin.i18n.translate.bind(plugin.i18n);
 	}
@@ -66,7 +64,7 @@ export class TimeEntryEditorModal extends Modal {
 		this.keyboardHandler = (e: KeyboardEvent) => {
 			if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
-				this.save();
+				void this.save();
 			}
 		};
 		this.containerEl.addEventListener("keydown", this.keyboardHandler);
@@ -84,7 +82,7 @@ export class TimeEntryEditorModal extends Modal {
 			// Save is the one primary action, so adding an entry stays a plain button.
 			text: this.translate(msg({ message: "Add time entry", context: "modals.timeEntryEditor.addEntry" })),
 		});
-		addButton.addEventListener("click", () => this.addNewEntry());
+		addButton.addEventListener("click", () => void this.addNewEntry());
 
 		// Footer with total time and actions
 		const footer = contentEl.createDiv({ cls: "time-entry-editor-modal__footer" });
@@ -105,7 +103,7 @@ export class TimeEntryEditorModal extends Modal {
 			text: this.translate(msg({ message: "Save", context: "common.save" })),
 			cls: "mod-cta",
 		});
-		saveButton.addEventListener("click", () => this.save());
+		saveButton.addEventListener("click", () => void this.save());
 	}
 
 	private renderEntries() {
@@ -201,12 +199,7 @@ export class TimeEntryEditorModal extends Modal {
 		};
 		// A changed date or start keeps the entry's length, however long; a running entry keeps running.
 		const keptMinutes = () => (isRunning() ? null : this.calculateDuration(entry));
-		const moved = () => {
-			const before = entry.occurrence;
-			if (this.task.recurrence) entry.occurrence = getMovedTimeEntryOccurrence(this.task, entry);
-			if (entry.occurrence !== before) this.renderEntries();
-			else sync();
-		};
+		const moved = sync;
 
 		dateInput.addEventListener("change", () => {
 			if (!dateInput.value) return sync();
@@ -238,6 +231,29 @@ export class TimeEntryEditorModal extends Modal {
 			sync();
 		});
 		sync();
+
+		if (this.task.recurrence) {
+			const allocation = entryEl.createEl("button", {
+				text: this.translate(
+					msg({
+						message: "Change occurrence",
+						context: "modals.timeEntryEditor.changeOccurrence",
+					})
+				),
+			});
+			allocation.addEventListener("click", () => {
+				void chooseTimeEntryOccurrence(
+					this.app,
+					this.plugin,
+					this.task,
+					getEntryDay(entry)
+				).then((occurrence) => {
+					if (!occurrence) return;
+					entry.occurrence = occurrence;
+					this.renderEntries();
+				});
+			});
+		}
 
 		const descriptionEl = entryEl.createDiv({
 			cls: "time-entry-editor-modal__description-editor-container",
@@ -271,7 +287,7 @@ export class TimeEntryEditorModal extends Modal {
 		textarea.addEventListener("keydown", (e) => {
 			if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
-				this.save();
+				void this.save();
 			} else if (e.key === "Escape") {
 				e.preventDefault();
 				this.close();
@@ -309,7 +325,7 @@ export class TimeEntryEditorModal extends Modal {
 			onChange: (value) => {
 				entry.description = value || undefined;
 			},
-			onSubmit: () => this.save(),
+			onSubmit: () => void this.save(),
 			onEscape: () => this.close(),
 			onTab: () => false,
 		});
@@ -364,7 +380,7 @@ export class TimeEntryEditorModal extends Modal {
 		return this.timeEntries.reduce((total, entry) => total + this.calculateDuration(entry), 0);
 	}
 
-	private addNewEntry() {
+	private async addNewEntry() {
 		const now = new Date();
 		const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
@@ -373,10 +389,19 @@ export class TimeEntryEditorModal extends Modal {
 			endTime: now.toISOString(),
 			description: "",
 		};
-		const occurrence = this.task.recurrence
-			? getTimeEntryOccurrence(this.task, newEntry.startTime)
-			: null;
-		if (occurrence) newEntry.occurrence = occurrence;
+		try {
+			Object.assign(newEntry, allocateTimeEntry(this.task, newEntry));
+		} catch (error) {
+			if (!(error instanceof TimeEntryOccurrenceError)) throw error;
+			const occurrence = await chooseTimeEntryOccurrence(
+				this.app,
+				this.plugin,
+				error.task,
+				getEntryDay(newEntry)
+			);
+			if (!occurrence) return;
+			newEntry.occurrence = occurrence;
+		}
 
 		this.timeEntries.push(newEntry);
 		this.renderEntries();
@@ -390,7 +415,8 @@ export class TimeEntryEditorModal extends Modal {
 		this.updateTotalDisplay();
 	}
 
-	private save() {
+	private async save() {
+		if (this.saving) return;
 		// Validate entries
 		for (const entry of this.timeEntries) {
 			if (!entry.startTime) {
@@ -409,13 +435,52 @@ export class TimeEntryEditorModal extends Modal {
 			}
 		}
 
-		const sanitizedEntries = this.timeEntries.map((entry) => {
-			const sanitizedEntry = { ...entry };
-			delete sanitizedEntry.duration;
-			return sanitizedEntry;
-		});
-		this.onSave(sanitizedEntries);
-		this.close();
+		this.saving = true;
+		try {
+			while (true) {
+				try {
+					const { timeEntries } = normalizeTaskUpdateInput({
+						timeEntries: this.timeEntries,
+					});
+					await this.onSave(timeEntries ?? []);
+					this.close();
+					return;
+				} catch (error) {
+					if (!(error instanceof TimeEntryOccurrenceError)) throw error;
+					const entry = this.timeEntries.find(
+						(item) =>
+							item.startTime === error.entry.startTime &&
+							item.occurrence === error.entry.occurrence
+					);
+					if (!entry) throw error;
+					const occurrence = await chooseTimeEntryOccurrence(
+						this.app,
+						this.plugin,
+						error.task,
+						getEntryDay(entry)
+					);
+					if (!occurrence) return;
+					entry.occurrence = occurrence;
+					this.renderEntries();
+				}
+			}
+		} catch (error) {
+			tasknotesLogger.error("Failed to save time entries:", {
+				category: "persistence",
+				operation: "save-time-entries",
+				error,
+			});
+			new Notice(
+				this.translate(
+					msg({
+						message: "Failed to save time entries",
+						context: "modals.timeEntryEditor.saveFailed",
+					})
+				)
+			);
+		} finally {
+			this.saving = false;
+		}
 	}
 
 	onClose() {

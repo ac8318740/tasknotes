@@ -7,7 +7,12 @@ import {
 	TaskInfo,
 } from "../../types";
 import type { TaskNotesSettings } from "../../types/settings";
-import { addDTSTARTToRecurrenceRule, updateToNextScheduledOccurrence } from "../../core/recurrence";
+import type { FieldMapper } from "../FieldMapper";
+import {
+	addDTSTARTToRecurrenceRule,
+	updateToNextScheduledOccurrence,
+	allocateTimeEntry,
+} from "../../core/recurrence";
 import {
 	FilenameContext,
 	type TaskFilenameSettings,
@@ -46,6 +51,7 @@ interface TaskCreationVault extends Vault {
 }
 
 interface TaskCreationFieldMapper {
+	mapFromFrontmatter: FieldMapper["mapFromFrontmatter"];
 	getUserFields(): UserMappedField[];
 	mapToFrontmatter(
 		taskData: Partial<TaskInfo>,
@@ -350,6 +356,16 @@ export class TaskCreationService {
 				);
 			}
 			tagsArray = getFrontmatterTags(finalFrontmatter.tags);
+			const mapped = runtime.fieldMapper.mapFromFrontmatter(
+				finalFrontmatter,
+				fullPath,
+				runtime.settings.storeTitleInFilename
+			);
+			if (mapped.timeEntries?.length) {
+				const task = { ...completeTaskData, ...mapped };
+				finalFrontmatter[runtime.fieldMapper.toUserField("timeEntries")] =
+					mapped.timeEntries.map((entry) => allocateTimeEntry(task, entry));
+			}
 
 			const yamlHeader = stringifyYaml(finalFrontmatter);
 			let content = `---\n${yamlHeader}---\n\n`;

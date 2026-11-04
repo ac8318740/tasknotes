@@ -7,6 +7,9 @@ import { TimeEntryEditorModal } from "../modals/TimeEntryEditorModal";
 import { showConfirmationModal } from "../modals/ConfirmationModal";
 import { openTaskSelector } from "../modals/TaskSelectorWithCreateModal";
 import { getCurrentDateString } from "../core/date";
+import { TimeEntryOccurrenceError } from "../core/recurrence";
+import { chooseTimeEntryOccurrence } from "../modals/TimeEntryOccurrenceModal";
+import { getDatePart } from "../utils/dateUtils";
 import { getActiveTimeEntry } from "../utils/helpers";
 import { getOverdueScheduledRolloverCandidates } from "../utils/scheduledRollover";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
@@ -59,7 +62,24 @@ export class TaskActionCoordinator {
 
 	async startTimeTracking(task: TaskInfo, description?: string): Promise<TaskInfo> {
 		try {
-			let updatedTask = await this.plugin.taskService.startTimeTracking(task);
+			let updatedTask: TaskInfo;
+			let occurrence: string | undefined;
+			while (true) {
+				try {
+					updatedTask = await this.plugin.taskService.startTimeTracking(task, occurrence);
+					break;
+				} catch (error) {
+					if (!(error instanceof TimeEntryOccurrenceError)) throw error;
+					const selected = await chooseTimeEntryOccurrence(
+						this.plugin.app,
+						this.plugin,
+						error.task,
+						getDatePart(error.entry.startTime)
+					);
+					if (!selected) return task;
+					occurrence = selected;
+				}
+			}
 
 			const trimmedDescription = description?.trim();
 			if (
@@ -193,11 +213,6 @@ export class TaskActionCoordinator {
 
 						try {
 							await this.startTimeTracking(selectedTask);
-							showNotice(
-								this.plugin.i18n.translate(msg({ message: "Started tracking time for: {taskTitle}", context: "modals.timeTracking.started" }), {
-									taskTitle: selectedTask.title,
-								})
-							);
 						} catch (error) {
 							tasknotesLogger.error("Error starting time tracking:", {
 								category: "persistence",
@@ -330,31 +345,18 @@ export class TaskActionCoordinator {
 			this.plugin.app,
 			this.plugin,
 			task,
-			(updatedEntries) => {
-				void (async () => {
-					try {
-						const sanitizedEntries = updatedEntries.map((entry) => {
-							const sanitizedEntry = { ...entry };
-							delete sanitizedEntry.duration;
-							return sanitizedEntry;
-						});
-
-						await this.plugin.taskService.updateTask(task, {
-							timeEntries: sanitizedEntries,
-						});
-
-						onSave?.();
-						this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
-						showNotice(this.plugin.i18n.translate(msg({ message: "Time entries saved", context: "modals.timeEntryEditor.saved" })));
-					} catch (error) {
-						tasknotesLogger.error("Error saving time entries:", {
-							category: "persistence",
-							operation: "saving-time-entries",
-							error: error,
-						});
-						showNotice(this.plugin.i18n.translate(msg({ message: "Failed to save time entries", context: "modals.timeEntryEditor.saveFailed" })));
-					}
-				})();
+			async (updatedEntries) => {
+				await this.plugin.taskService.updateTask(task, { timeEntries: updatedEntries });
+				onSave?.();
+				this.plugin.emitter.trigger(EVENT_DATA_CHANGED);
+				showNotice(
+					this.plugin.i18n.translate(
+						msg({
+							message: "Time entries saved",
+							context: "modals.timeEntryEditor.saved",
+						})
+					)
+				);
 			}
 		);
 

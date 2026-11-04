@@ -473,6 +473,7 @@ export interface TaskNotesTaskRelationships {
 
 export interface StartTimeEntryOptions {
 	description?: string;
+	occurrence?: string;
 }
 
 export interface TaskNotesRuntimeTimeSummaryOptions {

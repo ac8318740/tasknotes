@@ -2204,7 +2204,7 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 	): Promise<TaskInfo> {
 		const task = await this.requireTask(path);
 		let updatedTask = await this.withMutationContext([task.path], context, () =>
-			this.plugin.taskService.startTimeTracking(task)
+			this.plugin.taskService.startTimeTracking(task, options?.occurrence)
 		);
 
 		if (options?.description && updatedTask.timeEntries?.length) {
@@ -2651,7 +2651,9 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 		type MetadataCacheWithLinkResolver = {
 			getFirstLinkpathDest?: (linkpath: string, sourcePath: string) => Nullable<TFile>;
 		};
-		const metadataCache = this.plugin.app.metadataCache as MetadataCacheWithLinkResolver | undefined;
+		const metadataCache = this.plugin.app.metadataCache as
+			| MetadataCacheWithLinkResolver
+			| undefined;
 		const resolvedFile = metadataCache?.getFirstLinkpathDest?.(linkPath, sourcePath);
 		if (resolvedFile instanceof TFile) return normalizePath(resolvedFile.path);
 

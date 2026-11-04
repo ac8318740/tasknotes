@@ -158,7 +158,7 @@ type QueryTasksArgs = {
 	sortDirection?: "asc" | "desc";
 	groupKey?: TaskGroupKey;
 };
-type StartTimeTrackingArgs = TaskIdArgs & { description?: string };
+type StartTimeTrackingArgs = TaskIdArgs & { description?: string; occurrence?: string };
 type TimeSummaryArgs = {
 	period?: "today" | "week" | "month" | "all" | "custom";
 	from?: string;
@@ -734,16 +734,20 @@ export class MCPService {
 				inputSchema: {
 					id: z.string().describe("Task file path"),
 					description: z.string().optional().describe("Description for the time session"),
+					occurrence: z
+						.string()
+						.optional()
+						.describe("Recurring occurrence date (YYYY-MM-DD)"),
 				},
 			},
-			async ({ id, description }: StartTimeTrackingArgs) => {
+			async ({ id, description, occurrence }: StartTimeTrackingArgs) => {
 				try {
 					const task = await this.cacheManager.getTaskInfo(id);
 					if (!task) {
 						return this.errorResult("Task not found");
 					}
 
-					let updatedTask = await this.taskService.startTimeTracking(task);
+					let updatedTask = await this.taskService.startTimeTracking(task, occurrence);
 
 					// If description was provided, update the latest time entry
 					if (
