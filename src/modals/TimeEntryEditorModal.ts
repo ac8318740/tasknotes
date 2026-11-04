@@ -12,6 +12,9 @@ import { normalizeTaskUpdateInput } from "../services/task-service/taskUpdatePla
 import { chooseTimeEntryOccurrence } from "./TimeEntryOccurrenceModal";
 import { formatTime, getTimeEntryMinutes } from "../utils/helpers";
 import { fromVaultDate, toVaultDate } from "../utils/vaultTime";
+import { createTaskNotesLogger } from "../utils/tasknotesLogger";
+
+const tasknotesLogger = createTaskNotesLogger({ tag: "Modals/TimeEntryEditorModal" });
 
 export class TimeEntryEditorModal extends Modal {
 	private plugin: TaskNotesPlugin;
@@ -61,7 +64,7 @@ export class TimeEntryEditorModal extends Modal {
 		this.keyboardHandler = (e: KeyboardEvent) => {
 			if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
-				this.save();
+				void this.save();
 			}
 		};
 		this.containerEl.addEventListener("keydown", this.keyboardHandler);
@@ -79,7 +82,7 @@ export class TimeEntryEditorModal extends Modal {
 			// Save is the one primary action, so adding an entry stays a plain button.
 			text: this.translate(msg({ message: "Add time entry", context: "modals.timeEntryEditor.addEntry" })),
 		});
-		addButton.addEventListener("click", () => this.addNewEntry());
+		addButton.addEventListener("click", () => void this.addNewEntry());
 
 		// Footer with total time and actions
 		const footer = contentEl.createDiv({ cls: "time-entry-editor-modal__footer" });
@@ -100,7 +103,7 @@ export class TimeEntryEditorModal extends Modal {
 			text: this.translate(msg({ message: "Save", context: "common.save" })),
 			cls: "mod-cta",
 		});
-		saveButton.addEventListener("click", () => this.save());
+		saveButton.addEventListener("click", () => void this.save());
 	}
 
 	private renderEntries() {
@@ -238,16 +241,17 @@ export class TimeEntryEditorModal extends Modal {
 					})
 				),
 			});
-			allocation.addEventListener("click", async () => {
-				const occurrence = await chooseTimeEntryOccurrence(
+			allocation.addEventListener("click", () => {
+				void chooseTimeEntryOccurrence(
 					this.app,
 					this.plugin,
 					this.task,
 					getEntryDay(entry)
-				);
-				if (!occurrence) return;
-				entry.occurrence = occurrence;
-				this.renderEntries();
+				).then((occurrence) => {
+					if (!occurrence) return;
+					entry.occurrence = occurrence;
+					this.renderEntries();
+				});
 			});
 		}
 
@@ -283,7 +287,7 @@ export class TimeEntryEditorModal extends Modal {
 		textarea.addEventListener("keydown", (e) => {
 			if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
-				this.save();
+				void this.save();
 			} else if (e.key === "Escape") {
 				e.preventDefault();
 				this.close();
@@ -321,7 +325,7 @@ export class TimeEntryEditorModal extends Modal {
 			onChange: (value) => {
 				entry.description = value || undefined;
 			},
-			onSubmit: () => this.save(),
+			onSubmit: () => void this.save(),
 			onEscape: () => this.close(),
 			onTab: () => false,
 		});
@@ -461,7 +465,11 @@ export class TimeEntryEditorModal extends Modal {
 				}
 			}
 		} catch (error) {
-			console.error("Failed to save time entries:", error);
+			tasknotesLogger.error("Failed to save time entries:", {
+				category: "persistence",
+				operation: "save-time-entries",
+				error,
+			});
 			new Notice(
 				this.translate(
 					msg({
