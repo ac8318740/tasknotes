@@ -23,6 +23,8 @@ In most workflows, users combine both approaches: fast capture with natural lang
 
 As you type, the parts of the input that set a value are highlighted in the natural language field: dates (blue), recurrence (purple), time estimates (orange), priority (red), status (green), and tags, contexts, projects and custom fields (accent color). Text that is not highlighted becomes the title. A highlighted phrase can still stay in the title, as in "weekly review" or "Monday's meeting", where the phrase both names the task and sets the value.
 
+To keep a highlighted word as plain text, such as "December" in "by December groceries", put the cursor right after it and press Backspace. The highlight disappears, the word stays in the title, and no text is deleted. The next Backspace deletes as usual. The word stays plain until you edit it.
+
 To change the colors, target the `tn-nlp-highlight` class, or one kind such as `tn-nlp-highlight--due`, in a CSS snippet.
 
 ### Auto-Suggestions in Natural Language Input

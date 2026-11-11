@@ -17,7 +17,8 @@ import type {
 	MarkdownEditorProps,
 } from "../editor/EmbeddableMarkdownEditor";
 import { createNLPAutocomplete } from "../editor/NLPCodeMirrorAutocomplete";
-import { createNLPHighlight } from "../editor/NLPHighlight";
+import type { EditorView } from "@codemirror/view";
+import { createNLPHighlight, getNLPParseInput } from "../editor/NLPHighlight";
 import { buildCreationBlockingUpdates, buildTaskCreationData } from "./taskCreationData";
 import {
 	buildTaskCreationFormState,
@@ -220,7 +221,10 @@ export class TaskCreationModal extends TaskModal {
 				cls: "nlp-editor",
 				extensions: [
 					...nlpAutocomplete,
-					createNLPHighlight((text) => this.nlParser.parseInputWithSpans(text).spans),
+					createNLPHighlight(
+						(text) => this.nlParser.parseInputWithSpans(text).spans,
+						() => this.updateNaturalLanguagePreview(this.getNLPInputValue().trim())
+					),
 				],
 				enterVimInsertMode: true, // Auto-enter insert mode when vim is enabled (#1410)
 				onChange: (value) => {
@@ -398,10 +402,21 @@ export class TaskCreationModal extends TaskModal {
 		}, this.getInitialFocusDelay());
 	}
 
+	/** Parses natural language input, leaving words released with Backspace in the title. */
+	private parseNaturalLanguage(input: string): NLParsedTaskData {
+		const cm = this.nlMarkdownEditor?.editor?.cm as unknown as EditorView | undefined;
+		if (!cm) return this.nlParser.parseInputForModal(input);
+		const { text, restore } = getNLPParseInput(cm.state);
+		const parsed = this.nlParser.parseInputForModal(text.trim());
+		parsed.title = restore(parsed.title);
+		if (parsed.details) parsed.details = restore(parsed.details);
+		return parsed;
+	}
+
 	private updateNaturalLanguagePreview(input: string): void {
 		if (!this.nlPreviewContainer) return;
 
-		const parsed = this.nlParser.parseInputForModal(input);
+		const parsed = this.parseNaturalLanguage(input);
 		const previewData = this.nlParser.getPreviewData(parsed);
 
 		if (previewData.length > 0 && parsed.title) {
@@ -545,7 +560,7 @@ export class TaskCreationModal extends TaskModal {
 	}
 
 	private parseAndFillForm(input: string): void {
-		const parsed = this.nlParser.parseInputForModal(input);
+		const parsed = this.parseNaturalLanguage(input);
 		this.applyParsedData(parsed);
 
 		// Expand the form to show filled fields
@@ -676,7 +691,7 @@ export class TaskCreationModal extends TaskModal {
 			const nlContent = this.getNLPInputValue().trim();
 			if (nlContent && !this.title.trim()) {
 				// Only auto-parse if no title has been manually entered
-				const parsed = this.nlParser.parseInputForModal(nlContent);
+				const parsed = this.parseNaturalLanguage(nlContent);
 				this.applyParsedData(parsed);
 			}
 		}
