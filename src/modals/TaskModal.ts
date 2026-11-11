@@ -1,7 +1,7 @@
 import { uiData } from "../i18n/dataText";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { App, Modal, Notice, TAbstractFile, TFile } from "obsidian";
+import { App, Modal, Notice, Setting, TAbstractFile, TFile } from "obsidian";
 
 type Nullable<T> = T | null;
 
@@ -341,6 +341,7 @@ export abstract class TaskModal extends Modal {
 	protected projects = "";
 	protected tags = "";
 	protected timeEstimate = 0;
+	protected bundle = false;
 	protected recurrenceRule = "";
 	protected recurrenceAnchor: "scheduled" | "completion" | "period" = "scheduled";
 	protected reminders: Reminder[] = [];
@@ -376,6 +377,7 @@ export abstract class TaskModal extends Modal {
 	protected projectsInput: HTMLInputElement = undefined as unknown as HTMLInputElement;
 	protected tagsInput: HTMLInputElement = undefined as unknown as HTMLInputElement;
 	protected timeEstimateInput: HTMLInputElement = undefined as unknown as HTMLInputElement;
+	protected bundleToggle: TaskModalUserFieldToggleControl | null = null;
 	protected projectsList: HTMLElement = undefined as unknown as HTMLElement;
 	protected subtasksList: HTMLElement = undefined as unknown as HTMLElement;
 	protected actionBar: HTMLElement = undefined as unknown as HTMLElement;
@@ -777,6 +779,7 @@ export abstract class TaskModal extends Modal {
 			contexts: (container) => this.createContextsField(container),
 			tags: (container) => this.createTagsField(container),
 			"time-estimate": (container) => this.createTimeEstimateField(container),
+			bundle: (container) => this.createBundleField(container),
 			projects: (container) => this.createProjectsField(container),
 			subtasks: (container) => this.createSubtasksField(container),
 			attachments: (container) => this.createAttachmentsField(container),
@@ -813,6 +816,25 @@ export abstract class TaskModal extends Modal {
 				this.timeEstimate = value;
 			},
 		});
+	}
+
+	protected createBundleField(container: HTMLElement): void {
+		new Setting(container)
+			.setName(this.t(msg({ message: "Bundle", context: "modals.task.bundleLabel" })))
+			.setDesc(
+				this.t(
+					msg({
+						message: "Can share a scheduled block with other tasks",
+						context: "modals.task.bundleDescription",
+					})
+				)
+			)
+			.addToggle((toggle) => {
+				toggle.setValue(this.bundle).onChange((value) => {
+					this.bundle = value;
+				});
+				this.bundleToggle = toggle;
+			});
 	}
 
 	private getMetadataFieldContext(): TaskModalMetadataFieldContext {

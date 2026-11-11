@@ -2460,6 +2460,21 @@ msgctxt "views.pomodoro.status.breakComplete"
 msgid "Break complete! Ready for the next Pomodoro?"
 msgstr "Break complete! Ready for the next Pomodoro?"
 
+#: src/modals/TaskModal.ts
+msgctxt "modals.task.bundleLabel"
+msgid "Bundle"
+msgstr "Bundle"
+
+#: src/i18n/fieldLabels.ts
+msgctxt "utils/fieldConfigDefaults: defaults displayName"
+msgid "Bundle"
+msgstr "Bundle"
+
+#: src/modals/TaskCreationModal.ts
+msgctxt "modals.taskCreation.nlPreviewBundle"
+msgid "Bundle: can share a scheduled block"
+msgstr "Bundle: can share a scheduled block"
+
 #: src/modals/TaskCreationModal.ts
 msgctxt "modals.taskCreation.nlPlaceholder"
 msgid "Buy groceries tomorrow at 3pm @home #errands"
@@ -2635,6 +2650,11 @@ msgstr "Calendar/Events"
 msgctxt "settings.integrations.oauth.calendarErrors"
 msgid "Calendars with errors: {count}. First error: {calendar}: {message}"
 msgstr "Calendars with errors: {count}. First error: {calendar}: {message}"
+
+#: src/modals/TaskModal.ts
+msgctxt "modals.task.bundleDescription"
+msgid "Can share a scheduled block with other tasks"
+msgstr "Can share a scheduled block with other tasks"
 
 #: src/bases/KanbanView.ts
 #: src/bases/TaskListView.ts

@@ -19,6 +19,7 @@ export interface TaskCreationDataInput {
 	projects: string;
 	tags: string;
 	timeEstimate: number;
+	bundle: boolean;
 	recurrenceRule: string;
 	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
@@ -67,6 +68,7 @@ export function buildTaskCreationData(input: TaskCreationDataInput): TaskCreatio
 		projects: projectList.length > 0 ? projectList : undefined,
 		tags: tagList.length > 0 ? tagList : undefined,
 		timeEstimate: input.timeEstimate > 0 ? input.timeEstimate : undefined,
+		bundle: input.bundle ? true : undefined,
 		recurrence: input.recurrenceRule || undefined,
 		recurrence_anchor: input.recurrenceRule
 			? (input.recurrenceAnchor as TaskInfo["recurrence_anchor"])

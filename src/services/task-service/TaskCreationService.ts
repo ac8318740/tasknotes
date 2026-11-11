@@ -242,6 +242,7 @@ export class TaskCreationService {
 				recurrence,
 				completedDate,
 				recurrence_anchor: taskData.recurrence_anchor || undefined,
+				bundle: taskData.bundle === true ? true : undefined,
 				recurrence_original_date: taskData.recurrence_original_date || undefined,
 				recurrence_parent: taskData.recurrence_parent || undefined,
 				occurrence_date: taskData.occurrence_date || undefined,

@@ -510,6 +510,9 @@ function removeUnsetMappedFields(
 	) {
 		delete frontmatter[fieldMapper.toUserField("recurrenceOriginalDate")];
 	}
+	if (Object.prototype.hasOwnProperty.call(updates, "bundle") && updates.bundle !== true) {
+		delete frontmatter[fieldMapper.toUserField("bundle")];
+	}
 	if (
 		Object.prototype.hasOwnProperty.call(updates, "googleCalendarExceptionOriginalScheduled") &&
 		updates.googleCalendarExceptionOriginalScheduled === undefined

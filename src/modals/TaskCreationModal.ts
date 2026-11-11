@@ -8,7 +8,8 @@ import { TaskInfo } from "../types";
 import { sanitizeTags } from "../utils/helpers";
 import {
 	NaturalLanguageParser,
-	ParsedTaskData as NLParsedTaskData,
+	findBundleKeyword,
+	ParsedTaskData,
 } from "../services/NaturalLanguageParser";
 import { combineDateAndTime } from "../utils/dateUtils";
 
@@ -18,6 +19,7 @@ import type {
 } from "../editor/EmbeddableMarkdownEditor";
 import { createNLPAutocomplete } from "../editor/NLPCodeMirrorAutocomplete";
 import type { EditorView } from "@codemirror/view";
+import type { ParsedSpan } from "tasknotes-nlp-core";
 import { createNLPHighlight, getNLPParseInput } from "../editor/NLPHighlight";
 import { buildCreationBlockingUpdates, buildTaskCreationData } from "./taskCreationData";
 import {
@@ -111,6 +113,8 @@ function createEmbeddableMarkdownEditor(
 	/* eslint-enable @typescript-eslint/no-require-imports -- Re-enable after the isolated lazy import. */
 	return new editorModule.EmbeddableMarkdownEditor(app, container, options);
 }
+
+type NLParsedTaskData = ParsedTaskData & Pick<TaskInfo, "bundle">;
 
 export class TaskCreationModal extends TaskModal {
 	private options: TaskCreationOptions;
@@ -222,7 +226,7 @@ export class TaskCreationModal extends TaskModal {
 				extensions: [
 					...nlpAutocomplete,
 					createNLPHighlight(
-						(text) => this.nlParser.parseInputWithSpans(text).spans,
+						(text) => this.getNLPSpans(text),
 						() => this.updateNaturalLanguagePreview(this.getNLPInputValue().trim())
 					),
 				],
@@ -405,12 +409,29 @@ export class TaskCreationModal extends TaskModal {
 	/** Parses natural language input, leaving words released with Backspace in the title. */
 	private parseNaturalLanguage(input: string): NLParsedTaskData {
 		const cm = this.nlMarkdownEditor?.editor?.cm as unknown as EditorView | undefined;
-		if (!cm) return this.nlParser.parseInputForModal(input);
-		const { text, restore } = getNLPParseInput(cm.state);
-		const parsed = this.nlParser.parseInputForModal(text.trim());
+		const { text, restore } = cm
+			? getNLPParseInput(cm.state)
+			: { text: input, restore: (value: string) => value };
+		// The bundle keyword and the space before it stay out of the title.
+		const keyword = findBundleKeyword(text);
+		const withoutKeyword = keyword
+			? text.slice(0, keyword.start).replace(/\s$/, "") + text.slice(keyword.end)
+			: text;
+		const parsed: NLParsedTaskData = this.nlParser.parseInputForModal(withoutKeyword.trim());
 		parsed.title = restore(parsed.title);
 		if (parsed.details) parsed.details = restore(parsed.details);
+		if (keyword) parsed.bundle = true;
 		return parsed;
+	}
+
+	private getNLPSpans(text: string): ParsedSpan[] {
+		const spans = this.nlParser.parseInputWithSpans(text).spans;
+		const keyword = findBundleKeyword(text);
+		if (!keyword || spans.some((span) => span.start < keyword.end && keyword.start < span.end)) {
+			return spans;
+		}
+		const bundleText = text.slice(keyword.start, keyword.end);
+		return [...spans, { kind: "field", field: "bundle", text: bundleText, ...keyword }];
 	}
 
 	private updateNaturalLanguagePreview(input: string): void {
@@ -418,6 +439,17 @@ export class TaskCreationModal extends TaskModal {
 
 		const parsed = this.parseNaturalLanguage(input);
 		const previewData = this.nlParser.getPreviewData(parsed);
+		if (parsed.bundle) {
+			previewData.push({
+				icon: "layers",
+				text: this.t(
+					msg({
+						message: "Bundle: can share a scheduled block",
+						context: "modals.taskCreation.nlPreviewBundle",
+					})
+				),
+			});
+		}
 
 		if (previewData.length > 0 && parsed.title) {
 			this.nlPreviewContainer.empty();
@@ -594,6 +626,10 @@ export class TaskCreationModal extends TaskModal {
 		if (parsed.tags && parsed.tags.length > 0) this.tags = sanitizeTags(parsed.tags.join(", "));
 		if (parsed.details) this.details = parsed.details;
 		if (parsed.recurrence) this.recurrenceRule = parsed.recurrence;
+		if (parsed.bundle) {
+			this.bundle = true;
+			this.bundleToggle?.setValue(true);
+		}
 		if (parsed.estimate !== undefined) {
 			this.timeEstimate = parsed.estimate > 0 ? parsed.estimate : 0;
 			if (this.timeEstimateInput) {
@@ -663,6 +699,7 @@ export class TaskCreationModal extends TaskModal {
 		this.contexts = formState.contexts;
 		this.tags = formState.tags;
 		this.timeEstimate = formState.timeEstimate;
+		this.bundle = formState.bundle;
 		this.recurrenceRule = formState.recurrenceRule;
 		this.recurrenceAnchor = formState.recurrenceAnchor;
 		this.reminders = formState.reminders;
@@ -848,6 +885,7 @@ export class TaskCreationModal extends TaskModal {
 			projects: this.projects,
 			tags: this.tags,
 			timeEstimate: this.timeEstimate,
+			bundle: this.bundle,
 			recurrenceRule: this.recurrenceRule,
 			recurrenceAnchor: this.recurrenceAnchor,
 			reminders: this.reminders,

@@ -70,4 +70,15 @@ describe("core/fieldMapping", () => {
 		expect(result.valid).toBe(false);
 		expect(result.errors).toContain("Field mappings must have unique property names");
 	});
+	it("reads and writes bundle only as true, also with settings saved before the field", () => {
+		const { bundle: _omitted, ...oldMapping } = DEFAULT_FIELD_MAPPING;
+
+		for (const mapping of [DEFAULT_FIELD_MAPPING, oldMapping]) {
+			expect(mapTaskFromFrontmatter(mapping, { bundle: true }, "a.md").bundle).toBe(true);
+			expect(mapTaskFromFrontmatter(mapping, { bundle: false }, "a.md")).not.toHaveProperty("bundle");
+			expect(mapTaskFromFrontmatter(mapping, { bundle: "yes" }, "a.md")).not.toHaveProperty("bundle");
+			expect(mapTaskToFrontmatter(mapping, { title: "A", bundle: true }).bundle).toBe(true);
+			expect(mapTaskToFrontmatter(mapping, { title: "A" })).not.toHaveProperty("bundle");
+		}
+	});
 });

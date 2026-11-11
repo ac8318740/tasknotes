@@ -44,6 +44,7 @@ export interface TaskEditFormState {
 	tags: string;
 	initialTags: string;
 	timeEstimate: number;
+	bundle: boolean;
 	recurrenceRule: string;
 	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
@@ -104,6 +105,7 @@ export function buildTaskEditFormState(input: TaskEditFormStateInput): TaskEditF
 		tags,
 		initialTags: tags,
 		timeEstimate: input.task.timeEstimate || 0,
+		bundle: input.task.bundle === true,
 		recurrenceRule: typeof input.task.recurrence === "string" ? input.task.recurrence : "",
 		recurrenceAnchor: input.task.recurrence_anchor || "scheduled",
 		reminders: input.task.reminders ? [...input.task.reminders] : [],

@@ -2459,6 +2459,21 @@ msgctxt "views.pomodoro.status.breakComplete"
 msgid "Break complete! Ready for the next Pomodoro?"
 msgstr "휴식이 끝났습니다! 다음 뽀모도로를 시작하시겠습니까?"
 
+#: src/modals/TaskModal.ts
+msgctxt "modals.task.bundleLabel"
+msgid "Bundle"
+msgstr "묶기"
+
+#: src/i18n/fieldLabels.ts
+msgctxt "utils/fieldConfigDefaults: defaults displayName"
+msgid "Bundle"
+msgstr "묶기"
+
+#: src/modals/TaskCreationModal.ts
+msgctxt "modals.taskCreation.nlPreviewBundle"
+msgid "Bundle: can share a scheduled block"
+msgstr "묶기: 예약된 블록을 공유할 수 있음"
+
 #: src/modals/TaskCreationModal.ts
 msgctxt "modals.taskCreation.nlPlaceholder"
 msgid "Buy groceries tomorrow at 3pm @home #errands"
@@ -2634,6 +2649,11 @@ msgstr "캘린더/이벤트"
 msgctxt "settings.integrations.oauth.calendarErrors"
 msgid "Calendars with errors: {count}. First error: {calendar}: {message}"
 msgstr "오류가 있는 캘린더: {count}개. 첫 번째 오류: {calendar}: {message}"
+
+#: src/modals/TaskModal.ts
+msgctxt "modals.task.bundleDescription"
+msgid "Can share a scheduled block with other tasks"
+msgstr "다른 작업과 예약된 블록을 공유할 수 있습니다"
 
 #: src/bases/KanbanView.ts
 #: src/bases/TaskListView.ts

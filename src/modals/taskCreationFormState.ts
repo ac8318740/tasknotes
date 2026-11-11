@@ -29,6 +29,7 @@ export interface TaskCreationFormState {
 	tags: string;
 	projectStrings: string[];
 	timeEstimate: number;
+	bundle: boolean;
 	recurrenceRule: string;
 	recurrenceAnchor: RecurrenceAnchor;
 	reminders: Reminder[];
@@ -57,6 +58,7 @@ export function buildTaskCreationFormState(
 			defaults.defaultTimeEstimate && defaults.defaultTimeEstimate > 0
 				? defaults.defaultTimeEstimate
 				: 0,
+		bundle: false,
 		recurrenceRule: "",
 		recurrenceAnchor: "scheduled",
 		reminders:
@@ -132,6 +134,7 @@ function applyPrePopulatedValues(
 		);
 	}
 	if (values.timeEstimate !== undefined) state.timeEstimate = values.timeEstimate;
+	if (values.bundle === true) state.bundle = true;
 	if (values.recurrence !== undefined && typeof values.recurrence === "string") {
 		state.recurrenceRule = values.recurrence;
 	}

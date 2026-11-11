@@ -190,6 +190,7 @@ function createTaskInfoFromProperties(
 		"occurrence_date",
 		"recurrence_original_date",
 		"recurrence_window",
+		"bundle",
 		"occurrence_materialization",
 		"occurrence_next_trigger",
 		"occurrence_template",
@@ -262,6 +263,7 @@ function createTaskInfoFromProperties(
 		occurrence_date: toOptionalString(props.occurrence_date),
 		recurrence_original_date: normalizeRecurrenceOriginalDate(props.recurrence_original_date),
 		recurrence_window: normalizeRecurrenceWindow(props.recurrence_window),
+		bundle: props.bundle === true ? true : undefined,
 		occurrence_materialization: toOccurrenceMaterializationMode(
 			props.occurrence_materialization
 		),
