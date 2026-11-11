@@ -51,3 +51,26 @@ test("highlights the parts of the input the parser recognised", async () => {
 
 	await instance.page.keyboard.press("Escape");
 });
+
+test("Backspace after a highlight turns it back into title text", async () => {
+	await instance.page.evaluate(() => (window as any).app.plugins.plugins.tasknotes.openTaskCreationModal());
+	await expect(editor()).toBeVisible();
+	await editor().click();
+	await instance.page.keyboard.insertText("Buy milk tomorrow");
+
+	const highlights = editor().locator(".tn-nlp-highlight");
+	await expect(highlights).toHaveText(["tomorrow"]);
+
+	await instance.page.keyboard.press("Backspace");
+	await expect(highlights).toHaveCount(0);
+	await expect(editor()).toHaveText("Buy milk tomorrow");
+	await expect(instance.page.locator(".modal .nl-preview-container")).not.toContainText("Scheduled");
+
+	await instance.page.keyboard.insertText(" groceries");
+	await expect(highlights).toHaveCount(0);
+
+	await instance.page.keyboard.press("Backspace");
+	await expect(editor()).toHaveText("Buy milk tomorrow grocerie");
+
+	await instance.page.keyboard.press("Escape");
+});
