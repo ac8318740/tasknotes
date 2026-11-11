@@ -59,8 +59,10 @@ function isEdited(range: Range, changes: ChangeSet): boolean {
 	return edited;
 }
 
-// Letters from a rare script stand in for released text: the parser reads them as an
-// ordinary word it cannot match, and the same length keeps every offset unchanged.
+// An underscore and letters from a rare script stand in for released text: the parser
+// reads them as an ordinary word it cannot match, and the same length keeps every offset
+// unchanged. The leading underscore matters: the date parser treats a non-ASCII letter as
+// a word break, so a date right before the mask would swallow the space and be rejected.
 const MASK_BASE = 0xa500;
 
 /**
@@ -79,7 +81,9 @@ export function getNLPParseInput(state: EditorState): {
 	let last = 0;
 	const originals = new Map<string, string>();
 	ranges.forEach((range, index) => {
-		const mask = String.fromCharCode(MASK_BASE + index).repeat(range.to - range.from);
+		const letter = String.fromCharCode(MASK_BASE + index);
+		const length = range.to - range.from;
+		const mask = length > 1 ? "_" + letter.repeat(length - 1) : letter;
 		originals.set(mask, doc.slice(range.from, range.to));
 		text += doc.slice(last, range.from) + mask;
 		last = range.to;

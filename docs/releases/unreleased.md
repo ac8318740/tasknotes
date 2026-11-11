@@ -47,6 +47,7 @@ When a change has user-facing documentation, include a canonical tasknotes.dev l
 
 ## Fixed
 
+- (#2537) Fixed Backspace on a highlighted word making the date right before it plain text too, as in "Buy gifts by December 2h" after releasing "2h".
 - (#1065) New time entries on recurring tasks now require an occurrence. If TaskNotes cannot determine one, interactive timers and the time entry editor ask you to choose; cancelling leaves the entry unsaved. API and command-line callers can supply an explicit occurrence date. Editing an entry's clock times keeps its allocation; use **Change occurrence** to move it. The status bar shows the active timer's occurrence. Existing entries keep their recorded occurrence, or lack of one.
 - (#2482) Fixed open calendars not showing timeblock changes made outside TaskNotes (for example by a sync tool or a hand edit to a daily note) until refreshed.
 - (#2481) Fixed the timeblock edit modal dropping attachments written as links without `.md` (for example `[[Tasks/Write report]]`) when saving. Existing links now keep their original text.
