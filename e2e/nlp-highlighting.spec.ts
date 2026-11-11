@@ -3,7 +3,8 @@ import { launchObsidian, closeObsidian, type ObsidianApp } from "./obsidian";
 
 let instance: ObsidianApp;
 let original: boolean;
-const editor = () => instance.page.locator(".modal .tn-task-modal__markdown-editor--nlp .cm-content");
+const editor = () =>
+	instance.page.locator(".modal .tn-task-modal__markdown-editor--nlp .cm-content");
 
 test.beforeAll(async () => {
 	instance = await launchObsidian();
@@ -19,7 +20,8 @@ test.afterAll(async () => {
 	if (!instance) return;
 	try {
 		await instance.page.evaluate((original) => {
-			(window as any).app.plugins.plugins.tasknotes.settings.enableNaturalLanguageInput = original;
+			(window as any).app.plugins.plugins.tasknotes.settings.enableNaturalLanguageInput =
+				original;
 		}, original);
 	} finally {
 		await closeObsidian(instance);
@@ -27,7 +29,9 @@ test.afterAll(async () => {
 });
 
 test("highlights the parts of the input the parser recognised", async () => {
-	await instance.page.evaluate(() => (window as any).app.plugins.plugins.tasknotes.openTaskCreationModal());
+	await instance.page.evaluate(() =>
+		(window as any).app.plugins.plugins.tasknotes.openTaskCreationModal()
+	);
 	await expect(editor()).toBeVisible();
 	await editor().click();
 	await instance.page.keyboard.insertText("Weekly review tomorrow at 3pm @office 30m");
@@ -53,7 +57,9 @@ test("highlights the parts of the input the parser recognised", async () => {
 });
 
 test("Backspace after a highlight turns it back into title text", async () => {
-	await instance.page.evaluate(() => (window as any).app.plugins.plugins.tasknotes.openTaskCreationModal());
+	await instance.page.evaluate(() =>
+		(window as any).app.plugins.plugins.tasknotes.openTaskCreationModal()
+	);
 	await expect(editor()).toBeVisible();
 	await editor().click();
 	await instance.page.keyboard.insertText("Buy milk tomorrow");
@@ -64,13 +70,33 @@ test("Backspace after a highlight turns it back into title text", async () => {
 	await instance.page.keyboard.press("Backspace");
 	await expect(highlights).toHaveCount(0);
 	await expect(editor()).toHaveText("Buy milk tomorrow");
-	await expect(instance.page.locator(".modal .nl-preview-container")).not.toContainText("Scheduled");
+	await expect(instance.page.locator(".modal .nl-preview-container")).not.toContainText(
+		"Scheduled"
+	);
 
 	await instance.page.keyboard.insertText(" groceries");
 	await expect(highlights).toHaveCount(0);
 
 	await instance.page.keyboard.press("Backspace");
 	await expect(editor()).toHaveText("Buy milk tomorrow grocerie");
+
+	await instance.page.keyboard.press("Escape");
+});
+
+test("releasing a highlight keeps the date before it", async () => {
+	await instance.page.evaluate(() =>
+		(window as any).app.plugins.plugins.tasknotes.openTaskCreationModal()
+	);
+	await expect(editor()).toBeVisible();
+	await editor().click();
+	await instance.page.keyboard.insertText("Buy gifts by December 2h");
+
+	const highlights = editor().locator(".tn-nlp-highlight");
+	await expect(highlights).toHaveText(["by December", "2h"]);
+
+	await instance.page.keyboard.press("Backspace");
+	await expect(highlights).toHaveText(["by December"]);
+	await expect(editor()).toHaveText("Buy gifts by December 2h");
 
 	await instance.page.keyboard.press("Escape");
 });
