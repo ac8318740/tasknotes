@@ -164,7 +164,7 @@ Configure project suggestion appearance:
 
 ### Pass values to subtasks
 
-When on (the default), subtasks without their own priority, contexts or bundle setting get their parent's. TaskNotes copies the values and lists them in the `inherited` property. Turning it off removes all copied values. To fill in subtasks that existed before, run **Apply inherited values to all tasks** from the command palette. See [Values passed to subtasks](../features/task-management.md#values-passed-to-subtasks).
+When on, subtasks without their own priority, contexts or bundle setting get their parent's and follow its changes. TaskNotes copies the values and lists them in the `inherited` property. **Create subtask** also adds the parent's projects and tags to the new subtask. Turning it off removes all copied values. To fill in subtasks that existed before, run **Apply inherited values to all tasks** from the command palette. See [Values passed to subtasks](../features/task-management.md#values-passed-to-subtasks).
 
 ### Tags
 

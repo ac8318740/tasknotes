@@ -43,7 +43,7 @@ test.afterAll(async () => {
 		await instance.page.evaluate(
 			async (titles) => {
 				const app = (window as any).app;
-				app.plugins.plugins.tasknotes.settings.passValuesToSubtasks = true;
+				app.plugins.plugins.tasknotes.settings.taskCreationDefaults.inheritParentTaskProperties = true;
 				for (const file of app.vault.getMarkdownFiles()) {
 					if (titles.includes(file.basename)) await app.vault.delete(file);
 				}
@@ -59,7 +59,7 @@ test("subtasks get, follow, and give up their parent's values", async () => {
 	await instance.page.evaluate(
 		async ({ parentTitle, childTitle }) => {
 			const plugin = (window as any).app.plugins.plugins.tasknotes;
-			plugin.settings.passValuesToSubtasks = true;
+			plugin.settings.taskCreationDefaults.inheritParentTaskProperties = true;
 			await plugin.taskService.createTask({
 				title: parentTitle,
 				priority: "high",
@@ -92,7 +92,7 @@ test("subtasks get, follow, and give up their parent's values", async () => {
 	// Turning the setting off removes the remaining copies.
 	await instance.page.evaluate(async () => {
 		const plugin = (window as any).app.plugins.plugins.tasknotes;
-		plugin.settings.passValuesToSubtasks = false;
+		plugin.settings.taskCreationDefaults.inheritParentTaskProperties = false;
 		await plugin.taskInheritanceService.applyToAllTasks();
 	});
 	await expect

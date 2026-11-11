@@ -7343,11 +7343,6 @@ msgctxt "bases/registration: defaults inherit"
 msgid "Inherit"
 msgstr "Hériter"
 
-#: src/settings/tabs/taskProperties/projectsPropertyCard.ts
-msgctxt "settings.taskProperties.projectsCard.inheritParentTaskProperties"
-msgid "Inherit parent task properties for subtasks:"
-msgstr "Hériter des propriétés de la tâche parente pour les sous-tâches :"
-
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.initialScrollTime.name"
 msgid "Initial scroll time"
@@ -11931,8 +11926,8 @@ msgstr "Sous-tâches"
 
 #: src/settings/tabs/taskPropertiesTab.ts
 msgctxt "settings.taskProperties.passValuesToSubtasks.description"
-msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
-msgstr "Les sous-tâches sans priorité, contextes ou réglage « Regrouper » propres reçoivent ceux de leur tâche parente, listés dans la propriété inherited. Désactiver cette option supprime les valeurs copiées. Pour compléter les sous-tâches existantes, lancez la commande « Appliquer les valeurs héritées à toutes les tâches »."
+msgid "Subtasks without their own priority, contexts or bundle get their parent's and follow its changes. The copied properties are listed in the inherited property. Create subtask also adds the parent's projects and tags. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "Les sous-tâches sans priorité, contextes ou réglage « Regrouper » propres reçoivent ceux de leur tâche parente et suivent ses modifications. Les propriétés copiées sont listées dans la propriété inherited. « Créer une sous-tâche » ajoute aussi les projets et les tags de la tâche parente. Désactiver cette option supprime les valeurs copiées. Pour compléter les sous-tâches existantes, lancez la commande « Appliquer les valeurs héritées à toutes les tâches »."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

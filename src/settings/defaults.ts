@@ -112,7 +112,7 @@ export const DEFAULT_TASK_CREATION_DEFAULTS: TaskCreationDefaults = {
 	useParentNoteForTaskCreation: false,
 	useParentNoteAsProject: false,
 	useParentHeaderAsProject: false,
-	inheritParentTaskProperties: false,
+	inheritParentTaskProperties: true,
 	defaultTimeEstimate: 0,
 	defaultRecurrence: "none",
 	defaultDueDate: "none",
@@ -265,7 +265,6 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 	excludedFolders: "", // Default to no excluded folders
 	defaultTaskPriority: "normal",
 	defaultTaskStatus: "open",
-	passValuesToSubtasks: true,
 	taskOrgFiltersCollapsed: false, // Default to expanded
 	// Task filename defaults
 	taskFilenameFormat: "zettel", // Keep existing behavior as default

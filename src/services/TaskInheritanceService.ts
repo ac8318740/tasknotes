@@ -38,7 +38,7 @@ export function applyInheritedValuesToNewTask(
 	path: string,
 	frontmatter: Frontmatter
 ): void {
-	if (!plugin.settings.passValuesToSubtasks) return;
+	if (!plugin.settings.taskCreationDefaults.inheritParentTaskProperties) return;
 	const props = inheritanceProperties(plugin.fieldMapper.getMapping());
 	const inherited = findInheritedValues(
 		path,
@@ -99,7 +99,7 @@ export class TaskInheritanceService {
 	}
 
 	private schedule(path: string): void {
-		if (!this.plugin.settings.passValuesToSubtasks) return;
+		if (!this.plugin.settings.taskCreationDefaults.inheritParentTaskProperties) return;
 		this.changed.add(path);
 		if (this.timer !== null) window.clearTimeout(this.timer);
 		this.timer = window.setTimeout(() => {
@@ -124,7 +124,7 @@ export class TaskInheritanceService {
 	/** Checks `paths`, and with `withDescendants` everything below them, nearest first. */
 	private async check(paths: string[], withDescendants: boolean): Promise<void> {
 		const props = this.props();
-		const enabled = this.plugin.settings.passValuesToSubtasks;
+		const enabled = this.plugin.settings.taskCreationDefaults.inheritParentTaskProperties;
 		const tasks = [...this.plugin.cacheManager.getAllTaskPaths()];
 		const frontmatters = new Map(tasks.map((path) => [path, frontmatterOf(this.plugin, path)]));
 		const parents = new Map<string, string[]>();

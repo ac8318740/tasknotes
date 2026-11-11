@@ -7344,11 +7344,6 @@ msgctxt "bases/registration: defaults inherit"
 msgid "Inherit"
 msgstr "Herdar"
 
-#: src/settings/tabs/taskProperties/projectsPropertyCard.ts
-msgctxt "settings.taskProperties.projectsCard.inheritParentTaskProperties"
-msgid "Inherit parent task properties for subtasks:"
-msgstr "Herdar propriedades da tarefa pai para subtarefas:"
-
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.initialScrollTime.name"
 msgid "Initial scroll time"
@@ -11932,8 +11927,8 @@ msgstr "Subtarefas"
 
 #: src/settings/tabs/taskPropertiesTab.ts
 msgctxt "settings.taskProperties.passValuesToSubtasks.description"
-msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
-msgstr "Subtarefas sem prioridade, contextos ou ajuste \"Agrupar\" próprios recebem os da tarefa principal, listados na propriedade inherited. Desativar remove os valores copiados. Para preencher subtarefas existentes, execute o comando \"Aplicar valores herdados a todas as tarefas\"."
+msgid "Subtasks without their own priority, contexts or bundle get their parent's and follow its changes. The copied properties are listed in the inherited property. Create subtask also adds the parent's projects and tags. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "Subtarefas sem prioridade, contextos ou ajuste \"Agrupar\" próprios recebem os da tarefa principal e acompanham suas alterações. As propriedades copiadas são listadas na propriedade inherited. \"Criar subtarefa\" também adiciona os projetos e tags da tarefa principal. Desativar remove os valores copiados. Para preencher subtarefas existentes, execute o comando \"Aplicar valores herdados a todas as tarefas\"."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

@@ -111,7 +111,6 @@ export interface TaskNotesSettings {
 	excludedFolders: string; // Comma-separated list of folders to exclude from Notes tab
 	defaultTaskPriority: string; // Changed to string to support custom priorities
 	defaultTaskStatus: string; // Changed to string to support custom statuses
-	passValuesToSubtasks: boolean; // Copy priority, contexts and bundle from parents into subtasks without their own
 	taskOrgFiltersCollapsed: boolean; // Save collapse state of task organization filters
 	// Task filename settings
 	taskFilenameFormat: "title" | "zettel" | "timestamp" | "uuid" | "custom";
@@ -296,7 +295,7 @@ export interface TaskCreationDefaults {
 	useParentNoteForTaskCreation: boolean; // Use the active note as a project for normal task creation
 	useParentNoteAsProject: boolean; // Use the parent note as a project during inline creation and instant conversion
 	useParentHeaderAsProject: boolean; // Use the closest markdown heading as a project during instant conversion
-	inheritParentTaskProperties: boolean; // Copy parent task projects, contexts, priority, and tags when creating subtasks
+	inheritParentTaskProperties: boolean; // Pass priority, contexts and bundle down to subtasks; Create subtask also copies projects and tags
 	defaultTimeEstimate: number; // minutes, 0 = no default
 	defaultRecurrence: "none" | "daily" | "weekly" | "monthly" | "yearly";
 	// Date defaults

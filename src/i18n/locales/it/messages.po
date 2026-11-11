@@ -7342,11 +7342,6 @@ msgctxt "bases/registration: defaults inherit"
 msgid "Inherit"
 msgstr "Eredita"
 
-#: src/settings/tabs/taskProperties/projectsPropertyCard.ts
-msgctxt "settings.taskProperties.projectsCard.inheritParentTaskProperties"
-msgid "Inherit parent task properties for subtasks:"
-msgstr "Eredita le proprietà dell’attività principale per le sottoattività:"
-
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.initialScrollTime.name"
 msgid "Initial scroll time"
@@ -11930,8 +11925,8 @@ msgstr "Sottoattività"
 
 #: src/settings/tabs/taskPropertiesTab.ts
 msgctxt "settings.taskProperties.passValuesToSubtasks.description"
-msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
-msgstr "Le sottoattività senza priorità, contesti o impostazione «Raggruppa» propri ricevono quelli dell'attività principale, elencati nella proprietà inherited. Disattivando l'opzione i valori copiati vengono rimossi. Per completare le sottoattività esistenti, esegui il comando \"Applica i valori ereditati a tutte le attività\"."
+msgid "Subtasks without their own priority, contexts or bundle get their parent's and follow its changes. The copied properties are listed in the inherited property. Create subtask also adds the parent's projects and tags. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "Le sottoattività senza priorità, contesti o impostazione «Raggruppa» propri ricevono quelli dell'attività principale e ne seguono le modifiche. Le proprietà copiate sono elencate nella proprietà inherited. «Crea sottoattività» aggiunge anche i progetti e i tag dell'attività principale. Disattivando l'opzione i valori copiati vengono rimossi. Per completare le sottoattività esistenti, esegui il comando «Applica i valori ereditati a tutte le attività»."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

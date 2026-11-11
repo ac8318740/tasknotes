@@ -7342,11 +7342,6 @@ msgctxt "bases/registration: defaults inherit"
 msgid "Inherit"
 msgstr "継承"
 
-#: src/settings/tabs/taskProperties/projectsPropertyCard.ts
-msgctxt "settings.taskProperties.projectsCard.inheritParentTaskProperties"
-msgid "Inherit parent task properties for subtasks:"
-msgstr "サブタスクに親タスクのプロパティを継承:"
-
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.initialScrollTime.name"
 msgid "Initial scroll time"
@@ -11930,8 +11925,8 @@ msgstr "サブタスク"
 
 #: src/settings/tabs/taskPropertiesTab.ts
 msgctxt "settings.taskProperties.passValuesToSubtasks.description"
-msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
-msgstr "優先度、コンテキスト、「まとめる」設定を持たないサブタスクは親タスクの値を受け取り、inherited プロパティに記録されます。オフにするとコピーされた値は削除されます。既存のサブタスクに反映するには、「継承した値をすべてのタスクに適用」コマンドを実行してください。"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's and follow its changes. The copied properties are listed in the inherited property. Create subtask also adds the parent's projects and tags. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "優先度、コンテキスト、「まとめる」設定を持たないサブタスクは親タスクの値を受け取り、親の変更に追従します。コピーされたプロパティは inherited プロパティに記録されます。「サブタスクを作成」では親タスクのプロジェクトとタグも追加されます。オフにするとコピーされた値は削除されます。既存のサブタスクに反映するには、「継承した値をすべてのタスクに適用」コマンドを実行してください。"
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"
