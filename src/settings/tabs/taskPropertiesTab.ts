@@ -6,6 +6,7 @@ import type { DefaultTaskTime } from "../../types/settings";
 import {
 	createSectionHeader,
 	createHelpText,
+	createToggleSetting,
 } from "../components/settingHelpers";
 import { createCardInput } from "../components/CardComponent";
 
@@ -149,6 +150,17 @@ export function renderTaskPropertiesTab(
 
 	// Projects Property Card
 	renderProjectsPropertyCard(container, plugin, save, translate);
+
+	createToggleSetting(container, {
+		name: translate(msg({ message: "Pass values to subtasks", context: "settings.taskProperties.passValuesToSubtasks.name" })),
+		desc: translate(msg({ message: "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command.", context: "settings.taskProperties.passValuesToSubtasks.description" })),
+		getValue: () => plugin.settings.passValuesToSubtasks,
+		setValue: async (value) => {
+			plugin.settings.passValuesToSubtasks = value;
+			save();
+			if (!value) await plugin.taskInheritanceService?.applyToAllTasks();
+		},
+	});
 
 	// Tags Property Card (special - no property key, uses native Obsidian tags)
 	renderTagsPropertyCard(container, plugin, save, translate);

@@ -191,6 +191,7 @@ function createTaskInfoFromProperties(
 		"recurrence_original_date",
 		"recurrence_window",
 		"bundle",
+		"inherited",
 		"occurrence_materialization",
 		"occurrence_next_trigger",
 		"occurrence_template",

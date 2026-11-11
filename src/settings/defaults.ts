@@ -265,6 +265,7 @@ export const DEFAULT_SETTINGS: TaskNotesSettings = {
 	excludedFolders: "", // Default to no excluded folders
 	defaultTaskPriority: "normal",
 	defaultTaskStatus: "open",
+	passValuesToSubtasks: true,
 	taskOrgFiltersCollapsed: false, // Default to expanded
 	// Task filename defaults
 	taskFilenameFormat: "zettel", // Keep existing behavior as default

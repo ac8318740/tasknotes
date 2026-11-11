@@ -232,6 +232,7 @@ export default class TaskNotesPlugin extends Plugin {
 	// Task-to-Google Calendar sync service
 	taskCalendarSyncService: TaskCalendarSyncService;
 	taskFileLifecycleReconciliationService?: import("./services/TaskFileLifecycleReconciliationService").TaskFileLifecycleReconciliationService;
+	taskInheritanceService?: import("./services/TaskInheritanceService").TaskInheritanceService;
 
 	// mdbase-spec generation service
 	mdbaseSpecService: import("./services/MdbaseSpecService").MdbaseSpecService;

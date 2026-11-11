@@ -111,6 +111,7 @@ export interface TaskNotesSettings {
 	excludedFolders: string; // Comma-separated list of folders to exclude from Notes tab
 	defaultTaskPriority: string; // Changed to string to support custom priorities
 	defaultTaskStatus: string; // Changed to string to support custom statuses
+	passValuesToSubtasks: boolean; // Copy priority, contexts and bundle from parents into subtasks without their own
 	taskOrgFiltersCollapsed: boolean; // Save collapse state of task organization filters
 	// Task filename settings
 	taskFilenameFormat: "title" | "zettel" | "timestamp" | "uuid" | "custom";

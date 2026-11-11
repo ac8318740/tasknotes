@@ -1955,6 +1955,11 @@ msgctxt "settings.defaults.instantConversion.useDefaultsOnInstantConvert.descrip
 msgid "Apply default task settings when converting text to tasks instantly"
 msgstr "Appliquer les paramètres de tâche par défaut lors de la conversion instantanée de texte en tâches"
 
+#: src/commands/taskNotesCommands.ts
+msgctxt "commands.applyInheritedValues"
+msgid "Apply inherited values to all tasks"
+msgstr "Appliquer les valeurs héritées à toutes les tâches"
+
 #: src/modals/DateTimePickerModal.ts
 msgctxt "modals.dateTimePicker.apply"
 msgid "Apply natural language date"
@@ -9613,6 +9618,11 @@ msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "Analyser les dates, priorités et contextes lors de la création de tâches"
 
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.name"
+msgid "Pass values to subtasks"
+msgstr "Transmettre les valeurs aux sous-tâches"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.subscriptionsList.placeholders.password"
 msgid "Password"
@@ -11918,6 +11928,11 @@ msgstr "Sous-tâches"
 msgctxt "utils/fieldConfigDefaults: defaults displayName"
 msgid "Subtasks"
 msgstr "Sous-tâches"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.description"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "Les sous-tâches sans priorité, contextes ou réglage « Regrouper » propres reçoivent ceux de leur tâche parente, listés dans la propriété inherited. Désactiver cette option supprime les valeurs copiées. Pour compléter les sous-tâches existantes, lancez la commande « Appliquer les valeurs héritées à toutes les tâches »."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

@@ -20,6 +20,7 @@ This reference documents the expected data types for each frontmatter property t
 | projects | list | `["[[Project A]]"]` |
 | timeEstimate | number | `120` (minutes) |
 | bundle | true (optional) | `true` |
+| inherited | list (optional system property) | `["priority", "contexts"]` |
 | recurrence | text | `"FREQ=WEEKLY;BYDAY=MO"` |
 | recurrence_anchor | text | `"scheduled"`, `"completion"` or `"period"` |
 | recurrence_original_date | date (optional system property) | `"2026-10-18"` |
@@ -178,8 +179,13 @@ Single-item arrays may look verbose, but they prevent edge cases when filters an
 
 #### bundle
 - **Type:** `true`, optional
-- **Description:** The task may share a scheduled block with other tasks, for example a handful of 2-minute tasks. Without it, the task gets its own block. TaskNotes only writes `bundle: true` and removes the property when you turn it off; a hand-written `bundle: false` means the same as no value. It is a building block for future auto-scheduling; TaskNotes stores it but does not schedule tasks yet. See [Bundling tasks](../features/task-management.md#bundling-tasks)
+- **Description:** The task may share a scheduled block with other tasks, for example a handful of 2-minute tasks. Without it, the task gets its own block. TaskNotes only writes `bundle: true` and removes the property when you turn it off; a hand-written `bundle: false` means the same as no value, except that it stops the task from inheriting `bundle: true` from a parent. It is a building block for future auto-scheduling; TaskNotes stores it but does not schedule tasks yet. See [Bundling tasks](../features/task-management.md#bundling-tasks)
 - **Example:** `bundle: true`
+
+#### inherited
+- **Type:** list of property names, optional
+- **Description:** The properties TaskNotes copied from a parent task: `priority`, `contexts` or `bundle`. TaskNotes writes and removes it; editing a listed property makes the value the task's own. See [Values passed to subtasks](../features/task-management.md#values-passed-to-subtasks)
+- **Example:** `inherited: [priority, contexts]`
 
 ---
 

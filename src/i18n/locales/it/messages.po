@@ -1954,6 +1954,11 @@ msgctxt "settings.defaults.instantConversion.useDefaultsOnInstantConvert.descrip
 msgid "Apply default task settings when converting text to tasks instantly"
 msgstr "Applica le impostazioni predefinite delle attività durante la conversione istantanea del testo in attività"
 
+#: src/commands/taskNotesCommands.ts
+msgctxt "commands.applyInheritedValues"
+msgid "Apply inherited values to all tasks"
+msgstr "Applica i valori ereditati a tutte le attività"
+
 #: src/modals/DateTimePickerModal.ts
 msgctxt "modals.dateTimePicker.apply"
 msgid "Apply natural language date"
@@ -9612,6 +9617,11 @@ msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "Rileva date di scadenza, priorità e contesti dal linguaggio naturale quando crei attività."
 
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.name"
+msgid "Pass values to subtasks"
+msgstr "Passa i valori alle sottoattività"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.subscriptionsList.placeholders.password"
 msgid "Password"
@@ -11917,6 +11927,11 @@ msgstr "Sottoattività"
 msgctxt "utils/fieldConfigDefaults: defaults displayName"
 msgid "Subtasks"
 msgstr "Sottoattività"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.description"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "Le sottoattività senza priorità, contesti o impostazione «Raggruppa» propri ricevono quelli dell'attività principale, elencati nella proprietà inherited. Disattivando l'opzione i valori copiati vengono rimossi. Per completare le sottoattività esistenti, esegui il comando \"Applica i valori ereditati a tutte le attività\"."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

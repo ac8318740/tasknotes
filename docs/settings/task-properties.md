@@ -162,6 +162,10 @@ Configure project suggestion appearance:
 - **Enable fuzzy matching**: Allow typos and partial matches in project search
 - **Row 1, 2, 3**: Configure up to 3 lines of information for each project suggestion
 
+### Pass values to subtasks
+
+When on (the default), subtasks without their own priority, contexts or bundle setting get their parent's. TaskNotes copies the values and lists them in the `inherited` property. Turning it off removes all copied values. To fill in subtasks that existed before, run **Apply inherited values to all tasks** from the command palette. See [Values passed to subtasks](../features/task-management.md#values-passed-to-subtasks).
+
 ### Tags
 
 Obsidian tags for categorization. Configuration options:

@@ -408,5 +408,12 @@ export function createTaskNotesCommandDefinitions(
 				await ctx.rolloverOverdueScheduledTasks();
 			},
 		},
+		{
+			id: "apply-inherited-values",
+			nameKey: msg({ message: "Apply inherited values to all tasks", context: "commands.applyInheritedValues" }),
+			callback: async (ctx) => {
+				await ctx.taskInheritanceService?.applyToAllTasks();
+			},
+		},
 	];
 }

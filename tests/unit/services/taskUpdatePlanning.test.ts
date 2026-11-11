@@ -385,6 +385,30 @@ describe("taskUpdatePlanning", () => {
 		expect(removed).not.toHaveProperty("bundle");
 	});
 
+	it("makes edited inherited values the task's own and keeps an inherited bundle off", () => {
+		const frontmatter: Record<string, unknown> = {
+			title: "Old",
+			tags: ["task"],
+			priority: "high",
+			contexts: ["office"],
+			bundle: true,
+			inherited: ["priority", "contexts", "bundle"],
+		};
+		applyTaskUpdateFrontmatterChange({
+			frontmatter,
+			originalTask: createTask({ bundle: true }),
+			updates: { priority: "low", bundle: undefined },
+			recurrenceUpdates: {},
+			dateModified: "2026-05-19T09:00:00.000Z",
+			fieldMapper: createFieldMapper(),
+			taskIdentification: { method: "tag", tag: "task", propertyName: "", propertyValue: "" },
+			storeTitleInFilename: false,
+			updateCompletedDateInFrontmatter: jest.fn(),
+		});
+
+		expect(frontmatter).toMatchObject({ priority: "low", bundle: false, inherited: ["contexts"] });
+	});
+
 	it("leaves contexts and blockedBy alone when the update omits them or keeps values", () => {
 		const frontmatter: Record<string, unknown> = {
 			title: "Old",

@@ -1,5 +1,6 @@
 import type { OccurrenceMaterializationMode, OccurrenceNextTrigger } from "@tasknotes/model";
 import type { TAbstractFile } from "obsidian";
+import type { InheritableField } from "./core/taskInheritance";
 
 // View types (active views)
 export const MINI_CALENDAR_VIEW_TYPE = "tasknotes-mini-calendar-view";
@@ -475,6 +476,7 @@ export interface TaskInfo {
 	occurrence_date?: string; // Target recurrence date (YYYY-MM-DD) for materialized occurrences
 	recurrence_window?: number | "month_end"; // Days each occurrence stays open (counting its own date), or until the end of its month; sets its due date
 	bundle?: true; // May share a scheduled block with other tasks; absent means its own block
+	inherited?: InheritableField[]; // Fields whose values were copied from a cascading ancestor
 	recurrence_original_date?: string; // Original rule date (YYYY-MM-DD) of a pending moved virtual recurring occurrence
 	occurrence_materialization?: OccurrenceMaterializationMode; // Parent occurrence materialization policy
 	occurrence_next_trigger?: OccurrenceNextTrigger; // Parent policy for materializing the next occurrence
@@ -730,6 +732,7 @@ export interface FieldMapping {
 	recurrenceParent: string;
 	occurrenceDate: string;
 	bundle?: string; // Optional like recurrenceOriginalDate; defaults to bundle
+	inherited?: string; // Optional like bundle; defaults to inherited
 	recurrenceWindow?: string; // Optional like recurrenceOriginalDate; defaults to recurrence_window
 	recurrenceOriginalDate?: string; // Optional so settings saved before this field existed keep working; defaults to recurrence_original_date
 	occurrenceMaterialization: string;

@@ -1,3 +1,4 @@
+import { applyInheritedValuesToNewTask } from "./TaskInheritanceService";
 import { displayError } from "../i18n/runtime";
 import { uiText } from "../i18n/runtime";
 import { msg } from "@lingui/core/macro";
@@ -140,6 +141,8 @@ export class TaskService {
 			},
 			sanitizeTitleForFilename: sanitizeTaskTitleForFilename,
 			sanitizeTitleForStorage: sanitizeTaskTitleForStorage,
+			applyInheritedValues: (path, frontmatter) =>
+				applyInheritedValuesToNewTask(this.plugin, path, frontmatter),
 		});
 		this.taskUpdateService = new TaskUpdateService({
 			runtime: this.plugin,

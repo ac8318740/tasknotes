@@ -1,4 +1,5 @@
 import type { FieldMappingKey, TaskInfo, TimeEntry } from "../../types";
+import { claimEditedValues, INHERITABLE_FIELDS } from "../../core/taskInheritance";
 import {
 	addDTSTARTToRecurrenceRule,
 	allocateTimeEntry,
@@ -386,6 +387,16 @@ export function applyTaskUpdateFrontmatterChange({
 	}
 
 	removeUnsetMappedFields(frontmatter, { ...updates, ...recurrenceUpdates }, fieldMapper);
+	claimEditedValues(
+		frontmatter,
+		INHERITABLE_FIELDS.filter((field) => Object.prototype.hasOwnProperty.call(updates, field)),
+		{
+			priority: fieldMapper.toUserField("priority"),
+			contexts: fieldMapper.toUserField("contexts"),
+			bundle: fieldMapper.toUserField("bundle"),
+			inherited: fieldMapper.toUserField("inherited"),
+		}
+	);
 
 	// Use the resolved filename, not just the requested title: sanitization,
 	// fallback names and collision suffixes all need a lossless property copy.

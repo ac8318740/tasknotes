@@ -1954,6 +1954,11 @@ msgctxt "settings.defaults.instantConversion.useDefaultsOnInstantConvert.descrip
 msgid "Apply default task settings when converting text to tasks instantly"
 msgstr "テキストをタスクにインスタント変換する際にデフォルトタスク設定を適用"
 
+#: src/commands/taskNotesCommands.ts
+msgctxt "commands.applyInheritedValues"
+msgid "Apply inherited values to all tasks"
+msgstr "継承した値をすべてのタスクに適用"
+
 #: src/modals/DateTimePickerModal.ts
 msgctxt "modals.dateTimePicker.apply"
 msgid "Apply natural language date"
@@ -9612,6 +9617,11 @@ msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "タスク作成時に自然言語から期限日、優先度、コンテキストを解析"
 
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.name"
+msgid "Pass values to subtasks"
+msgstr "サブタスクに値を引き継ぐ"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.subscriptionsList.placeholders.password"
 msgid "Password"
@@ -11917,6 +11927,11 @@ msgstr "サブタスク"
 msgctxt "utils/fieldConfigDefaults: defaults displayName"
 msgid "Subtasks"
 msgstr "サブタスク"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.description"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "優先度、コンテキスト、「まとめる」設定を持たないサブタスクは親タスクの値を受け取り、inherited プロパティに記録されます。オフにするとコピーされた値は削除されます。既存のサブタスクに反映するには、「継承した値をすべてのタスクに適用」コマンドを実行してください。"
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

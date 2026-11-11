@@ -1954,6 +1954,11 @@ msgctxt "settings.defaults.instantConversion.useDefaultsOnInstantConvert.descrip
 msgid "Apply default task settings when converting text to tasks instantly"
 msgstr "텍스트를 작업으로 즉시 변환할 때 기본 작업 설정 적용"
 
+#: src/commands/taskNotesCommands.ts
+msgctxt "commands.applyInheritedValues"
+msgid "Apply inherited values to all tasks"
+msgstr "상속된 값을 모든 작업에 적용"
+
 #: src/modals/DateTimePickerModal.ts
 msgctxt "modals.dateTimePicker.apply"
 msgid "Apply natural language date"
@@ -9612,6 +9617,11 @@ msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "작업 생성 시 자연어에서 마감일, 우선순위, 컨텍스트 파싱"
 
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.name"
+msgid "Pass values to subtasks"
+msgstr "하위 작업에 값 전달"
+
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.subscriptionsList.placeholders.password"
 msgid "Password"
@@ -11917,6 +11927,11 @@ msgstr "하위 작업"
 msgctxt "utils/fieldConfigDefaults: defaults displayName"
 msgid "Subtasks"
 msgstr "하위 작업"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.description"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's, listed in the inherited property. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "자체 우선순위, 컨텍스트 또는 \"묶기\" 설정이 없는 하위 작업은 상위 작업의 값을 받으며, inherited 속성에 표시됩니다. 끄면 복사된 값이 제거됩니다. 기존 하위 작업에 채우려면 \"상속된 값을 모든 작업에 적용\" 명령을 실행하세요."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

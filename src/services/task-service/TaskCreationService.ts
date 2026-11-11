@@ -114,6 +114,7 @@ export interface TaskCreationServiceDependencies {
 	processFolderTemplate(folderTemplate: string, taskData?: TaskCreationData, date?: Date): string;
 	sanitizeTitleForFilename(input: string): string;
 	sanitizeTitleForStorage(input: string): string;
+	applyInheritedValues?(path: string, frontmatter: Record<string, unknown>): void;
 }
 
 export interface TaskCreationOptions {
@@ -356,6 +357,7 @@ export class TaskCreationService {
 					runtime.settings.taskPropertyValue
 				);
 			}
+			this.deps.applyInheritedValues?.(fullPath, finalFrontmatter);
 			tagsArray = getFrontmatterTags(finalFrontmatter.tags);
 			const mapped = runtime.fieldMapper.mapFromFrontmatter(
 				finalFrontmatter,
