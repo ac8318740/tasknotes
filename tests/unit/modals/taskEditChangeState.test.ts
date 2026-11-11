@@ -40,6 +40,7 @@ function createState(
 		tags: (task.tags || []).join(", "),
 		initialTags: (task.tags || []).join(", "),
 		timeEstimate: task.timeEstimate || 0,
+		bundle: task.bundle === true,
 		recurrenceRule: typeof task.recurrence === "string" ? task.recurrence : "",
 		recurrenceAnchor: task.recurrence_anchor || "scheduled",
 		reminders: task.reminders || [],
@@ -249,5 +250,28 @@ describe("taskEditChangeState", () => {
 		expect(result.changes.skipped_instances).toEqual([]);
 		expect(result.changes.scheduled).toEqual(expect.any(String));
 		expect(result.changes.dateModified).toEqual(expect.any(String));
+	});
+	it("sends bundle only when the toggle changes, and turning it off clears it", () => {
+		const app = createMockApp(MockObsidian.createMockApp());
+		const settings = {
+			userFields: [],
+			taskIdentificationMethod: "tag",
+			taskTag: "task",
+			maintainDueDateOffsetInRecurring: false,
+		};
+		const changesFor = (task: TaskInfo, bundle: boolean) =>
+			buildTaskEditChangesFromModalState({
+				...createState({ task, bundle }),
+				app,
+				settings,
+				normalizeDetails: (value) => value,
+			}).changes;
+
+		expect(changesFor(createTask(), true).bundle).toBe(true);
+		expect(changesFor(createTask(), false)).not.toHaveProperty("bundle");
+		expect(changesFor(createTask({ bundle: true }), true)).not.toHaveProperty("bundle");
+		const off = changesFor(createTask({ bundle: true }), false);
+		expect(off).toHaveProperty("bundle");
+		expect(off.bundle).toBeUndefined();
 	});
 });

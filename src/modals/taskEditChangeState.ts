@@ -33,6 +33,7 @@ export interface TaskEditModalChangeState {
 	tags: string;
 	initialTags: string;
 	timeEstimate: number;
+	bundle: boolean;
 	recurrenceRule: string;
 	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
@@ -85,6 +86,7 @@ export function buildTaskEditChangesFromModalState(
 		tags: input.tags,
 		initialTags: input.initialTags,
 		timeEstimate: input.timeEstimate,
+		bundle: input.bundle,
 		recurrenceRule: input.recurrenceRule,
 		recurrenceAnchor: input.recurrenceAnchor,
 		reminders: input.reminders,

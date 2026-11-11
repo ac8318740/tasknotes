@@ -16,6 +16,7 @@ const fields = {
 	contexts: { english: "Contexts", descriptor: msg({ message: "Contexts", context: "utils/fieldConfigDefaults: defaults displayName" }) },
 	tags: { english: "Tags", descriptor: msg({ message: "Tags", context: "utils/fieldConfigDefaults: defaults displayName" }) },
 	"time-estimate": { english: "Time Estimate", descriptor: msg({ message: "Time Estimate", context: "utils/fieldConfigDefaults: defaults displayName" }) },
+	bundle: { english: "Bundle", descriptor: msg({ message: "Bundle", context: "utils/fieldConfigDefaults: defaults displayName" }) },
 	projects: { english: "Projects", descriptor: msg({ message: "Projects", context: "utils/fieldConfigDefaults: defaults displayName" }) },
 	subtasks: { english: "Subtasks", descriptor: msg({ message: "Subtasks", context: "utils/fieldConfigDefaults: defaults displayName" }) },
 	"blocked-by": { english: "Blocked By", descriptor: msg({ message: "Blocked By", context: "utils/fieldConfigDefaults: defaults displayName" }) },

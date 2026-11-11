@@ -112,6 +112,12 @@ This frontmatter-first design keeps task data editable and portable while suppor
 
 For property types and examples, see [Core Concepts](../core-concepts.md#yaml-frontmatter). For configuration options, see [Task Properties Settings](../settings/task-properties.md).
 
+### Bundling Tasks
+
+A task with `bundle: true` may share a scheduled block with other tasks, such as a handful of 2-minute tasks. A task without it gets its own block. Turn on **Bundle** in the task modal, or type the word "bundle" in the natural language field, as in "Call the bank bundle". The word is highlighted and left out of the title; press Backspace right after it to keep it as title text. Turning **Bundle** off removes the property. You can filter and show `bundle` in Bases like any other property.
+
+The property is a building block for future auto-scheduling. TaskNotes stores it but does not schedule tasks or change how views lay them out yet.
+
 ### Task Dates
 
 Scheduled and due dates can be date-only or include a time. The **+1 day**, **-1 day**, **+1 week**, and **-1 week** actions in card date menus and task context menus shift the existing date while keeping its local time, including across daylight-saving changes. Date-only values stay date-only; for example, `2026-05-16T21:37` becomes `2026-05-17T21:37` with **+1 day**.

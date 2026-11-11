@@ -362,6 +362,29 @@ describe("taskUpdatePlanning", () => {
 		expect(frontmatter).not.toHaveProperty("blockedBy");
 	});
 
+	it("removes bundle when an update turns it off and keeps it when the update omits it", () => {
+		const apply = (frontmatter: Record<string, unknown>, updates: Partial<TaskInfo>) =>
+			applyTaskUpdateFrontmatterChange({
+				frontmatter,
+				originalTask: createTask({ bundle: true }),
+				updates,
+				recurrenceUpdates: {},
+				dateModified: "2026-05-19T09:00:00.000Z",
+				fieldMapper: createFieldMapper(),
+				taskIdentification: { method: "tag", tag: "task", propertyName: "", propertyValue: "" },
+				storeTitleInFilename: false,
+				updateCompletedDateInFrontmatter: jest.fn(),
+			});
+
+		const kept: Record<string, unknown> = { title: "Old", bundle: true, tags: ["task"] };
+		apply(kept, { title: "New" });
+		expect(kept.bundle).toBe(true);
+
+		const removed: Record<string, unknown> = { title: "Old", bundle: true, tags: ["task"] };
+		apply(removed, { bundle: undefined });
+		expect(removed).not.toHaveProperty("bundle");
+	});
+
 	it("leaves contexts and blockedBy alone when the update omits them or keeps values", () => {
 		const frontmatter: Record<string, unknown> = {
 			title: "Old",

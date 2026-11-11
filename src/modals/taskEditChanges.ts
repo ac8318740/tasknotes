@@ -30,6 +30,7 @@ export interface TaskEditChangeInput {
 	tags: string;
 	initialTags: string;
 	timeEstimate: number;
+	bundle: boolean;
 	recurrenceRule: string;
 	recurrenceAnchor: "scheduled" | "completion" | "period";
 	reminders: Reminder[];
@@ -153,6 +154,10 @@ export function buildTaskEditChanges(input: TaskEditChangeInput): TaskEditChange
 	const newTimeEstimate = input.timeEstimate > 0 ? input.timeEstimate : undefined;
 	if (newTimeEstimate !== input.task.timeEstimate) {
 		changes.timeEstimate = newTimeEstimate;
+	}
+
+	if (input.bundle !== (input.task.bundle === true)) {
+		changes.bundle = input.bundle ? true : undefined;
 	}
 
 	const oldRecurrence = typeof input.task.recurrence === "string" ? input.task.recurrence : "";

@@ -287,6 +287,10 @@ export class MdbaseSpecService {
 			type: "date",
 			description: "Original rule date of a pending moved virtual recurring occurrence.",
 		});
+		this.addRoleField(lines, "bundle", {
+			type: "boolean",
+			description: "When true, the task may share a scheduled block with other tasks.",
+		});
 		this.addField(lines, "tags", { type: "list", items: { type: "string" }, tn_role: "tags" });
 
 		// Complex nested fields

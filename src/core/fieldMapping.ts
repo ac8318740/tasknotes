@@ -29,6 +29,7 @@ import type {
 } from "../types";
 import type { UserMappedField } from "../types/settings";
 import {
+	DEFAULT_BUNDLE_PROPERTY,
 	DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
 	DEFAULT_RECURRENCE_WINDOW_PROPERTY,
 } from "./defaultFieldMapping";
@@ -50,16 +51,22 @@ export {
 	VALID_DEPENDENCY_RELTYPES,
 };
 
-// The shared model mapping does not know about `recurrenceOriginalDate` or `recurrenceWindow`,
-// and settings saved before the fields existed do not contain them. These wrappers resolve the
-// property names (falling back to the defaults) and handle the fields around the model functions.
+// The shared model mapping does not know about `recurrenceOriginalDate`, `recurrenceWindow` or
+// `bundle`, and settings saved before the fields existed do not contain them. These wrappers
+// resolve the property names (falling back to the defaults) and handle the fields around the
+// model functions.
 
-type ResolvedFieldMapping = FieldMapping & { recurrenceOriginalDate: string; recurrenceWindow: string };
+type ResolvedFieldMapping = FieldMapping & {
+	recurrenceOriginalDate: string;
+	recurrenceWindow: string;
+	bundle: string;
+};
 
 function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
 	if (
 		typeof mapping.recurrenceOriginalDate === "string" &&
-		typeof mapping.recurrenceWindow === "string"
+		typeof mapping.recurrenceWindow === "string" &&
+		typeof mapping.bundle === "string"
 	) {
 		return mapping as ResolvedFieldMapping;
 	}
@@ -68,6 +75,7 @@ function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
 		recurrenceOriginalDate:
 			mapping.recurrenceOriginalDate ?? DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
 		recurrenceWindow: mapping.recurrenceWindow ?? DEFAULT_RECURRENCE_WINDOW_PROPERTY,
+		bundle: mapping.bundle ?? DEFAULT_BUNDLE_PROPERTY,
 	};
 }
 
@@ -184,6 +192,10 @@ export function mapTaskFromFrontmatter(
 	if (window) {
 		mapped.recurrence_window = window;
 	}
+	// Only `true` bundles a task; a hand-written `false` means the same as no value.
+	if (frontmatter?.[resolved.bundle] === true) {
+		mapped.bundle = true;
+	}
 	// The model reads unknown anchors as "scheduled"; keep the plugin's "period" anchor.
 	if (frontmatter?.[resolved.recurrenceAnchor] === "period") {
 		mapped.recurrence_anchor = frontmatter[resolved.recurrenceAnchor] as TaskInfo["recurrence_anchor"];
@@ -213,6 +225,9 @@ export function mapTaskToFrontmatter(
 	const window = normalizeRecurrenceWindow(taskData.recurrence_window);
 	if (window) {
 		frontmatter[resolved.recurrenceWindow] = window;
+	}
+	if (taskData.bundle === true) {
+		frontmatter[resolved.bundle] = true;
 	}
 	return frontmatter;
 }

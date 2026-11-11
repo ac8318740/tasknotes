@@ -109,6 +109,16 @@ export const DEFAULT_CORE_FIELDS: ModalFieldConfig[] = [
 		order: 2,
 		enabled: true,
 	},
+	{
+		id: "bundle",
+		fieldType: "core",
+		group: "metadata",
+		displayName: uiData("Bundle", "Writable persisted field/group name; preserve configured settings across locales"),
+		visibleInCreation: true,
+		visibleInEdit: true,
+		order: 3,
+		enabled: true,
+	},
 
 	// Organization group
 	{

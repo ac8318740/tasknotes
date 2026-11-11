@@ -30,6 +30,21 @@ function getDateLocaleFromPlugin(plugin: TaskNotesPlugin): string {
 	return getBrowserLocale() || plugin.settings.nlpLanguage || "en";
 }
 
+/**
+ * The first plain word "bundle" on the title line, outside wiki links. Typed in the task
+ * creation modal, it marks the task as bundled and is left out of the title.
+ */
+export function findBundleKeyword(input: string): { start: number; end: number } | null {
+	const line = input.split("\n", 1)[0];
+	const links = [...line.matchAll(/\[\[[^\]]*\]\]/g)].map((m) => [m.index, m.index + m[0].length]);
+	for (const match of line.matchAll(/(^|\s)(bundle)(?=\s|$)/giu)) {
+		const start = match.index + match[1].length;
+		const end = start + match[2].length;
+		if (!links.some(([from, to]) => start >= from && end <= to)) return { start, end };
+	}
+	return null;
+}
+
 /** The part of the parser that long-lived services use. */
 export type TaskTextParser = Pick<NaturalLanguageParser, "parseInput">;
 

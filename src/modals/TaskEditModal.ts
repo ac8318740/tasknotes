@@ -110,6 +110,7 @@ export class TaskEditModal extends TaskModal {
 		this.tags = formState.tags;
 		this.initialTags = formState.initialTags;
 		this.timeEstimate = formState.timeEstimate;
+		this.bundle = formState.bundle;
 		this.recurrenceRule = formState.recurrenceRule;
 		this.recurrenceAnchor = formState.recurrenceAnchor;
 		this.reminders = formState.reminders;
@@ -577,6 +578,7 @@ export class TaskEditModal extends TaskModal {
 			tags: this.tags,
 			initialTags: this.initialTags,
 			timeEstimate: this.timeEstimate,
+			bundle: this.bundle,
 			recurrenceRule: this.recurrenceRule,
 			recurrenceAnchor: this.recurrenceAnchor,
 			reminders: this.reminders,
