@@ -295,7 +295,7 @@ export interface TaskCreationDefaults {
 	useParentNoteForTaskCreation: boolean; // Use the active note as a project for normal task creation
 	useParentNoteAsProject: boolean; // Use the parent note as a project during inline creation and instant conversion
 	useParentHeaderAsProject: boolean; // Use the closest markdown heading as a project during instant conversion
-	inheritParentTaskProperties: boolean; // Copy parent task projects, contexts, priority, and tags when creating subtasks
+	inheritParentTaskProperties: boolean; // Pass priority, contexts and bundle down to subtasks; Create subtask also copies projects and tags
 	defaultTimeEstimate: number; // minutes, 0 = no default
 	defaultRecurrence: "none" | "daily" | "weekly" | "monthly" | "yearly";
 	// Date defaults

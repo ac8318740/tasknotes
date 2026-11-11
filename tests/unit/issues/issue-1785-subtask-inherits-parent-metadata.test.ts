@@ -39,7 +39,7 @@ describe("issue #1785 subtask metadata prefill", () => {
 		MockObsidian.reset();
 	});
 
-	it("prefills a new subtask with parent contexts, priority, user tags, and parent link", () => {
+	it("prefills a new subtask with parent projects, user tags, and parent link, leaving priority and contexts to inheritance", () => {
 		const parentFile = new TFile("Tasks/Parent task.md");
 		const values = buildSubtaskCreationPrePopulatedValues(
 			createPlugin() as never,
@@ -48,8 +48,8 @@ describe("issue #1785 subtask metadata prefill", () => {
 		);
 
 		expect(values.projects).toEqual(["[[Client A]]", "[[Parent task]]"]);
-		expect(values.contexts).toEqual(["office", "calls"]);
-		expect(values.priority).toBe("high");
+		expect(values.contexts).toBeUndefined();
+		expect(values.priority).toBeUndefined();
 		expect(values.tags).toEqual(["client-a", "urgent"]);
 	});
 

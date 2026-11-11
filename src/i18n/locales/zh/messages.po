@@ -1954,6 +1954,11 @@ msgctxt "settings.defaults.instantConversion.useDefaultsOnInstantConvert.descrip
 msgid "Apply default task settings when converting text to tasks instantly"
 msgstr "即时转换文本为任务时应用默认任务设置"
 
+#: src/commands/taskNotesCommands.ts
+msgctxt "commands.applyInheritedValues"
+msgid "Apply inherited values to all tasks"
+msgstr "将继承的值应用到所有任务"
+
 #: src/modals/DateTimePickerModal.ts
 msgctxt "modals.dateTimePicker.apply"
 msgid "Apply natural language date"
@@ -7337,11 +7342,6 @@ msgctxt "bases/registration: defaults inherit"
 msgid "Inherit"
 msgstr "继承"
 
-#: src/settings/tabs/taskProperties/projectsPropertyCard.ts
-msgctxt "settings.taskProperties.projectsCard.inheritParentTaskProperties"
-msgid "Inherit parent task properties for subtasks:"
-msgstr "子任务继承父任务属性："
-
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.initialScrollTime.name"
 msgid "Initial scroll time"
@@ -9611,6 +9611,11 @@ msgstr "从文本输入解析日期、优先级和其他属性。"
 msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "创建任务时从自然语言解析截止日期、优先级和上下文"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.name"
+msgid "Pass values to subtasks"
+msgstr "将值传递给子任务"
 
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.subscriptionsList.placeholders.password"
@@ -11917,6 +11922,11 @@ msgstr "子任务"
 msgctxt "utils/fieldConfigDefaults: defaults displayName"
 msgid "Subtasks"
 msgstr "子任务"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.description"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's and follow its changes. The copied properties are listed in the inherited property. Create subtask also adds the parent's projects and tags. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "没有自己的优先级、上下文或“合并安排”设置的子任务会获得父任务的值，并随父任务的更改而更新。复制的属性列在 inherited 属性中。“创建子任务”还会添加父任务的项目和标签。关闭后会移除复制的值。要填充现有子任务，请运行“将继承的值应用到所有任务”命令。"
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

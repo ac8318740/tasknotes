@@ -29,7 +29,13 @@ import type {
 } from "../types";
 import type { UserMappedField } from "../types/settings";
 import {
+	INHERITABLE_FIELDS,
+	readInheritedMarker,
+	type InheritanceProperties,
+} from "./taskInheritance";
+import {
 	DEFAULT_BUNDLE_PROPERTY,
+	DEFAULT_INHERITED_PROPERTY,
 	DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
 	DEFAULT_RECURRENCE_WINDOW_PROPERTY,
 } from "./defaultFieldMapping";
@@ -51,22 +57,24 @@ export {
 	VALID_DEPENDENCY_RELTYPES,
 };
 
-// The shared model mapping does not know about `recurrenceOriginalDate`, `recurrenceWindow` or
-// `bundle`, and settings saved before the fields existed do not contain them. These wrappers
-// resolve the property names (falling back to the defaults) and handle the fields around the
-// model functions.
+// The shared model mapping does not know about `recurrenceOriginalDate`, `recurrenceWindow`,
+// `bundle` or `inherited`, and settings saved before the fields existed do not contain
+// them. These wrappers resolve the property names (falling back to the defaults) and handle the
+// fields around the model functions.
 
 type ResolvedFieldMapping = FieldMapping & {
 	recurrenceOriginalDate: string;
 	recurrenceWindow: string;
 	bundle: string;
+	inherited: string;
 };
 
 function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
 	if (
 		typeof mapping.recurrenceOriginalDate === "string" &&
 		typeof mapping.recurrenceWindow === "string" &&
-		typeof mapping.bundle === "string"
+		typeof mapping.bundle === "string" &&
+		typeof mapping.inherited === "string"
 	) {
 		return mapping as ResolvedFieldMapping;
 	}
@@ -76,6 +84,7 @@ function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
 			mapping.recurrenceOriginalDate ?? DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
 		recurrenceWindow: mapping.recurrenceWindow ?? DEFAULT_RECURRENCE_WINDOW_PROPERTY,
 		bundle: mapping.bundle ?? DEFAULT_BUNDLE_PROPERTY,
+		inherited: mapping.inherited ?? DEFAULT_INHERITED_PROPERTY,
 	};
 }
 
@@ -98,6 +107,17 @@ export function normalizeRecurrenceOriginalDate(value: unknown): string | undefi
 	} catch {
 		return undefined;
 	}
+}
+
+/** Frontmatter property names used by task value inheritance. */
+export function inheritanceProperties(mapping: FieldMapping): InheritanceProperties {
+	const resolved = withResolvedMapping(mapping);
+	return {
+		priority: resolved.priority,
+		contexts: resolved.contexts,
+		bundle: resolved.bundle,
+		inherited: resolved.inherited,
+	};
 }
 
 export function toUserField(mapping: FieldMapping, internalName: FieldMappingKey): string {
@@ -195,6 +215,11 @@ export function mapTaskFromFrontmatter(
 	// Only `true` bundles a task; a hand-written `false` means the same as no value.
 	if (frontmatter?.[resolved.bundle] === true) {
 		mapped.bundle = true;
+	}
+	const marker = frontmatter ? readInheritedMarker(frontmatter, inheritanceProperties(resolved)) : [];
+	const inherited = INHERITABLE_FIELDS.filter((field) => marker.includes(resolved[field]));
+	if (inherited.length > 0) {
+		mapped.inherited = inherited;
 	}
 	// The model reads unknown anchors as "scheduled"; keep the plugin's "period" anchor.
 	if (frontmatter?.[resolved.recurrenceAnchor] === "period") {

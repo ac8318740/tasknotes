@@ -175,16 +175,7 @@ export function buildSubtaskCreationPrePopulatedValues(
 	if (inheritedTags.length > 0) {
 		values.tags = inheritedTags;
 	}
-	if (
-		shouldInheritParentProperties &&
-		Array.isArray(parentTask.contexts) &&
-		parentTask.contexts.length > 0
-	) {
-		values.contexts = [...parentTask.contexts];
-	}
-	if (shouldInheritParentProperties && parentTask.priority) {
-		values.priority = parentTask.priority;
-	}
+	// Priority and contexts are copied on save by TaskInheritanceService, marked as inherited.
 
 	return values;
 }

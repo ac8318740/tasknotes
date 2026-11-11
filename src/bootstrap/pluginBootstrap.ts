@@ -52,6 +52,7 @@ import { CalendarProviderRegistry } from "../services/CalendarProvider";
 import { PomodoroService } from "../services/PomodoroService";
 import { AutoExportService } from "../services/AutoExportService";
 import { TaskFileLifecycleReconciliationService } from "../services/TaskFileLifecycleReconciliationService";
+import { TaskInheritanceService } from "../services/TaskInheritanceService";
 import { TaskNotesAPI } from "../api/TaskNotesAPI";
 import { isCalendarIntegrationDisabledOnMobile } from "../utils/calendarIntegration";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
@@ -546,6 +547,11 @@ export function initializeServicesLazily(plugin: TaskNotesPlugin): void {
 				plugin.taskFileLifecycleReconciliationService =
 					new TaskFileLifecycleReconciliationService(plugin);
 				await plugin.taskFileLifecycleReconciliationService.initialize();
+			});
+
+			await runLazyInitStep("task-inheritance", () => {
+				plugin.taskInheritanceService = new TaskInheritanceService(plugin);
+				plugin.taskInheritanceService.initialize();
 			});
 
 			await runLazyInitStep("http-api", () => initializeHTTPAPI(plugin));

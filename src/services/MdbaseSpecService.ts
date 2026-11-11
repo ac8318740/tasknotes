@@ -291,6 +291,11 @@ export class MdbaseSpecService {
 			type: "boolean",
 			description: "When true, the task may share a scheduled block with other tasks.",
 		});
+		this.addRoleField(lines, "inherited", {
+			type: "list",
+			items: { type: "string" },
+			description: "Properties whose values were copied from a parent task.",
+		});
 		this.addField(lines, "tags", { type: "list", items: { type: "string" }, tn_role: "tags" });
 
 		// Complex nested fields

@@ -1955,6 +1955,11 @@ msgctxt "settings.defaults.instantConversion.useDefaultsOnInstantConvert.descrip
 msgid "Apply default task settings when converting text to tasks instantly"
 msgstr "Standard-Aufgabeneinstellungen anwenden bei sofortiger Textkonvertierung zu Aufgaben"
 
+#: src/commands/taskNotesCommands.ts
+msgctxt "commands.applyInheritedValues"
+msgid "Apply inherited values to all tasks"
+msgstr "Geerbte Werte auf alle Aufgaben anwenden"
+
 #: src/modals/DateTimePickerModal.ts
 msgctxt "modals.dateTimePicker.apply"
 msgid "Apply natural language date"
@@ -7338,11 +7343,6 @@ msgctxt "bases/registration: defaults inherit"
 msgid "Inherit"
 msgstr "Übernehmen"
 
-#: src/settings/tabs/taskProperties/projectsPropertyCard.ts
-msgctxt "settings.taskProperties.projectsCard.inheritParentTaskProperties"
-msgid "Inherit parent task properties for subtasks:"
-msgstr "Eigenschaften der übergeordneten Aufgabe für Unteraufgaben übernehmen:"
-
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.initialScrollTime.name"
 msgid "Initial scroll time"
@@ -9612,6 +9612,11 @@ msgstr "Analysiere Daten, Prioritäten und andere Eigenschaften aus Texteingaben
 msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "Fälligkeitsdaten, Prioritäten und Kontexte beim Erstellen von Aufgaben aus natürlicher Sprache erkennen"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.name"
+msgid "Pass values to subtasks"
+msgstr "Werte an Unteraufgaben weitergeben"
 
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.subscriptionsList.placeholders.password"
@@ -11918,6 +11923,11 @@ msgstr "Unteraufgaben"
 msgctxt "utils/fieldConfigDefaults: defaults displayName"
 msgid "Subtasks"
 msgstr "Unteraufgaben"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.description"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's and follow its changes. The copied properties are listed in the inherited property. Create subtask also adds the parent's projects and tags. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "Unteraufgaben ohne eigene Priorität, Kontexte oder „Bündeln“-Einstellung erhalten die Werte ihrer übergeordneten Aufgabe und folgen deren Änderungen. Die kopierten Eigenschaften werden in der Eigenschaft „inherited“ aufgeführt. „Unteraufgabe erstellen“ übernimmt außerdem die Projekte und Tags der übergeordneten Aufgabe. Wird dies deaktiviert, werden die kopierten Werte entfernt. Um bestehende Unteraufgaben zu ergänzen, führe den Befehl „Geerbte Werte auf alle Aufgaben anwenden“ aus."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

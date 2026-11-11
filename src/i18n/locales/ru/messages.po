@@ -1957,6 +1957,11 @@ msgctxt "settings.defaults.instantConversion.useDefaultsOnInstantConvert.descrip
 msgid "Apply default task settings when converting text to tasks instantly"
 msgstr "Применять настройки задач по умолчанию при мгновенном преобразовании текста в задачи"
 
+#: src/commands/taskNotesCommands.ts
+msgctxt "commands.applyInheritedValues"
+msgid "Apply inherited values to all tasks"
+msgstr "Применить унаследованные значения ко всем задачам"
+
 #: src/modals/DateTimePickerModal.ts
 msgctxt "modals.dateTimePicker.apply"
 msgid "Apply natural language date"
@@ -7338,11 +7343,6 @@ msgctxt "bases/registration: defaults inherit"
 msgid "Inherit"
 msgstr "Наследовать"
 
-#: src/settings/tabs/taskProperties/projectsPropertyCard.ts
-msgctxt "settings.taskProperties.projectsCard.inheritParentTaskProperties"
-msgid "Inherit parent task properties for subtasks:"
-msgstr "Наследовать свойства родительской задачи для подзадач:"
-
 #: src/settings/tabs/appearanceTab.ts
 msgctxt "settings.appearance.timeSettings.initialScrollTime.name"
 msgid "Initial scroll time"
@@ -9612,6 +9612,11 @@ msgstr "Анализ дат, приоритетов и других свойст
 msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "Анализировать сроки выполнения, приоритеты и контексты из естественного языка при создании задач"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.name"
+msgid "Pass values to subtasks"
+msgstr "Передавать значения подзадачам"
 
 #: src/settings/tabs/integrationsTab.ts
 msgctxt "settings.integrations.subscriptionsList.placeholders.password"
@@ -11918,6 +11923,11 @@ msgstr "Подзадачи"
 msgctxt "utils/fieldConfigDefaults: defaults displayName"
 msgid "Subtasks"
 msgstr "Подзадачи"
+
+#: src/settings/tabs/taskPropertiesTab.ts
+msgctxt "settings.taskProperties.passValuesToSubtasks.description"
+msgid "Subtasks without their own priority, contexts or bundle get their parent's and follow its changes. The copied properties are listed in the inherited property. Create subtask also adds the parent's projects and tags. Turning this off removes the copied values. To fill in existing subtasks, run the \"Apply inherited values to all tasks\" command."
+msgstr "Подзадачи без собственного приоритета, контекстов или настройки «Объединять» получают значения родительской задачи и следуют за её изменениями. Скопированные свойства перечисляются в свойстве inherited. «Создать подзадачу» также добавляет проекты и теги родительской задачи. При отключении скопированные значения удаляются. Чтобы заполнить существующие подзадачи, выполните команду «Применить унаследованные значения ко всем задачам»."
 
 #: src/views/PomodoroView.ts
 msgctxt "views.pomodoro.buttons.subtractMinute"

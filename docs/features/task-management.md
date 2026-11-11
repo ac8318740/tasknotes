@@ -118,6 +118,24 @@ A task with `bundle: true` may share a scheduled block with other tasks, such as
 
 The property is a building block for future auto-scheduling. TaskNotes stores it but does not schedule tasks or change how views lay them out yet.
 
+### Values Passed to Subtasks
+
+A subtask gets its parent's priority, contexts and bundle setting when it has none of its own. A parent is a task linked in the subtask's `projects`. TaskNotes copies the values into the subtask's frontmatter, so Bases can filter on them, and lists the copied properties in `inherited`:
+
+```yaml
+priority: high
+contexts: [office]
+inherited: [priority, contexts]
+```
+
+- The nearest ancestor with its own value wins. If a project is `high` and a subtask under it is `low`, the subtask's own subtasks get `low`.
+- When a task has several parents, the first parent listed in `projects` wins.
+- A value the task sets itself is never replaced. A priority of `none` counts as no value. A hand-written `bundle: false` is the task's own value.
+- Editing a copied value makes it the task's own and removes it from `inherited`. Clearing it brings back the parent's value.
+- Copies follow edits: changing a parent updates its subtasks, and a new subtask under a `high` parent starts at `high` instead of the default priority.
+- Existing subtasks get copies only when you run **Apply inherited values to all tasks** from the command palette. TaskNotes does not scan the vault on startup.
+- Turn **Pass values to subtasks** on or off in [Task Properties settings](../settings/task-properties.md#pass-values-to-subtasks). Turning it off removes all copied values.
+
 ### Task Dates
 
 Scheduled and due dates can be date-only or include a time. The **+1 day**, **-1 day**, **+1 week**, and **-1 week** actions in card date menus and task context menus shift the existing date while keeping its local time, including across daylight-saving changes. Date-only values stay date-only; for example, `2026-05-16T21:37` becomes `2026-05-17T21:37` with **+1 day**.

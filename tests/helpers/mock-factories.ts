@@ -388,6 +388,7 @@ export const PluginFactory = {
       },
       metadataCache: {
         getFileCache: jest.fn(),
+        getFirstLinkpathDest: jest.fn().mockReturnValue(null),
         on: jest.fn(),
         off: jest.fn()
       },
