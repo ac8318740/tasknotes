@@ -9612,6 +9612,11 @@ msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "タスク作成時に自然言語から期限日、優先度、コンテキストを解析"
 
+#: src/modals/TaskEditModal.ts
+msgctxt "modals.taskEdit.cascadeToSubtasksLabel"
+msgid "Pass values to subtasks"
+msgstr "サブタスクに値を引き継ぐ"
+
 #: src/settings/tabs/taskPropertiesTab.ts
 msgctxt "settings.taskProperties.passValuesToSubtasks.name"
 msgid "Pass values to subtasks"
@@ -14403,6 +14408,11 @@ msgstr "新しいタスクが作成されたとき"
 msgctxt "settings.features.nlp.defaultToScheduled.description"
 msgid "When NLP detects a date without context, treat it as scheduled rather than due"
 msgstr "NLP が用途を特定できない日付は、期限日ではなく予定日として扱います。"
+
+#: src/modals/TaskEditModal.ts
+msgctxt "modals.taskEdit.cascadeToSubtasksDescription"
+msgid "When off, subtasks inherit no priority, contexts or bundle from this task or the tasks above it"
+msgstr "オフの場合、サブタスクはこのタスクや上位のタスクから優先度、コンテキスト、まとめるを引き継ぎません"
 
 #: src/i18n/messages.ts
 msgctxt "settings.integrations.webhooks.events.pomodoroInterrupted.description"

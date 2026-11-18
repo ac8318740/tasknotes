@@ -9612,6 +9612,11 @@ msgctxt "settings.features.nlp.enable.description"
 msgid "Parse due dates, priorities, and contexts from natural language when creating tasks"
 msgstr "Rileva date di scadenza, priorità e contesti dal linguaggio naturale quando crei attività."
 
+#: src/modals/TaskEditModal.ts
+msgctxt "modals.taskEdit.cascadeToSubtasksLabel"
+msgid "Pass values to subtasks"
+msgstr "Passa i valori alle sottoattività"
+
 #: src/settings/tabs/taskPropertiesTab.ts
 msgctxt "settings.taskProperties.passValuesToSubtasks.name"
 msgid "Pass values to subtasks"
@@ -14403,6 +14408,11 @@ msgstr "Quando vengono create nuove attività"
 msgctxt "settings.features.nlp.defaultToScheduled.description"
 msgid "When NLP detects a date without context, treat it as scheduled rather than due"
 msgstr "Quando l’NLP rileva una data senza contesto, considerala una data pianificata anziché una data di scadenza."
+
+#: src/modals/TaskEditModal.ts
+msgctxt "modals.taskEdit.cascadeToSubtasksDescription"
+msgid "When off, subtasks inherit no priority, contexts or bundle from this task or the tasks above it"
+msgstr "Se disattivato, le sottoattività non ereditano priorità, contesti o Raggruppa da questa attività o dalle attività superiori"
 
 #: src/i18n/messages.ts
 msgctxt "settings.integrations.webhooks.events.pomodoroInterrupted.description"

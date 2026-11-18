@@ -35,6 +35,7 @@ import {
 } from "./taskInheritance";
 import {
 	DEFAULT_BUNDLE_PROPERTY,
+	DEFAULT_CASCADE_TO_SUBTASKS_PROPERTY,
 	DEFAULT_INHERITED_PROPERTY,
 	DEFAULT_RECURRENCE_ORIGINAL_DATE_PROPERTY,
 	DEFAULT_RECURRENCE_WINDOW_PROPERTY,
@@ -58,7 +59,7 @@ export {
 };
 
 // The shared model mapping does not know about `recurrenceOriginalDate`, `recurrenceWindow`,
-// `bundle` or `inherited`, and settings saved before the fields existed do not contain
+// `bundle`, `inherited` or `cascadeToSubtasks`, and settings saved before the fields existed do not contain
 // them. These wrappers resolve the property names (falling back to the defaults) and handle the
 // fields around the model functions.
 
@@ -67,6 +68,7 @@ type ResolvedFieldMapping = FieldMapping & {
 	recurrenceWindow: string;
 	bundle: string;
 	inherited: string;
+	cascadeToSubtasks: string;
 };
 
 function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
@@ -74,7 +76,8 @@ function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
 		typeof mapping.recurrenceOriginalDate === "string" &&
 		typeof mapping.recurrenceWindow === "string" &&
 		typeof mapping.bundle === "string" &&
-		typeof mapping.inherited === "string"
+		typeof mapping.inherited === "string" &&
+		typeof mapping.cascadeToSubtasks === "string"
 	) {
 		return mapping as ResolvedFieldMapping;
 	}
@@ -85,6 +88,7 @@ function withResolvedMapping(mapping: FieldMapping): ResolvedFieldMapping {
 		recurrenceWindow: mapping.recurrenceWindow ?? DEFAULT_RECURRENCE_WINDOW_PROPERTY,
 		bundle: mapping.bundle ?? DEFAULT_BUNDLE_PROPERTY,
 		inherited: mapping.inherited ?? DEFAULT_INHERITED_PROPERTY,
+		cascadeToSubtasks: mapping.cascadeToSubtasks ?? DEFAULT_CASCADE_TO_SUBTASKS_PROPERTY,
 	};
 }
 
@@ -117,6 +121,7 @@ export function inheritanceProperties(mapping: FieldMapping): InheritancePropert
 		contexts: resolved.contexts,
 		bundle: resolved.bundle,
 		inherited: resolved.inherited,
+		cascadeToSubtasks: resolved.cascadeToSubtasks,
 	};
 }
 
@@ -216,6 +221,10 @@ export function mapTaskFromFrontmatter(
 	if (frontmatter?.[resolved.bundle] === true) {
 		mapped.bundle = true;
 	}
+	// Only `false` stops cascading; any other value means the default.
+	if (frontmatter?.[resolved.cascadeToSubtasks] === false) {
+		mapped.cascadeToSubtasks = false;
+	}
 	const marker = frontmatter ? readInheritedMarker(frontmatter, inheritanceProperties(resolved)) : [];
 	const inherited = INHERITABLE_FIELDS.filter((field) => marker.includes(resolved[field]));
 	if (inherited.length > 0) {
@@ -253,6 +262,9 @@ export function mapTaskToFrontmatter(
 	}
 	if (taskData.bundle === true) {
 		frontmatter[resolved.bundle] = true;
+	}
+	if (taskData.cascadeToSubtasks === false) {
+		frontmatter[resolved.cascadeToSubtasks] = false;
 	}
 	return frontmatter;
 }

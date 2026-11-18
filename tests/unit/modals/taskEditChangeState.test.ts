@@ -41,6 +41,7 @@ function createState(
 		initialTags: (task.tags || []).join(", "),
 		timeEstimate: task.timeEstimate || 0,
 		bundle: task.bundle === true,
+		cascadeToSubtasks: task.cascadeToSubtasks !== false,
 		recurrenceRule: typeof task.recurrence === "string" ? task.recurrence : "",
 		recurrenceAnchor: task.recurrence_anchor || "scheduled",
 		reminders: task.reminders || [],
@@ -273,5 +274,31 @@ describe("taskEditChangeState", () => {
 		const off = changesFor(createTask({ bundle: true }), false);
 		expect(off).toHaveProperty("bundle");
 		expect(off.bundle).toBeUndefined();
+	});
+
+	it("sends cascadeToSubtasks only when the toggle changes, and turning it on clears it", () => {
+		const app = createMockApp(MockObsidian.createMockApp());
+		const settings = {
+			userFields: [],
+			taskIdentificationMethod: "tag",
+			taskTag: "task",
+			maintainDueDateOffsetInRecurring: false,
+		};
+		const changesFor = (task: TaskInfo, cascadeToSubtasks: boolean) =>
+			buildTaskEditChangesFromModalState({
+				...createState({ task, cascadeToSubtasks }),
+				app,
+				settings,
+				normalizeDetails: (value) => value,
+			}).changes;
+
+		expect(changesFor(createTask(), false).cascadeToSubtasks).toBe(false);
+		expect(changesFor(createTask(), true)).not.toHaveProperty("cascadeToSubtasks");
+		expect(changesFor(createTask({ cascadeToSubtasks: false }), false)).not.toHaveProperty(
+			"cascadeToSubtasks"
+		);
+		const on = changesFor(createTask({ cascadeToSubtasks: false }), true);
+		expect(on).toHaveProperty("cascadeToSubtasks");
+		expect(on.cascadeToSubtasks).toBeUndefined();
 	});
 });

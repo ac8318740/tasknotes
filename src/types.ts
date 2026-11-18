@@ -477,6 +477,7 @@ export interface TaskInfo {
 	recurrence_window?: number | "month_end"; // Days each occurrence stays open (counting its own date), or until the end of its month; sets its due date
 	bundle?: true; // May share a scheduled block with other tasks; absent means its own block
 	inherited?: InheritableField[]; // Fields whose values were copied from a cascading ancestor
+	cascadeToSubtasks?: false; // Passes no values to subtasks; absent means it does
 	recurrence_original_date?: string; // Original rule date (YYYY-MM-DD) of a pending moved virtual recurring occurrence
 	occurrence_materialization?: OccurrenceMaterializationMode; // Parent occurrence materialization policy
 	occurrence_next_trigger?: OccurrenceNextTrigger; // Parent policy for materializing the next occurrence
@@ -733,6 +734,7 @@ export interface FieldMapping {
 	occurrenceDate: string;
 	bundle?: string; // Optional like recurrenceOriginalDate; defaults to bundle
 	inherited?: string; // Optional like bundle; defaults to inherited
+	cascadeToSubtasks?: string; // Optional like bundle; defaults to cascadeToSubtasks
 	recurrenceWindow?: string; // Optional like recurrenceOriginalDate; defaults to recurrence_window
 	recurrenceOriginalDate?: string; // Optional so settings saved before this field existed keep working; defaults to recurrence_original_date
 	occurrenceMaterialization: string;

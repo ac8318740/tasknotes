@@ -21,6 +21,7 @@ This reference documents the expected data types for each frontmatter property t
 | timeEstimate | number | `120` (minutes) |
 | bundle | true (optional) | `true` |
 | inherited | list (optional system property) | `["priority", "contexts"]` |
+| cascadeToSubtasks | false (optional) | `false` |
 | recurrence | text | `"FREQ=WEEKLY;BYDAY=MO"` |
 | recurrence_anchor | text | `"scheduled"`, `"completion"` or `"period"` |
 | recurrence_original_date | date (optional system property) | `"2026-10-18"` |
@@ -186,6 +187,11 @@ Single-item arrays may look verbose, but they prevent edge cases when filters an
 - **Type:** list of property names, optional
 - **Description:** The properties TaskNotes copied from a parent task: `priority`, `contexts` or `bundle`. TaskNotes writes and removes it; editing a listed property makes the value the task's own. See [Values passed to subtasks](../features/task-management.md#values-passed-to-subtasks)
 - **Example:** `inherited: [priority, contexts]`
+
+#### cascadeToSubtasks
+- **Type:** `false`, optional
+- **Description:** When `false`, the task passes no priority, contexts or bundle to its subtasks, including values it inherits itself. TaskNotes only writes `false` and removes the property when you turn passing back on; any other value means the default. See [Values passed to subtasks](../features/task-management.md#values-passed-to-subtasks)
+- **Example:** `cascadeToSubtasks: false`
 
 ---
 

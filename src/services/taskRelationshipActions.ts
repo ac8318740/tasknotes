@@ -151,7 +151,9 @@ export function buildSubtaskCreationPrePopulatedValues(
 	);
 	const projectReference = buildStableFileLink(plugin, parentFile, parentTask.path);
 	const parentTags = Array.isArray(parentTask.tags) ? parentTask.tags : [];
-	const parentProjects = shouldInheritParentProperties
+	// A parent that stops passing values must not link its subtasks to the tasks above it.
+	const parentProjects =
+		shouldInheritParentProperties && parentTask.cascadeToSubtasks !== false
 		? Array.isArray(parentTask.projects)
 			? parentTask.projects.map((project) =>
 					resolveProjectReference(plugin, project, parentTask.path)
