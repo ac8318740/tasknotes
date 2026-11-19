@@ -53,6 +53,17 @@ describe("issue #1785 subtask metadata prefill", () => {
 		expect(values.tags).toEqual(["client-a", "urgent"]);
 	});
 
+	it("links only the parent when the parent stops passing values to subtasks", () => {
+		const parentFile = new TFile("Tasks/Parent task.md");
+		const values = buildSubtaskCreationPrePopulatedValues(
+			createPlugin() as never,
+			createParentTask({ cascadeToSubtasks: false }),
+			parentFile
+		);
+
+		expect(values.projects).toEqual(["[[Parent task]]"]);
+	});
+
 	it("keeps task-tag-looking user tags when task identification is property-based", () => {
 		const parentFile = new TFile("Tasks/Parent task.md");
 		const values = buildSubtaskCreationPrePopulatedValues(

@@ -134,7 +134,8 @@ inherited: [priority, contexts]
 - Editing a copied value makes it the task's own and removes it from `inherited`. Clearing it brings back the parent's value.
 - Copies follow edits: changing a parent updates its subtasks, and a new subtask under a `high` parent starts at `high` instead of the default priority.
 - Existing subtasks get copies only when you run **Apply inherited values to all tasks** from the command palette. TaskNotes does not scan the vault on startup.
-- Turn **Pass values to subtasks** on or off in [Task Properties settings](../settings/task-properties.md#pass-values-to-subtasks). Turning it off removes all copied values.
+- To stop one task passing values down, turn off **Pass values to subtasks** under its subtasks in the edit modal. This writes `cascadeToSubtasks: false`. Its subtasks then get nothing from it or from the tasks above it, and their copies are removed; turning it back on restores them. The task itself still gets values from its own parents, and a subtask's own values still pass to its subtasks. The toggle is greyed out until the task has subtasks.
+- Turn **Pass values to subtasks** on or off for all tasks in [Task Properties settings](../settings/task-properties.md#pass-values-to-subtasks). Turning it off removes all copied values.
 
 ### Task Dates
 

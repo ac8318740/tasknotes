@@ -81,4 +81,17 @@ describe("core/fieldMapping", () => {
 			expect(mapTaskToFrontmatter(mapping, { title: "A" })).not.toHaveProperty("bundle");
 		}
 	});
+
+	it("reads and writes cascadeToSubtasks only as false, also with settings saved before the field", () => {
+		const { cascadeToSubtasks: _omitted, ...oldMapping } = DEFAULT_FIELD_MAPPING;
+		const prop = "cascadeToSubtasks";
+
+		for (const mapping of [DEFAULT_FIELD_MAPPING, oldMapping]) {
+			expect(mapTaskFromFrontmatter(mapping, { [prop]: false }, "a.md")[prop]).toBe(false);
+			expect(mapTaskFromFrontmatter(mapping, { [prop]: true }, "a.md")).not.toHaveProperty(prop);
+			expect(mapTaskFromFrontmatter(mapping, { [prop]: "no" }, "a.md")).not.toHaveProperty(prop);
+			expect(mapTaskToFrontmatter(mapping, { title: "A", [prop]: false })[prop]).toBe(false);
+			expect(mapTaskToFrontmatter(mapping, { title: "A" })).not.toHaveProperty(prop);
+		}
+	});
 });

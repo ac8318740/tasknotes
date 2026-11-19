@@ -104,9 +104,7 @@ describe("taskUpdatePlanning", () => {
 
 	it("normalizes details only when the update explicitly includes details", () => {
 		expect(normalizeTaskUpdateDetails({ title: "Renamed" })).toBeNull();
-		expect(normalizeTaskUpdateDetails({ details: "Line 1\r\nLine 2" })).toBe(
-			"Line 1\nLine 2"
-		);
+		expect(normalizeTaskUpdateDetails({ details: "Line 1\r\nLine 2" })).toBe("Line 1\nLine 2");
 		expect(normalizeTaskUpdateDetails({ details: undefined })).toBe("");
 	});
 
@@ -211,7 +209,8 @@ describe("taskUpdatePlanning", () => {
 	});
 
 	it.each(["complete_instances", "skipped_instances"] as const)(
-		"distinguishes automatic advancement from manual moves with new %s (#2203)", (field) => {
+		"distinguishes automatic advancement from manual moves with new %s (#2203)",
+		(field) => {
 			const originalTask = createTask({
 				recurrence: "DTSTART:20260413;FREQ=DAILY",
 				recurrence_anchor: "scheduled",
@@ -371,7 +370,12 @@ describe("taskUpdatePlanning", () => {
 				recurrenceUpdates: {},
 				dateModified: "2026-05-19T09:00:00.000Z",
 				fieldMapper: createFieldMapper(),
-				taskIdentification: { method: "tag", tag: "task", propertyName: "", propertyValue: "" },
+				taskIdentification: {
+					method: "tag",
+					tag: "task",
+					propertyName: "",
+					propertyValue: "",
+				},
 				storeTitleInFilename: false,
 				updateCompletedDateInFrontmatter: jest.fn(),
 			});
@@ -383,6 +387,36 @@ describe("taskUpdatePlanning", () => {
 		const removed: Record<string, unknown> = { title: "Old", bundle: true, tags: ["task"] };
 		apply(removed, { bundle: undefined });
 		expect(removed).not.toHaveProperty("bundle");
+	});
+
+	it("removes cascadeToSubtasks when an update turns cascading back on", () => {
+		const apply = (frontmatter: Record<string, unknown>, updates: Partial<TaskInfo>) =>
+			applyTaskUpdateFrontmatterChange({
+				frontmatter,
+				originalTask: createTask(),
+				updates,
+				recurrenceUpdates: {},
+				dateModified: "2026-05-19T09:00:00.000Z",
+				fieldMapper: createFieldMapper(),
+				taskIdentification: {
+					method: "tag",
+					tag: "task",
+					propertyName: "",
+					propertyValue: "",
+				},
+				storeTitleInFilename: false,
+				updateCompletedDateInFrontmatter: jest.fn(),
+			});
+
+		const frontmatter: Record<string, unknown> = {
+			title: "Old",
+			tags: ["task"],
+			cascadeToSubtasks: false,
+		};
+		apply(frontmatter, { title: "New" });
+		expect(frontmatter.cascadeToSubtasks).toBe(false);
+		apply(frontmatter, { cascadeToSubtasks: undefined });
+		expect(frontmatter).not.toHaveProperty("cascadeToSubtasks");
 	});
 
 	it("makes edited inherited values the task's own and keeps an inherited bundle off", () => {
@@ -406,7 +440,11 @@ describe("taskUpdatePlanning", () => {
 			updateCompletedDateInFrontmatter: jest.fn(),
 		});
 
-		expect(frontmatter).toMatchObject({ priority: "low", bundle: false, inherited: ["contexts"] });
+		expect(frontmatter).toMatchObject({
+			priority: "low",
+			bundle: false,
+			inherited: ["contexts"],
+		});
 	});
 
 	it("leaves contexts and blockedBy alone when the update omits them or keeps values", () => {

@@ -395,6 +395,7 @@ export function applyTaskUpdateFrontmatterChange({
 			contexts: fieldMapper.toUserField("contexts"),
 			bundle: fieldMapper.toUserField("bundle"),
 			inherited: fieldMapper.toUserField("inherited"),
+			cascadeToSubtasks: fieldMapper.toUserField("cascadeToSubtasks"),
 		}
 	);
 
@@ -523,6 +524,12 @@ function removeUnsetMappedFields(
 	}
 	if (Object.prototype.hasOwnProperty.call(updates, "bundle") && updates.bundle !== true) {
 		delete frontmatter[fieldMapper.toUserField("bundle")];
+	}
+	if (
+		Object.prototype.hasOwnProperty.call(updates, "cascadeToSubtasks") &&
+		updates.cascadeToSubtasks !== false
+	) {
+		delete frontmatter[fieldMapper.toUserField("cascadeToSubtasks")];
 	}
 	if (
 		Object.prototype.hasOwnProperty.call(updates, "googleCalendarExceptionOriginalScheduled") &&

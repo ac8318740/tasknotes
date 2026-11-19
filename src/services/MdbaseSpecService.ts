@@ -296,6 +296,10 @@ export class MdbaseSpecService {
 			items: { type: "string" },
 			description: "Properties whose values were copied from a parent task.",
 		});
+		this.addRoleField(lines, "cascadeToSubtasks", {
+			type: "boolean",
+			description: "When false, the task passes no values to its subtasks.",
+		});
 		this.addField(lines, "tags", { type: "list", items: { type: "string" }, tn_role: "tags" });
 
 		// Complex nested fields

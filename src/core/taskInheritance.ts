@@ -12,7 +12,10 @@ export type InheritedValues = Partial<Record<InheritableField, InheritedValue>>;
 export type SeenValues = Partial<Record<InheritableField, unknown>>;
 
 /** Frontmatter property names, already resolved through the field mapping. */
-export type InheritanceProperties = Record<InheritableField | "inherited", string>;
+export type InheritanceProperties = Record<
+	InheritableField | "inherited" | "cascadeToSubtasks",
+	string
+>;
 
 type Frontmatter = Record<string, unknown>;
 
@@ -39,21 +42,32 @@ function passedValue(field: InheritableField, value: unknown): InheritedValue | 
 
 /** Whether a task's own value blocks inheritance. A hand-written `bundle: false` does. */
 function hasOwnValue(field: InheritableField, value: unknown): boolean {
-	return field === "bundle" ? typeof value === "boolean" : passedValue(field, value) !== undefined;
+	return field === "bundle"
+		? typeof value === "boolean"
+		: passedValue(field, value) !== undefined;
 }
 
 function sameValue(a: unknown, b: unknown): boolean {
 	return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function readInheritedMarker(frontmatter: Frontmatter, props: InheritanceProperties): string[] {
+export function readInheritedMarker(
+	frontmatter: Frontmatter,
+	props: InheritanceProperties
+): string[] {
 	const marker = frontmatter[props.inherited];
 	const values = Array.isArray(marker) ? marker : marker == null ? [] : [marker];
 	return values.filter((value): value is string => typeof value === "string");
 }
 
-function writeMarker(frontmatter: Frontmatter, props: InheritanceProperties, marked: Set<string>): void {
-	const ordered = INHERITABLE_FIELDS.map((field) => props[field]).filter((prop) => marked.has(prop));
+function writeMarker(
+	frontmatter: Frontmatter,
+	props: InheritanceProperties,
+	marked: Set<string>
+): void {
+	const ordered = INHERITABLE_FIELDS.map((field) => props[field]).filter((prop) =>
+		marked.has(prop)
+	);
 	if (ordered.length > 0) frontmatter[props.inherited] = ordered;
 	else delete frontmatter[props.inherited];
 }
@@ -61,7 +75,8 @@ function writeMarker(frontmatter: Frontmatter, props: InheritanceProperties, mar
 /**
  * Values a task inherits. Ancestors are walked breadth first through their parent links: the
  * nearest ancestor with its own value wins, and at equal distance the first listed parent wins.
- * An ancestor's copied values are skipped, so a stale copy never passes further down.
+ * An ancestor's copied values are skipped, so a stale copy never passes further down. An ancestor
+ * with `cascadeToSubtasks: false` passes nothing, including what it would pass from further up.
  */
 export function findInheritedValues(
 	path: string,
@@ -78,8 +93,9 @@ export function findInheritedValues(
 		for (const ancestor of level) {
 			if (visited.has(ancestor)) continue;
 			visited.add(ancestor);
-			next.push(...getParents(ancestor));
 			const frontmatter = getFrontmatter(ancestor);
+			if (frontmatter?.[props.cascadeToSubtasks] === false) continue;
+			next.push(...getParents(ancestor));
 			if (!frontmatter) continue;
 			const marked = readInheritedMarker(frontmatter, props);
 			for (const field of INHERITABLE_FIELDS) {

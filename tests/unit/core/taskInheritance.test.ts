@@ -11,6 +11,7 @@ const props: InheritanceProperties = {
 	contexts: "contexts",
 	bundle: "bundle",
 	inherited: "inherited",
+	cascadeToSubtasks: "cascadeToSubtasks",
 };
 
 function graph(files: Record<string, { fm: Record<string, unknown>; parents?: string[] }>) {
@@ -62,6 +63,35 @@ describe("findInheritedValues", () => {
 			b: { fm: {}, parents: ["a"] },
 		});
 		expect(findInheritedValues("a", props, g.get, g.parents)).toEqual({});
+	});
+
+	it("stops at a parent that does not cascade, which still inherits itself", () => {
+		const g = graph({
+			top: { fm: { priority: "high", contexts: ["@desk"] } },
+			stop: { fm: { cascadeToSubtasks: false, bundle: true }, parents: ["top"] },
+			child: { fm: {}, parents: ["stop"] },
+			own: { fm: { priority: "low" }, parents: ["stop"] },
+			grandchild: { fm: {}, parents: ["own"] },
+		});
+		expect(findInheritedValues("stop", props, g.get, g.parents)).toEqual({
+			priority: "high",
+			contexts: ["@desk"],
+		});
+		expect(findInheritedValues("child", props, g.get, g.parents)).toEqual({});
+		expect(findInheritedValues("grandchild", props, g.get, g.parents)).toEqual({
+			priority: "low",
+		});
+	});
+
+	it("still inherits through another parent that cascades", () => {
+		const g = graph({
+			stop: { fm: { priority: "high", cascadeToSubtasks: false } },
+			other: { fm: { contexts: "@home" } },
+			child: { fm: {}, parents: ["stop", "other"] },
+		});
+		expect(findInheritedValues("child", props, g.get, g.parents)).toEqual({
+			contexts: ["@home"],
+		});
 	});
 });
 
@@ -119,7 +149,12 @@ describe("claimEditedValues", () => {
 			inherited: ["priority", "contexts", "bundle"],
 		};
 		claimEditedValues(fm, ["priority", "bundle"], props);
-		expect(fm).toEqual({ priority: "low", contexts: ["@desk"], bundle: false, inherited: ["contexts"] });
+		expect(fm).toEqual({
+			priority: "low",
+			contexts: ["@desk"],
+			bundle: false,
+			inherited: ["contexts"],
+		});
 	});
 
 	it("leaves tasks without a marker untouched", () => {

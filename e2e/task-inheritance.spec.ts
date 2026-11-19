@@ -5,6 +5,8 @@ let instance: ObsidianApp;
 const stamp = Date.now();
 const parentTitle = `Inheritance parent ${stamp}`;
 const childTitle = `Inheritance child ${stamp}`;
+const stopTitle = `Inheritance stop ${stamp}`;
+const leafTitle = `Inheritance leaf ${stamp}`;
 
 async function frontmatter(title: string): Promise<Record<string, unknown> | null> {
 	return instance.page.evaluate((title) => {
@@ -48,7 +50,7 @@ test.afterAll(async () => {
 					if (titles.includes(file.basename)) await app.vault.delete(file);
 				}
 			},
-			[parentTitle, childTitle]
+			[parentTitle, childTitle, stopTitle, leafTitle]
 		);
 	} finally {
 		await closeObsidian(instance);
@@ -98,4 +100,53 @@ test("subtasks get, follow, and give up their parent's values", async () => {
 	await expect
 		.poll(child, { timeout: 10000 })
 		.toEqual({ priority: "high", contexts: undefined, inherited: "absent" });
+});
+
+test("a task with passing turned off passes nothing to its subtasks", async () => {
+	const setCascade = (value: false | undefined) =>
+		instance.page.evaluate(
+			async ({ title, value }) => {
+				const app = (window as any).app;
+				const plugin = app.plugins.plugins.tasknotes;
+				const file = app.vault.getMarkdownFiles().find((file: any) => file.basename === title);
+				const task = await plugin.cacheManager.getTaskInfo(file.path);
+				await plugin.taskService.updateTask(task, { cascadeToSubtasks: value });
+			},
+			{ title: stopTitle, value }
+		);
+	const pick = async (title: string) => {
+		const fm = await frontmatter(title);
+		return { priority: fm?.priority, cascade: fm?.cascadeToSubtasks, inherited: fm?.inherited ?? "absent" };
+	};
+
+	await instance.page.evaluate(
+		async ({ parentTitle, stopTitle, leafTitle }) => {
+			const plugin = (window as any).app.plugins.plugins.tasknotes;
+			plugin.settings.taskCreationDefaults.inheritParentTaskProperties = true;
+			await plugin.taskService.updateTask(
+				await plugin.cacheManager.getTaskInfo(
+					(window as any).app.vault.getMarkdownFiles().find((f: any) => f.basename === parentTitle).path
+				),
+				{ priority: "high" }
+			);
+			await new Promise((resolve) => setTimeout(resolve, 300));
+			await plugin.taskService.createTask({ title: stopTitle, projects: [`[[${parentTitle}]]`] });
+			await new Promise((resolve) => setTimeout(resolve, 300));
+			await plugin.taskService.createTask({ title: leafTitle, projects: [`[[${stopTitle}]]`] });
+		},
+		{ parentTitle, stopTitle, leafTitle }
+	);
+	await expect.poll(() => pick(leafTitle), { timeout: 10000 }).toMatchObject({ priority: "high" });
+
+	// Turning passing off removes the copies below, but the task keeps its own inherited values.
+	await setCascade(false);
+	await expect
+		.poll(() => pick(leafTitle), { timeout: 10000 })
+		.toMatchObject({ inherited: "absent" });
+	expect(await pick(stopTitle)).toMatchObject({ priority: "high", cascade: false });
+
+	// Turning it back on restores them and removes the property.
+	await setCascade(undefined);
+	await expect.poll(() => pick(leafTitle), { timeout: 10000 }).toMatchObject({ priority: "high" });
+	expect(await pick(stopTitle)).toMatchObject({ cascade: undefined });
 });
