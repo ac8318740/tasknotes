@@ -740,13 +740,42 @@ export function isPastDate(dateString: string): boolean {
 	return isBeforeDateSafe(dateString, getTodayString());
 }
 
-/**
- * Format a date string for user display
- */
-export function formatDateForDisplay(dateString: string, formatString = "MMM d, yyyy"): string {
+/** The display preferences needed by date labels, independent of plugin state. */
+export interface DateDisplaySettings {
+	dateDisplayFormat?: "default" | "iso";
+	calendarViewSettings?: { timeFormat?: "12" | "24" };
+}
+
+/** Display-only policy. Never use for storage, filenames, or date arithmetic. */
+export function getDateDisplayPattern(
+	preference: DateDisplaySettings["dateDisplayFormat"],
+	fallback = "MMM d, yyyy"
+): string {
+	return preference === "iso" && fallback.trim() !== "" ? "yyyy-MM-dd" : fallback;
+}
+
+/** Format a local calendar date, optionally including the user's preferred clock format. */
+export function formatDateLabel(
+	date: Date,
+	settings: DateDisplaySettings,
+	fallback = "MMM d, yyyy",
+	includeTime = false
+): string {
+	if (!isValid(date)) return String(date);
+	const datePattern = getDateDisplayPattern(settings.dateDisplayFormat, fallback);
+	const timePattern = settings.calendarViewSettings?.timeFormat === "12" ? "h:mm a" : "HH:mm";
+	return formatUIDate(date, includeTime ? `${datePattern} ${timePattern}` : datePattern);
+}
+
+/** Format a date string for user display. */
+export function formatDateForDisplay(
+	dateString: string,
+	formatString = "MMM d, yyyy",
+	dateDisplayFormat?: DateDisplaySettings["dateDisplayFormat"]
+): string {
 	try {
 		const parsed = parseDateToLocalInternal(dateString);
-		return formatUIDate(parsed, formatString);
+		return formatUIDate(parsed, getDateDisplayPattern(dateDisplayFormat, formatString));
 	} catch (error) {
 		tasknotesLogger.error("Error formatting date for display:", {
 			category: "validation",
@@ -830,7 +859,8 @@ export function parseTimestamp(timestampString: string): Date {
 export function formatTimestampForDisplay(
 	timestampString: string,
 	formatString?: string,
-	timeFormat: "12" | "24" = "24"
+	timeFormat: "12" | "24" = "24",
+	dateDisplayFormat?: DateDisplaySettings["dateDisplayFormat"]
 ): string {
 	if (!timestampString) {
 		return timestampString;
@@ -841,7 +871,7 @@ export function formatTimestampForDisplay(
 		if (isValid(parsed)) {
 			// Use custom format if provided, otherwise use time format preference
 			const finalFormat =
-				formatString || (timeFormat === "12" ? "MMM d, yyyy h:mm a" : "MMM d, yyyy HH:mm");
+				formatString || `${getDateDisplayPattern(dateDisplayFormat)} ${timeFormat === "12" ? "h:mm a" : "HH:mm"}`;
 			return formatUIDate(toVaultDate(parsed), finalFormat);
 		}
 		return timestampString;
@@ -948,7 +978,11 @@ export function formatTime(date: Date, timeFormat: "12" | "24" = "24"): string {
  * @param timeFormat - The user's time format preference ('12' or '24')
  * @returns Formatted date and time string
  */
-export function formatDateTime(date: Date, timeFormat: "12" | "24" = "24"): string {
+export function formatDateTime(
+	date: Date,
+	timeFormat: "12" | "24" = "24",
+	dateDisplayFormat?: DateDisplaySettings["dateDisplayFormat"]
+): string {
 	if (!isValid(date)) {
 		tasknotesLogger.warn("Invalid date provided to formatDateTime:", {
 			category: "validation",
@@ -958,7 +992,7 @@ export function formatDateTime(date: Date, timeFormat: "12" | "24" = "24"): stri
 		return "";
 	}
 
-	return formatUIDate(date, timeFormat === "12" ? "MMM d, yyyy h:mm a" : "MMM d, yyyy HH:mm");
+	return formatUIDate(date, `${getDateDisplayPattern(dateDisplayFormat)} ${timeFormat === "12" ? "h:mm a" : "HH:mm"}`);
 }
 
 /**
@@ -990,7 +1024,10 @@ export function formatDateStringTime(dateString: string, timeFormat: "12" | "24"
  * Helper function to create formatDateTimeForDisplay calls with user's time format preference
  * Use this in UI components that have access to the plugin instance
  */
-export function createTimeFormatHelper(userTimeFormat: "12" | "24") {
+export function createTimeFormatHelper(
+	userTimeFormat: "12" | "24",
+	dateDisplayFormat?: DateDisplaySettings["dateDisplayFormat"]
+) {
 	return {
 		formatDateTimeForDisplay: (
 			dateString: string,
@@ -999,11 +1036,11 @@ export function createTimeFormatHelper(userTimeFormat: "12" | "24") {
 				timeFormat?: string;
 				showTime?: boolean;
 			} = {}
-		) => formatDateTimeForDisplay(dateString, { ...options, userTimeFormat }),
+		) => formatDateTimeForDisplay(dateString, { ...options, userTimeFormat, dateDisplayFormat }),
 
 		formatTime: (date: Date) => formatTime(date, userTimeFormat),
 
-		formatDateTime: (date: Date) => formatDateTime(date, userTimeFormat),
+		formatDateTime: (date: Date) => formatDateTime(date, userTimeFormat, dateDisplayFormat),
 
 		formatDateStringTime: (dateString: string) =>
 			formatDateStringTime(dateString, userTimeFormat),
@@ -1076,6 +1113,7 @@ export function formatDateTimeForDisplay(
 	dateString: string,
 	options: {
 		dateFormat?: string;
+		dateDisplayFormat?: DateDisplaySettings["dateDisplayFormat"];
 		timeFormat?: string;
 		showTime?: boolean;
 		userTimeFormat?: "12" | "24"; // User's time format preference
@@ -1084,11 +1122,14 @@ export function formatDateTimeForDisplay(
 	if (!dateString) return "";
 
 	const {
-		dateFormat = "MMM d, yyyy",
+		dateFormat: fallbackDateFormat = "MMM d, yyyy",
+		dateDisplayFormat,
 		timeFormat,
 		showTime = true,
 		userTimeFormat = "24",
 	} = options;
+
+	const dateFormat = getDateDisplayPattern(dateDisplayFormat, fallbackDateFormat);
 
 	// Use userTimeFormat if no specific timeFormat is provided
 	const finalTimeFormat = timeFormat || (userTimeFormat === "12" ? "h:mm a" : "HH:mm");

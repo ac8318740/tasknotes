@@ -1,3 +1,4 @@
+import { applyModalShell } from "../ui/kit/modal";
 import { uiLocale } from "../i18n/runtime";
 import { msg } from "@lingui/core/macro";
 import { App, Modal, Notice, setIcon } from "obsidian";
@@ -36,6 +37,7 @@ export class TimeEntryEditorModal extends Modal {
 		onSave: (timeEntries: TimeEntry[]) => void | Promise<void>
 	) {
 		super(app);
+		applyModalShell(this);
 		this.plugin = plugin;
 		this.task = task;
 		// Create a working copy of time entries

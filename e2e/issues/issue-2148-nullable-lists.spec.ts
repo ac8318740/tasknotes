@@ -21,7 +21,8 @@ async function open(name: string) {
     const plugin = (window as any).app.plugins.plugins.tasknotes;
     await plugin.openTaskEditModal(await plugin.cacheManager.getTaskInfo(path));
   }, `${folder}/${name}.md`);
-  await expect(page.locator('.modal').getByPlaceholder('Task title...')).toBeVisible();
+  await expect(page.locator('.modal .title-input')).toBeVisible();
+  if (await page.locator('.modal .tn-task-modal__details-toggle').getAttribute('aria-expanded') !== 'true') await page.locator('.modal .tn-task-modal__details-toggle').click();
 }
 
 test.beforeAll(async () => {
@@ -89,8 +90,8 @@ test('nullable lists open blank; no-op saves preserve bytes and unrelated files'
     const before = await read(name);
     await open(name);
     const modal = page.locator('.modal');
-    await expect(modal.getByPlaceholder('context1, context2')).toHaveValue('');
-    await expect(modal.getByPlaceholder('tag1, tag2')).toHaveValue('');
+    await expect(modal.getByPlaceholder('Add contexts', { exact: true })).toHaveValue('');
+    await expect(modal.getByPlaceholder('Add tags', { exact: true })).toHaveValue('');
     await expect(modal.locator('.setting-item').filter({ hasText: 'Custom list' }).locator('input')).toHaveValue('');
     await expect(modal.getByRole('button', { name: 'Remove project', exact: true })).toHaveCount(0);
     await modal.getByRole('button', { name: 'Save', exact: true }).click();
@@ -103,7 +104,7 @@ test('nullable lists open blank; no-op saves preserve bytes and unrelated files'
 test('adding a context to YAML null never carries a fake null string into the file', async () => {
   await open('Null');
   const modal = page.locator('.modal');
-  await modal.getByPlaceholder('context1, context2').fill('work');
+  await modal.getByPlaceholder('Add contexts', { exact: true }).fill('work');
   await modal.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(modal).toHaveCount(0);
   const key = await page.evaluate(() => (window as any).app.plugins.plugins.tasknotes.fieldMapper.toUserField('contexts'));
@@ -114,8 +115,14 @@ test('adding a context to YAML null never carries a fake null string into the fi
 test('clearing the last item in every list does not persist null strings', async () => {
   await open('Last');
   const modal = page.locator('.modal');
-  await modal.getByPlaceholder('context1, context2').fill('');
-  await modal.getByPlaceholder('tag1, tag2').fill('');
+  await modal.getByPlaceholder('Add contexts', { exact: true }).fill('');
+  await modal.getByPlaceholder('Add tags', { exact: true }).fill('');
+  // Clearing tags opens autocomplete; dismiss it before clicking controls behind it.
+  if (await page.locator('.suggestion-container:visible').count()) {
+    await modal.getByPlaceholder('Add tags', { exact: true }).press('Escape');
+    await expect(page.locator('.suggestion-container:visible')).toHaveCount(0);
+    await expect(modal).toBeVisible();
+  }
   await modal.getByRole('button', { name: 'Remove project', exact: true }).click();
   await modal.getByRole('button', { name: 'Remove task', exact: true }).click();
   await modal.locator('.setting-item').filter({ hasText: 'Custom list' }).locator('input').fill('');

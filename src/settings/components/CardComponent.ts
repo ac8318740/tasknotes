@@ -1,3 +1,5 @@
+import { renderEmptyState } from "../../ui/kit/emptyState";
+import { fieldLabel } from "../../ui/kit/modal";
 import { uiText } from "../../i18n/runtime";
 import { msg } from "@lingui/core/macro";
 /**
@@ -177,7 +179,7 @@ import { msg } from "@lingui/core/macro";
  * - Content and actions sections hide when collapsed
  */
 
-import { Setting, ToggleComponent, setIcon } from "obsidian";
+import { Setting, ToggleComponent, setIcon, setTooltip } from "obsidian";
 import {
 	colorValueToInputValue,
 	normalizeThemeColor,
@@ -208,6 +210,7 @@ export interface CardConfig {
 	/** Header section with title, subtitle, badges, and actions */
 	header: {
 		primaryText: string;
+		glyph?: HTMLElement;
 		secondaryText?: string;
 		meta?: HTMLElement[];
 		actions?: CardHeaderButton[];
@@ -264,12 +267,21 @@ export interface CardButton {
 }
 
 export const CARD_COLLAPSE_CHANGED = "tasknotes:card-collapse-changed";
+let disclosureSequence = 0;
 
 /** Update presentation without treating restoration as a user interaction. */
 export function setCardCollapsed(card: HTMLElement, collapsed: boolean): void {
 	card.classList.toggle("tasknotes-settings__card--collapsed", collapsed);
 	const header = card.querySelector<HTMLElement>(":scope > .tasknotes-settings__card-header");
-	if (header) header.title = collapsed ? uiText(msg({ message: "Expand card", context: "settings/components/CardComponent: setCardCollapsed display" })) : uiText(msg({ message: "Collapse card", context: "settings/components/CardComponent: setCardCollapsed display" }));
+	const disclosure = header?.querySelector<HTMLButtonElement>(".tasknotes-settings__card-disclosure");
+	disclosure?.setAttribute("aria-expanded", String(!collapsed));
+	const chevron = disclosure?.querySelector<HTMLElement>(".tasknotes-settings__card-chevron");
+	if (chevron) setIcon(chevron, collapsed ? "chevron-right" : "chevron-down");
+	for (const section of card.querySelectorAll<HTMLElement>(":scope > .tasknotes-settings__card-content, :scope > .tasknotes-settings__card-actions")) {
+		if (collapsed && section.contains(card.ownerDocument.activeElement)) disclosure?.focus();
+		section.inert = collapsed;
+		section.hidden = collapsed;
+	}
 }
 
 const CARD_INFO_CLASS = "tasknotes-settings__card-info";
@@ -332,13 +344,18 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 	if (config.draggable) {
 		header.addClass("tasknotes-settings__card-header--with-drag-handle");
 		dragHandle = header.createDiv("tasknotes-settings__card-drag-handle");
-		dragHandle.textContent = "⋮⋮";
+		setIcon(dragHandle, "grip-vertical");
 		dragHandle.draggable = true;
-		dragHandle.title = uiText(msg({ message: "Drag to reorder", context: "settings/components/CardComponent: createCard display" }));
+		dragHandle.tabIndex = 0;
+		dragHandle.setAttribute("role", "button");
+		dragHandle.setAttribute("aria-keyshortcuts", "Alt+ArrowUp Alt+ArrowDown");
+		setTooltip(dragHandle, uiText(msg({ message: "Drag to reorder", context: "settings/components/CardComponent: createCard display" })));
 	}
 
 	// Left side of header with color indicator and info
-	const headerLeft = header.createDiv();
+	const headerLeft = config.collapsible
+		? header.createEl("button", { cls: "tasknotes-settings__card-disclosure", attr: { type: "button" } })
+		: header.createDiv();
 	headerLeft.classList.remove(
 		"tn-static-display-block-2a1b75c9",
 		"tn-static-display-flex-4d51fc62",
@@ -371,6 +388,8 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 			);
 		}
 	}
+
+	if (config.header.glyph) headerLeft.appendChild(config.header.glyph);
 
 	// Header info
 	const headerInfo = headerLeft.createDiv("tasknotes-settings__card-info");
@@ -435,7 +454,7 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 			setIcon(icon, actionConfig.icon);
 
 			if (actionConfig.tooltip) {
-				button.title = actionConfig.tooltip;
+				setTooltip(button, actionConfig.tooltip);
 			}
 
 			button.onclick = (e) => {
@@ -447,6 +466,8 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 
 	// Add collapsible functionality if enabled
 	if (config.collapsible) {
+		const chevron = headerLeft.createSpan({ cls: "tasknotes-settings__card-chevron", attr: { "aria-hidden": "true" } });
+		setIcon(chevron, config.defaultCollapsed ? "chevron-right" : "chevron-down");
 		// Create toggle function
 		const toggleCollapse = () => {
 			const isCurrentlyCollapsed = card.hasClass("tasknotes-settings__card--collapsed");
@@ -460,12 +481,15 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 
 		// Make entire header clickable
 		header.addClass("tasknotes-settings__card-header--clickable");
-		header.title = config.defaultCollapsed ? uiText(msg({ message: "Expand card", context: "settings/components/CardComponent: createCard display" })) : uiText(msg({ message: "Collapse card", context: "settings/components/CardComponent: createCard display" }));
 		header.onclick = (e) => {
 			// Don't trigger if clicking on action buttons
-			if ((e.target as Element).closest(".tasknotes-settings__card-header-actions")) {
+			if ((e.target as Element).closest("button, input, select, a, [role=button]")) {
 				return;
 			}
+			toggleCollapse();
+		};
+		headerLeft.onclick = (event) => {
+			event.stopPropagation();
 			toggleCollapse();
 		};
 	}
@@ -482,6 +506,7 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 				const configRow = content.createDiv("tasknotes-settings__card-config-row");
 
 				if (row.fullWidth) {
+					configRow.addClass("tasknotes-settings__card-config-row--full-width");
 					configRow.classList.remove(
 						"tn-static-display-flex-4d51fc62",
 						"tn-static-display-flex-8bb39979",
@@ -504,7 +529,7 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 				}
 
 				const label = configRow.createSpan("tasknotes-settings__card-config-label");
-				label.textContent = row.label;
+				label.textContent = fieldLabel(row.label);
 
 				configRow.appendChild(row.input);
 			});
@@ -544,6 +569,12 @@ export function createCard(container: HTMLElement, config: CardConfig): HTMLElem
 		});
 	}
 
+	if (config.collapsible) {
+		const sections = Array.from(card.querySelectorAll<HTMLElement>(":scope > .tasknotes-settings__card-content, :scope > .tasknotes-settings__card-actions"));
+		for (const section of sections) section.id = `tn-settings-disclosure-${++disclosureSequence}`;
+		headerLeft.setAttribute("aria-controls", sections.map(section => section.id).join(" "));
+		setCardCollapsed(card, Boolean(config.defaultCollapsed));
+	}
 	return card;
 }
 
@@ -653,8 +684,7 @@ function configureNativeThemeColorPicker(input: ThemeColorTextInput): void {
 	picker.type = "color";
 	picker.addClass(THEME_COLOR_NATIVE_PICKER_CLASS);
 	picker.value = hexColorForNativePicker(input.value) || THEME_COLOR_PICKER_FALLBACK;
-	picker.title = uiText(msg({ message: "Open color picker", context: "settings/components/CardComponent: configureNativeThemeColorPicker display" }));
-	picker.setAttribute("aria-label", uiText(msg({ message: "Open color picker", context: "settings/components/CardComponent: configureNativeThemeColorPicker display" })));
+	setTooltip(picker, uiText(msg({ message: "Open color picker", context: "settings/components/CardComponent: configureNativeThemeColorPicker display" })));
 
 	const syncInputFromPicker = () => {
 		if (input.value === picker.value) return;
@@ -683,7 +713,6 @@ export function configureThemeColorInput(input: HTMLInputElement): void {
 	input.addClass(THEME_COLOR_TEXT_INPUT_CLASS);
 	input.placeholder = THEME_COLOR_INPUT_PLACEHOLDER;
 	input.setAttribute("list", THEME_COLOR_DATALIST_ID);
-	input.title = THEME_COLOR_INPUT_PLACEHOLDER;
 	ensureThemeColorDatalist();
 	configureNativeThemeColorPicker(themeInput);
 }
@@ -766,31 +795,73 @@ export function setupCardDragAndDrop(
 
 	const cardId = card.getAttribute("data-card-id");
 	if (!cardId) return;
+	let preview: HTMLElement | null = null;
+	const clearTargets = () => {
+		container.querySelectorAll(".tasknotes-settings__card--drag-over-top, .tasknotes-settings__card--drag-over-bottom")
+			.forEach((target) => target.classList.remove("tasknotes-settings__card--drag-over-top", "tasknotes-settings__card--drag-over-bottom"));
+	};
+	const finishDrag = () => {
+		clearTargets();
+		card.removeClass("tasknotes-settings__card--dragging");
+		preview?.remove();
+		preview = null;
+		card.ownerDocument.removeEventListener("keydown", cancelDrag, true);
+	};
+	const cancelDrag = (event: KeyboardEvent) => {
+		if (event.key !== "Escape") return;
+		event.preventDefault();
+		event.stopPropagation();
+		finishDrag();
+		dragHandle.focus({ preventScroll: true });
+	};
+	dragHandle.addEventListener("click", (event) => event.stopPropagation());
+	dragHandle.addEventListener("keydown", (event) => {
+		if (!event.altKey || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
+		event.preventDefault();
+		event.stopPropagation();
+		const cards = Array.from(container.querySelectorAll<HTMLElement>(".tasknotes-settings__card--draggable"));
+		const index = cards.indexOf(card);
+		const before = event.key === "ArrowUp";
+		const target = cards[index + (before ? -1 : 1)];
+		const targetId = target?.getAttribute("data-card-id");
+		if (!targetId) return;
+		onReorder(cardId, targetId, before);
+		const moved = Array.from(container.querySelectorAll<HTMLElement>("[data-card-id]"))
+			.find((candidate) => candidate.getAttribute("data-card-id") === cardId);
+		moved?.querySelector<HTMLElement>(".tasknotes-settings__card-drag-handle")?.focus({ preventScroll: true });
+		moved?.scrollIntoView({ block: "nearest" });
+	});
 
 	dragHandle.addEventListener("dragstart", (e) => {
 		if (e.dataTransfer) {
+			clearTargets();
 			e.dataTransfer.setData("text/plain", cardId);
+			e.dataTransfer.effectAllowed = "move";
+			preview = card.cloneNode(true) as HTMLElement;
+			preview.addClass("tasknotes-settings__card--drag-preview");
+			preview.querySelectorAll(".tasknotes-settings__card-content, .tasknotes-settings__card-actions").forEach((element) => element.remove());
+			preview.setCssProps({ "--tn-settings-drag-width": `${Math.min(card.getBoundingClientRect().width, 360)}px` });
+			container.appendChild(preview);
+			e.dataTransfer.setDragImage(preview, 16, 16);
+			card.ownerDocument.defaultView?.requestAnimationFrame(() => { preview?.remove(); preview = null; });
 			card.addClass("tasknotes-settings__card--dragging");
+			card.ownerDocument.addEventListener("keydown", cancelDrag, true);
 		}
 	});
 
-	dragHandle.addEventListener("dragend", () => {
-		card.removeClass("tasknotes-settings__card--dragging");
-	});
+	dragHandle.addEventListener("dragend", finishDrag);
 
 	card.addEventListener("dragover", (e) => {
-		e.preventDefault();
 		const draggingCard = container.querySelector(
 			".tasknotes-settings__card--dragging"
 		) as HTMLElement;
 		if (draggingCard && draggingCard !== card) {
+			e.preventDefault();
+			if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
 			const rect = card.getBoundingClientRect();
 			const midpoint = rect.top + rect.height / 2;
 
-			card.removeClass(
-				"tasknotes-settings__card--drag-over-top",
-				"tasknotes-settings__card--drag-over-bottom"
-			);
+			clearTargets();
 
 			if (e.clientY < midpoint) {
 				card.addClass("tasknotes-settings__card--drag-over-top");
@@ -800,7 +871,8 @@ export function setupCardDragAndDrop(
 		}
 	});
 
-	card.addEventListener("dragleave", () => {
+	card.addEventListener("dragleave", (event) => {
+		if (event.relatedTarget && card.contains(event.relatedTarget as Node)) return;
 		card.removeClass(
 			"tasknotes-settings__card--drag-over-top",
 			"tasknotes-settings__card--drag-over-bottom"
@@ -808,16 +880,11 @@ export function setupCardDragAndDrop(
 	});
 
 	card.addEventListener("drop", (e) => {
-		e.preventDefault();
-		card.removeClass(
-			"tasknotes-settings__card--drag-over-top",
-			"tasknotes-settings__card--drag-over-bottom"
-		);
-
+		const source = container.querySelector<HTMLElement>(".tasknotes-settings__card--dragging");
 		const draggedCardId = e.dataTransfer?.getData("text/plain");
-		if (!draggedCardId) {
-			return;
-		}
+		if (!source || !draggedCardId || source.getAttribute("data-card-id") !== draggedCardId) return;
+		e.preventDefault();
+		source.querySelector(".tasknotes-settings__card-drag-handle")?.dispatchEvent(new Event("dragend"));
 		const targetCardId = cardId;
 
 		if (draggedCardId !== targetCardId) {
@@ -932,7 +999,7 @@ export function createCardUrlInput(placeholder?: string, value?: string): HTMLIn
 
 	// Add pattern validation to accept calendar URL protocols
 	input.pattern = "^(https?|webcals?)://.*";
-	input.title = uiText(msg({ message: "Enter an HTTP://, HTTPS://, webcal://, or webcals:// URL", context: "settings/components/CardComponent: createCardUrlInput display" }));
+	setTooltip(input, uiText(msg({ message: "Enter an HTTP://, HTTPS://, webcal://, or webcals:// URL", context: "settings/components/CardComponent: createCardUrlInput display" })));
 
 	if (placeholder) {
 		input.placeholder = placeholder;
@@ -1019,31 +1086,5 @@ export function showCardEmptyState(
 	onAction?: () => void
 ): void {
 	container.empty();
-	const emptyState = container.createDiv("tasknotes-settings__empty-state");
-	emptyState.createSpan("tasknotes-settings__empty-icon");
-	emptyState.createSpan({
-		text: message,
-		cls: "tasknotes-settings__empty-text",
-	});
-
-	if (actionText && onAction) {
-		const actionButton = emptyState.createEl("button", {
-			text: actionText,
-			cls: "tn-btn tn-btn--primary",
-		});
-		actionButton.classList.remove(
-			"tn-static-font-size-12px-b0cc7e05",
-			"tn-static-margin-top-0-5rem-3dc98b5e",
-			"tn-static-margin-top-0-d462248a",
-			"tn-static-margin-top-12px-91e0f558",
-			"tn-static-margin-top-16px-1b0f4999",
-			"tn-static-margin-top-20px-a26bda7d",
-			"tn-static-margin-top-30px-2fbbbcd4",
-			"tn-static-margin-top-4px-96ad6099",
-			"tn-static-margin-top-8px-8a77e5a3",
-			"tn-static-margin-top-8px-f4f01e68"
-		);
-		actionButton.classList.add("tn-static-margin-top-1rem-2239d6d5");
-		actionButton.onclick = onAction;
-	}
+	renderEmptyState(container, { message, actionLabel: actionText, onAction });
 }

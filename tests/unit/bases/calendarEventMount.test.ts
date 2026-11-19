@@ -32,6 +32,9 @@ function createPlugin(overrides: Record<string, unknown> = {}) {
 				timeFormat: "HH:mm",
 			},
 		},
+		fieldMapper: {
+			isPropertyForField: (property: string, field: string) => property === field || property === `note.${field}`,
+		},
 		...overrides,
 	} as any;
 }
@@ -48,6 +51,43 @@ function createEvent(extendedProps: Record<string, unknown>): CalendarEventApi {
 }
 
 describe("calendarEventMount", () => {
+	it("omits only the date represented by the agenda gutter and its redundant countdown", () => {
+		const task = createTask({ scheduled: "2026-05-19T10:30", due: "2026-05-20" });
+		for (const eventType of ["scheduled", "due", "timeEntry"]) {
+			const createCard = jest.fn(() => document.createElement("div"));
+			createCalendarListEventCard({
+				event: createEvent({ taskInfo: task, eventType }),
+				plugin: createPlugin(),
+				visibleProperties: ["note.scheduled", "due", "formula.dueIn", "tags"],
+				basesEntryByPath: new Map(),
+				buildTaskCardOptions: (options) => options as any,
+				factories: { createTaskCard: createCard as any },
+			});
+			expect(createCard.mock.calls[0][2]).toEqual(eventType === "scheduled"
+				? ["due", "tags"] : eventType === "due" ? ["note.scheduled", "tags"] : ["note.scheduled", "due", "tags"]);
+		}
+	});
+	it("keeps countdown-only configurations and custom date mappings intact", () => {
+		const createCard = jest.fn(() => document.createElement("div"));
+		createCalendarListEventCard({
+			event: createEvent({ taskInfo: createTask(), eventType: "due" }),
+			plugin: createPlugin({ fieldMapper: { isPropertyForField: (property: string, field: string) => property === `note.custom_${field}` } }),
+			visibleProperties: ["note.custom_due", "note.custom_scheduled", "formula.score"],
+			basesEntryByPath: new Map(),
+			buildTaskCardOptions: options => options as any,
+			factories: { createTaskCard: createCard as any },
+		});
+		expect(createCard.mock.calls[0][2]).toEqual(["note.custom_scheduled", "formula.score"]);
+		createCalendarListEventCard({
+			event: createEvent({ taskInfo: createTask(), eventType: "scheduled" }),
+			plugin: createPlugin(),
+			visibleProperties: ["formula.dueIn", "formula.score"],
+			basesEntryByPath: new Map(),
+			buildTaskCardOptions: options => options as any,
+			factories: { createTaskCard: createCard as any },
+		});
+		expect(createCard.mock.calls[1][2]).toEqual(["formula.dueIn", "formula.score"]);
+	});
 	it("enriches list-view task cards with Bases formula and file values", () => {
 		const getValue = jest.fn((propertyId: string) => {
 			if (propertyId === "file.ctime") return { data: "2026-05-18T00:00:00" };
@@ -106,6 +146,7 @@ describe("calendarEventMount", () => {
 		expect(element.classList.contains("fc-event--has-related-note")).toBe(true);
 		expect(element.dataset.relatedNoteCount).toBe("2");
 		expect(element.querySelector(".fc-event-provider-icon")).not.toBeNull();
+		expect(element.classList.contains("has-provider-icon")).toBe(true);
 		const indicator = title.querySelector<HTMLElement>(".ics-related-note-indicator");
 		expect(indicator?.dataset.relatedNoteCount).toBe("2");
 		expect(indicator?.getAttribute("aria-label")).toBe("Related notes & tasks: 2");
@@ -151,6 +192,80 @@ describe("calendarEventMount", () => {
 		expect(enrichedTask.dateCreated).toBe("2026-05-19T00:00:00");
 		expect(visibleProperties).toEqual(["formula.score"]);
 		expect(buildTaskCardOptions.mock.calls[0][0].targetDate).toBeInstanceOf(Date);
+	});
+
+	it.each([
+		{
+			name: "a projected occurrence of a date-only series",
+			scheduled: "2026-11-08",
+			props: { isPatternInstance: true },
+			expected: "2026-11-15",
+		},
+		{
+			name: "a projected occurrence of a timed series",
+			scheduled: "2026-11-08T09:30",
+			props: { isPatternInstance: true },
+			expected: "2026-11-15T09:30",
+		},
+		{
+			name: "a recorded occurrence",
+			scheduled: "2026-11-08",
+			props: { isRecurringInstance: true },
+			expected: "2026-11-15",
+		},
+		{
+			name: "the pending occurrence",
+			scheduled: "2026-11-08",
+			props: { isNextScheduledOccurrence: true },
+			expected: undefined,
+		},
+		{
+			name: "an occurrence note",
+			scheduled: "2026-11-08",
+			props: { isRecurringInstance: true, isMaterializedOccurrence: true },
+			expected: undefined,
+		},
+	])("gives the card the date of $name", ({ scheduled, props, expected }) => {
+		const buildTaskCardOptions = jest.fn((options) => options as any);
+
+		createCalendarListEventCard({
+			event: createEvent({
+				taskInfo: createTask({ scheduled, recurrence: "FREQ=WEEKLY" }),
+				eventType: "recurring",
+				instanceDate: "2026-11-15",
+				recurringTemplateTime: "09:30",
+				...props,
+			}),
+			plugin: createPlugin(),
+			visibleProperties: [],
+			basesEntryByPath: new Map(),
+			buildTaskCardOptions,
+			factories: { createTaskCard: jest.fn(() => document.createElement("div")) as any },
+		});
+
+		expect(buildTaskCardOptions.mock.calls[0][0].occurrenceScheduled).toBe(expected);
+	});
+
+	it("points the card's menu at the row's occurrence", () => {
+		const buildTaskCardOptions = jest.fn((options) => options as any);
+
+		createCalendarListEventCard({
+			event: createEvent({
+				taskInfo: createTask({ scheduled: "2026-11-08", recurrence: "FREQ=WEEKLY" }),
+				eventType: "recurring",
+				instanceDate: "2026-11-15",
+				isPatternInstance: true,
+			}),
+			plugin: createPlugin(),
+			visibleProperties: [],
+			basesEntryByPath: new Map(),
+			buildTaskCardOptions,
+			factories: { createTaskCard: jest.fn(() => document.createElement("div")) as any },
+		});
+
+		expect(buildTaskCardOptions.mock.calls[0][0].occurrenceDate).toEqual(
+			new Date("2026-11-15T00:00:00.000Z")
+		);
 	});
 
 	it("renders provider events as calendar event cards with related-note counts", () => {

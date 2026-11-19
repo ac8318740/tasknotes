@@ -1,13 +1,13 @@
 import { uiData } from "../i18n/dataText";
+import { openTaskPropertyPicker, tasksForPropertyAction } from "./taskPropertyPickers";
 import type { MessageSuffix } from "../i18n/concepts";
 import { uiText } from "../i18n/runtime";
-import { uiNumber } from "../i18n/formatters";
+import { uiNumber, formatUIDate } from "../i18n/formatters";
 import { messageForKey } from "../i18n/messages";
 import { msg } from "@lingui/core/macro";
-import { Notice, setTooltip, TFile, type CachedMetadata } from "obsidian";
+import { setIcon, setTooltip, TFile, type CachedMetadata } from "obsidian";
 import TaskNotesPlugin from "../main";
 import { ICSEvent, TaskInfo } from "../types";
-import { DateContextMenu } from "../components/DateContextMenu";
 import { DEFAULT_INTERNAL_VISIBLE_PROPERTIES } from "../settings/defaults";
 import { calculateTotalTimeSpent, getFiniteRecurringInstanceCount } from "../utils/helpers";
 import { filterTaskIdentificationTags } from "../utils/taskTagFiltering";
@@ -15,10 +15,13 @@ import { getShownOccurrence } from "../core/recurrence";
 import {
 	formatDateTimeForDisplay,
 	getDatePart,
-	getTimePart,
+	getTodayLocal,
+	hasTimeComponent,
 	isOverdueTimeAware,
 	isTodayTimeAware,
+	parseDateToLocal,
 } from "../utils/dateUtils";
+import { convertBasesValueToNative } from "../bases/basesValueConversion";
 import { stringifyUnknown } from "../utils/stringUtils";
 import { convertInternalToUserProperties } from "../utils/propertyMapping";
 import {
@@ -35,19 +38,24 @@ import {
 } from "./taskCardHelpers";
 import {
 	appendInternalLink,
+	renderAttachmentLinks,
 	renderProjectLinks,
 	renderTextWithLinks,
 	type LinkServices,
 } from "./renderers/linkRenderer";
 import { renderContextsValue, renderTagsValue, type TagServices } from "./renderers/tagRenderer";
 import { normalizeDependencyEntry, resolveDependencyEntry } from "../utils/dependencyUtils";
+import { relativeDay } from "./kit/dateLabel";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { vaultNow } from "../utils/vaultTime";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Ui/TaskCardProperties" });
 
 export interface TaskCardPropertyOptions {
+	plainTags?: boolean;
 	propertyLabels?: TaskCardPresentationOptions["propertyLabels"];
+	/** See TaskCardOptions.occurrenceScheduled. */
+	occurrenceScheduled?: string;
 }
 
 function tTaskCard(
@@ -70,7 +78,7 @@ function prepareInteractiveControl(element: HTMLElement): void {
 	element.dataset.tnNoDrag = "true";
 	element.setAttribute("draggable", "false");
 	element.addEventListener("mousedown", (event) => {
-		event.preventDefault();
+		if (!element.closest(".kanban-view__card-wrapper")) event.preventDefault();
 		event.stopPropagation();
 	});
 	element.addEventListener("keydown", (event) => {
@@ -92,6 +100,7 @@ function normalizeICSEventIds(value: unknown): string[] {
 function formatICSEventSummary(icsEvent: ICSEvent, plugin: TaskNotesPlugin): string {
 	const dateText = icsEvent.start
 		? formatDateTimeForDisplay(icsEvent.start, {
+				dateDisplayFormat: plugin.settings.dateDisplayFormat,
 				userTimeFormat: plugin.settings.calendarViewSettings.timeFormat,
 			})
 		: "";
@@ -147,42 +156,7 @@ function attachDateClickHandler(
 	prepareInteractiveControl(span);
 	span.addEventListener("click", (event) => {
 		event.stopPropagation();
-		const currentValue = dateType === "due" ? task.due : task.scheduled;
-		const menu = new DateContextMenu({
-			currentValue: getDatePart(currentValue || ""),
-			currentTime: getTimePart(currentValue || ""),
-			onSelect: (dateValue, timeValue) => {
-				void (async () => {
-					try {
-						let finalValue: string | undefined;
-						if (!dateValue) {
-							finalValue = undefined;
-						} else if (timeValue) {
-							finalValue = `${dateValue}T${timeValue}`;
-						} else {
-							finalValue = dateValue;
-						}
-						await plugin.updateTaskProperty(task, dateType, finalValue);
-					} catch (error) {
-						const errorMessage = error instanceof Error ? error.message : String(error);
-						tasknotesLogger.error(`Error updating ${dateType} date:`, {
-							category: "persistence",
-							operation: "updating",
-							details: { value: errorMessage },
-						});
-						const noticeKey =
-							dateType === "due"
-								? msg({ message: "Failed to update task due date: {message}", context: "contextMenus.task.notices.updateDueDateFailure" })
-								: msg({ message: "Failed to update task scheduled date: {message}", context: "contextMenus.task.notices.updateScheduledFailure" });
-						new Notice(plugin.i18n.translate(noticeKey, { message: errorMessage }));
-					}
-				})();
-			},
-			dateRole: dateType,
-			plugin,
-			app: plugin.app,
-		});
-		menu.show(event);
+		void tasksForPropertyAction(plugin, task).then((tasks) => openTaskPropertyPicker(plugin, dateType, tasks, span));
 	});
 }
 
@@ -254,6 +228,8 @@ function calculateChecklistProgress(cache: unknown): ChecklistProgress | null {
 	};
 }
 
+const SELF_DESCRIBING_PROPERTIES = new Set(["file.tags", "note.tags", "file.name"]);
+
 type PropertyRenderer = (
 	element: HTMLElement,
 	value: unknown,
@@ -264,12 +240,22 @@ type PropertyRenderer = (
 
 const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 	due: (element, value, task, plugin, options) => {
-		if (typeof value === "string") {
+		// A series' due date is a standalone deadline, not one each occurrence repeats.
+		if (typeof value === "string" && options?.occurrenceScheduled === undefined) {
 			renderDueDateProperty(element, value, task, plugin, options?.propertyLabels);
 		}
 	},
 	scheduled: (element, value, task, plugin, options) => {
-		if (typeof value === "string") {
+		if (options?.occurrenceScheduled !== undefined) {
+			renderScheduledDateProperty(
+				element,
+				options.occurrenceScheduled,
+				task,
+				plugin,
+				options.propertyLabels,
+				true
+			);
+		} else if (typeof value === "string") {
 			renderScheduledDateProperty(element, value, task, plugin, options?.propertyLabels);
 		}
 	},
@@ -283,6 +269,14 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 			};
 			renderProjectLinks(element, value as string[], linkServices);
 		}
+	},
+	attachments: (element, _value, task, plugin) => {
+		renderAttachmentLinks(element, task.attachments ?? [], {
+			translate: plugin.i18n.translate.bind(plugin.i18n),
+			metadataCache: plugin.app.metadataCache,
+			workspace: plugin.app.workspace,
+			sourcePath: task.path,
+		});
 	},
 	contexts: (element, value, task, plugin) => {
 		if (Array.isArray(value)) {
@@ -301,7 +295,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 			renderContextsValue(element, value, tagServices);
 		}
 	},
-	tags: (element, value, _, plugin) => {
+	tags: (element, value, _, plugin, options) => {
 		if (Array.isArray(value)) {
 			let tagsToRender = value;
 			if (
@@ -317,6 +311,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 
 			if (tagsToRender.length > 0) {
 				const tagServices: TagServices = {
+					showHashPrefix: !options?.plainTags,
 					onTagClick: async (tag) => {
 						const searchTag = tag.startsWith("#") ? tag.slice(1) : tag;
 						await plugin.openTagsPane(`#${searchTag}`);
@@ -347,7 +342,10 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 	},
 	recurrence: (element, value, _task, plugin, options) => {
 		if (typeof value === "string") {
-			element.textContent = getRecurrenceTooltip(plugin, value, options?.propertyLabels);
+			const description = getRecurrenceTooltip(plugin, value, options?.propertyLabels);
+			setIcon(element, "rotate-ccw");
+			element.setAttribute("aria-label", description);
+			setTooltip(element, description, { placement: "top" });
 		}
 	},
 	recurrenceParent: (element, value, task, plugin) => {
@@ -365,6 +363,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 	occurrenceDate: (element, value, _task, plugin) => {
 		if (typeof value === "string") {
 			element.textContent = uiText(msg({ message: "Occurrence: {value1}", context: "ui/taskCardProperties: occurrenceDate display" }), { value1: formatDateTimeForDisplay(value, {
+				dateDisplayFormat: plugin.settings.dateDisplayFormat,
 				dateFormat: "MMM d",
 				showTime: false,
 				userTimeFormat: plugin.settings.calendarViewSettings?.timeFormat,
@@ -430,6 +429,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 				options?.propertyLabels
 			);
 			element.textContent = uiText(msg({ message: "{label}: {value2}", context: "ui/taskCardProperties: completedDate display" }), { label: label, value2: formatDateTimeForDisplay(value, {
+				dateDisplayFormat: plugin.settings.dateDisplayFormat,
 				dateFormat: "MMM d",
 				showTime: false,
 				userTimeFormat: plugin.settings.calendarViewSettings.timeFormat,
@@ -440,6 +440,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 		if (typeof value === "string") {
 			const label = getTaskCardPropertyLabel("dateCreated", plugin, options?.propertyLabels);
 			element.textContent = uiText(msg({ message: "{label}: {value2}", context: "ui/taskCardProperties: dateCreated display" }), { label: label, value2: formatDateTimeForDisplay(value, {
+				dateDisplayFormat: plugin.settings.dateDisplayFormat,
 				dateFormat: "MMM d",
 				showTime: false,
 				userTimeFormat: plugin.settings.calendarViewSettings.timeFormat,
@@ -450,6 +451,7 @@ const PROPERTY_RENDERERS: Record<string, PropertyRenderer> = {
 		if (typeof value === "string") {
 			const label = getTaskCardPropertyLabel("dateModified", plugin, options?.propertyLabels);
 			element.textContent = uiText(msg({ message: "{label}: {value2}", context: "ui/taskCardProperties: dateModified display" }), { label: label, value2: formatDateTimeForDisplay(value, {
+				dateDisplayFormat: plugin.settings.dateDisplayFormat,
 				dateFormat: "MMM d",
 				showTime: false,
 				userTimeFormat: plugin.settings.calendarViewSettings.timeFormat,
@@ -580,9 +582,13 @@ export function renderPropertyMetadata(
 	plugin: TaskNotesPlugin,
 	options: TaskCardPropertyOptions = {}
 ): HTMLElement | null {
-	const value = getTaskCardPropertyValue(task, propertyId, plugin);
+	const plainTags = options.plainTags && (propertyId === "file.tags" || propertyId === "note.tags");
+	const value = plainTags ? task.tags : getTaskCardPropertyValue(task, propertyId, plugin);
 
 	if (!hasValidValue(value)) {
+		return null;
+	}
+	if (propertyId === "file.name" && String(extractBasesValue(value)).replace(/\.md$/u, "") === task.title) {
 		return null;
 	}
 
@@ -592,9 +598,11 @@ export function renderPropertyMetadata(
 
 	try {
 		const mappingKey = plugin.fieldMapper.lookupMappingKey(propertyId);
-		const rendererKey = mappingKey || propertyId;
+		const rendererKey = plainTags ? "tags" : mappingKey || propertyId;
 
-		if (rendererKey in PROPERTY_RENDERERS) {
+		if (propertyId === "file.tags") {
+			PROPERTY_RENDERERS.tags(element, getFileTagsList(value, task), task, plugin, options);
+		} else if (rendererKey in PROPERTY_RENDERERS) {
 			PROPERTY_RENDERERS[rendererKey](element, value, task, plugin, options);
 		} else if (propertyId.startsWith("user:")) {
 			renderUserProperty(element, propertyId, value, plugin);
@@ -625,6 +633,15 @@ export function renderPropertyMetadata(
 	}
 }
 
+function getFileTagsList(value: unknown, task: TaskInfo): string[] {
+	// Plain tags pass the task's own tag array; converting an array as a Bases value joins it into one string.
+	const native = Array.isArray(value) ? value : convertBasesValueToNative(value);
+	const list = Array.isArray(native) ? native : typeof native === "string" ? [native] : task.tags;
+	return (list ?? [])
+		.map((tag) => (tag !== null && typeof tag === "object" ? convertBasesValueToNative(tag) : tag))
+		.filter((tag): tag is string => typeof tag === "string" && tag.trim() !== "");
+}
+
 function hasValidValue(value: unknown): boolean {
 	return !isEmptyCardDisplayValue(value);
 }
@@ -644,7 +661,10 @@ function renderUserProperty(
 	}
 
 	const fieldName = userField.displayName || fieldId;
-	element.createSpan({ text: uiText(msg({ message: "{fieldName}: ", context: "ui/taskCardProperties: renderUserProperty text" }), { fieldName: fieldName }) });
+	element.createSpan({
+		cls: "task-card__metadata-label",
+		text: uiText(msg({ message: "{fieldName}: ", context: "ui/taskCardProperties: renderUserProperty text" }), { fieldName: fieldName }),
+	});
 	const valueContainer = element.createSpan({
 		cls: "task-card__metadata-value",
 	});
@@ -659,7 +679,7 @@ function renderUserProperty(
 		if (containsRichTextLink(stringValue)) {
 			renderTextWithLinks(valueContainer, stringValue, linkServices);
 		} else {
-			valueContainer.textContent = formatUserPropertyValue(value, userField);
+			valueContainer.textContent = formatUserPropertyValue(value, userField, plugin);
 		}
 	} else if (userField.type === "list" && Array.isArray(value)) {
 		const validItems = value.map((item) => extractBasesValue(item)).filter(hasValidValue);
@@ -678,7 +698,7 @@ function renderUserProperty(
 			}
 		});
 	} else {
-		const displayValue = formatUserPropertyValue(value, userField);
+		const displayValue = formatUserPropertyValue(value, userField, plugin);
 		valueContainer.textContent = displayValue.trim() !== "" ? displayValue : uiText(msg({ message: "(empty)", context: "empty task property display" }));
 	}
 }
@@ -690,6 +710,11 @@ interface UserField {
 	displayName?: string;
 }
 
+/** Tags and file names read as what they are, so a label only adds noise. */
+function isSelfDescribingProperty(propertyId: string): boolean {
+	return SELF_DESCRIBING_PROPERTIES.has(propertyId);
+}
+
 function renderGenericProperty(
 	element: HTMLElement,
 	propertyId: string,
@@ -697,8 +722,13 @@ function renderGenericProperty(
 	plugin?: TaskNotesPlugin,
 	displayNameOverride?: string
 ): void {
-	const displayName = resolveTaskCardPropertyLabel(propertyId, {}, displayNameOverride);
-	element.createSpan({ text: uiText(msg({ message: "{displayName}: ", context: "ui/taskCardProperties: renderGenericProperty text" }), { displayName: displayName }) });
+	if (!isSelfDescribingProperty(propertyId)) {
+		const displayName = resolveTaskCardPropertyLabel(propertyId, {}, displayNameOverride);
+		element.createSpan({
+			cls: "task-card__metadata-label",
+			text: uiText(msg({ message: "{displayName}: ", context: "ui/taskCardProperties: renderGenericProperty text" }), { displayName: displayName }),
+		});
+	}
 	const valueContainer = element.createSpan({
 		cls: "task-card__metadata-value",
 	});
@@ -710,7 +740,11 @@ function renderGenericProperty(
 			renderPropertyValue(valueContainer, item, plugin);
 		});
 	} else {
-		renderPropertyValue(valueContainer, value, plugin);
+		renderPropertyValue(
+			valueContainer,
+			propertyId === "file.name" && typeof value === "string" ? value.replace(/\.md$/u, "") : value,
+			plugin
+		);
 	}
 }
 
@@ -723,7 +757,7 @@ function renderPropertyValue(
 		return;
 	}
 
-	if (plugin && renderBasesValue(container, value, plugin.app.renderContext)) {
+	if (plugin && renderBasesValue(container, value, plugin.app.renderContext, plugin.settings)) {
 		return;
 	}
 
@@ -753,6 +787,7 @@ function renderPropertyValue(
 	if (typeof value === "object" && value !== null) {
 		if (value instanceof Date) {
 			displayValue = formatDateTimeForDisplay(value.toISOString(), {
+				dateDisplayFormat: plugin?.settings.dateDisplayFormat,
 				dateFormat: "MMM d, yyyy",
 				timeFormat: "",
 				showTime: false,
@@ -790,7 +825,7 @@ function containsRichTextLink(value: string): boolean {
 	);
 }
 
-function formatUserPropertyValue(value: unknown, userField: UserField): string {
+function formatUserPropertyValue(value: unknown, userField: UserField, plugin: TaskNotesPlugin): string {
 	if (value === null || value === undefined) return "";
 	const userText = (raw: unknown) => uiData(stringifyUnknown(raw), "User-authored custom property content; preserve vault data");
 
@@ -802,6 +837,7 @@ function formatUserPropertyValue(value: unknown, userField: UserField): string {
 				return typeof value === "number" ? uiNumber(value, { maximumFractionDigits: 20 }) : userText(value);
 			case "date":
 				return formatDateTimeForDisplay(userText(value), {
+					dateDisplayFormat: plugin.settings.dateDisplayFormat,
 					dateFormat: "MMM d, yyyy",
 					timeFormat: "",
 					showTime: false,
@@ -826,9 +862,87 @@ function formatUserPropertyValue(value: unknown, userField: UserField): string {
 	}
 }
 
+const DAY_MS = 86400000;
+
+/** Day name relative to today for dates within a week, or null to show the date itself. */
+function getRelativeCardDay(dateString: string, plugin: TaskNotesPlugin): string | null {
+	if (plugin.settings.dateDisplayFormat === "iso") return null;
+	let target: Date;
+	try {
+		target = parseDateToLocal(getDatePart(dateString));
+	} catch {
+		return null;
+	}
+	if (Number.isNaN(target.getTime())) return null;
+	const days = Math.round((target.getTime() - getTodayLocal().getTime()) / DAY_MS);
+	if (days === -1) return plugin.i18n.translate(msg({ message: "Yesterday", context: "ui.taskCard.relativeYesterday" }));
+	if (days === 1) return plugin.i18n.translate(msg({ message: "Tomorrow", context: "ui.taskCard.relativeTomorrow" }));
+	if (days < -1 && days > -7) return plugin.i18n.translate(msg({ message: "{count, plural, one {# day ago} other {# days ago}}", context: "ui.taskCard.relativeDaysAgo" }), { count: -days });
+	if (days > 1 && days < 7) {
+		return formatUIDate(target, "EEEE");
+	}
+	return null;
+}
+
+/** Card date text: relative within a week of today, with the full date as a tooltip. */
+function formatCardDate(
+	dateString: string,
+	plugin: TaskNotesPlugin
+): { display: string; fullDisplay?: string } {
+	const userTimeFormat = plugin.settings.calendarViewSettings.timeFormat;
+	const absolute = formatDateTimeForDisplay(dateString, {
+		dateDisplayFormat: plugin.settings.dateDisplayFormat,
+		dateFormat: getTaskCardDateFormat(dateString),
+		showTime: true,
+		userTimeFormat,
+	});
+	const day = getRelativeCardDay(dateString, plugin);
+	if (!day) return { display: absolute };
+
+	const time = hasTimeComponent(dateString)
+		? formatDateTimeForDisplay(dateString, { dateFormat: "", showTime: true, userTimeFormat })
+		: "";
+	return {
+		display: time ? plugin.i18n.translate(msg({ message: "{day} at {time}", context: "ui.taskCard.relativeDayAtTime" }), { day, time }) : day,
+		fullDisplay: absolute,
+	};
+}
+
 function getTaskCardDateFormat(dateString: string): string {
 	const year = Number(getDatePart(dateString).slice(0, 4));
 	return Number.isInteger(year) && year !== vaultNow().getFullYear() ? "MMM d, yyyy" : "MMM d";
+}
+
+/** Short value in the row. The full sentence moves to the tooltip. */
+function renderDateValue(
+	element: HTMLElement,
+	dateValue: string,
+	icon: string,
+	fullText: string,
+	plugin: TaskNotesPlugin,
+	label: string
+): void {
+	element.empty();
+	setIcon(element.createSpan({ cls: "task-card__date-icon" }), icon);
+	element.createSpan({ cls: "task-card__date-label", text: label });
+	element.createSpan({
+		cls: "task-card__date-value",
+		text: formatCardDate(dateValue, plugin).display,
+	});
+	element.createSpan({
+		cls: "task-card__date-value task-card__date-value--compact",
+		text: plugin.settings.dateDisplayFormat === "iso" || getRelativeCardDay(dateValue, plugin) || relativeDay(dateValue) ? formatCardDate(dateValue, plugin).display : formatDateTimeForDisplay(dateValue, {
+			dateFormat: "MMM d",
+			showTime: true,
+			userTimeFormat: plugin.settings.calendarViewSettings.timeFormat,
+		}),
+	});
+	element.setAttribute("aria-label", fullText);
+	const { fullDisplay } = formatCardDate(dateValue, plugin);
+	const tooltip = fullDisplay
+		? tTaskCard(plugin, "scheduledLabel", { label, display: fullDisplay })
+		: fullText;
+	setTooltip(element, tooltip, { placement: "top" });
 }
 
 function renderDueDateProperty(
@@ -846,7 +960,7 @@ function renderDueDateProperty(
 	const userTimeFormat = plugin.settings.calendarViewSettings.timeFormat;
 	const dueLabel = getTaskCardPropertyLabel("due", plugin, propertyLabels);
 	let dueDateText = "";
-	if (isDueToday) {
+	if (isDueToday && plugin.settings.dateDisplayFormat !== "iso") {
 		const timeDisplay = formatDateTimeForDisplay(due, {
 			dateFormat: "",
 			showTime: true,
@@ -856,26 +970,24 @@ function renderDueDateProperty(
 			timeDisplay.trim() === ""
 				? tTaskCard(plugin, "dueToday", { label: dueLabel })
 				: tTaskCard(plugin, "dueTodayAt", { label: dueLabel, time: timeDisplay });
-	} else if (isDueOverdue) {
-		const display = formatDateTimeForDisplay(due, {
-			dateFormat: getTaskCardDateFormat(due),
-			showTime: true,
-			userTimeFormat,
-		});
-		dueDateText = tTaskCard(plugin, "dueOverdue", { label: dueLabel, display });
 	} else {
-		const display = formatDateTimeForDisplay(due, {
-			dateFormat: getTaskCardDateFormat(due),
-			showTime: true,
-			userTimeFormat,
-		});
-		dueDateText = tTaskCard(plugin, "dueLabel", { label: dueLabel, display });
+		const { display, fullDisplay } = formatCardDate(due, plugin);
+		// Relative overdue text ("3 days ago") already says the date has passed.
+		const key = isDueOverdue && !fullDisplay ? "dueOverdue" : "dueLabel";
+		dueDateText = tTaskCard(plugin, key, { label: dueLabel, display });
+		if (fullDisplay) {
+			setTooltip(element, tTaskCard(plugin, "dueLabel", { label: dueLabel, display: fullDisplay }), {
+				placement: "top",
+			});
+		}
 	}
 
-	element.textContent = dueDateText;
+	renderDateValue(element, due, "flag-triangle-right", dueDateText, plugin, dueLabel);
 	element.classList.add("task-card__metadata-date", "task-card__metadata-date--due");
 	if (isDueOverdue) {
 		element.classList.add("task-card__metadata-date--overdue");
+		const label = element.querySelector(".task-card__date-label");
+		if (label) label.textContent = uiText(msg({ message: "Overdue", context: "services.filter.groupLabels.due.overdue" }));
 	}
 	if (isDueToday) {
 		element.classList.add("task-card__metadata-date--today");
@@ -889,22 +1001,31 @@ function renderDueDateProperty(
 	attachDateClickHandler(element, task, plugin, "due");
 }
 
+function isOccurrenceResolved(task: TaskInfo, date: string): boolean {
+	return (
+		(task.complete_instances?.includes(date) || task.skipped_instances?.includes(date)) ?? false
+	);
+}
+
 function renderScheduledDateProperty(
 	element: HTMLElement,
 	scheduled: string,
 	task: TaskInfo,
 	plugin: TaskNotesPlugin,
-	propertyLabels?: Record<string, string>
+	propertyLabels?: Record<string, string>,
+	isOccurrence = false
 ): void {
 	const isScheduledToday = isTodayTimeAware(scheduled);
-	const isCompleted = plugin.statusManager.isCompletedStatus(task.status);
+	const isCompleted = isOccurrence
+		? isOccurrenceResolved(task, getDatePart(scheduled))
+		: plugin.statusManager.isCompletedStatus(task.status);
 	const hideCompletedFromOverdue = plugin.settings?.hideCompletedFromOverdue ?? true;
 	const isScheduledPast = isOverdueTimeAware(scheduled, isCompleted, hideCompletedFromOverdue);
 
 	const userTimeFormat = plugin.settings.calendarViewSettings.timeFormat;
 	const scheduledLabel = getTaskCardPropertyLabel("scheduled", plugin, propertyLabels);
 	let scheduledDateText = "";
-	if (isScheduledToday) {
+	if (isScheduledToday && plugin.settings.dateDisplayFormat !== "iso") {
 		const timeDisplay = formatDateTimeForDisplay(scheduled, {
 			dateFormat: "",
 			showTime: true,
@@ -917,23 +1038,20 @@ function renderScheduledDateProperty(
 						label: scheduledLabel,
 						time: timeDisplay,
 					});
-	} else if (isScheduledPast) {
-		const display = formatDateTimeForDisplay(scheduled, {
-			dateFormat: getTaskCardDateFormat(scheduled),
-			showTime: true,
-			userTimeFormat,
-		});
-		scheduledDateText = tTaskCard(plugin, "scheduledPast", { label: scheduledLabel, display });
 	} else {
-		const display = formatDateTimeForDisplay(scheduled, {
-			dateFormat: getTaskCardDateFormat(scheduled),
-			showTime: true,
-			userTimeFormat,
-		});
+		// Past scheduled dates are shown muted; only overdue due dates carry a warning.
+		const { display, fullDisplay } = formatCardDate(scheduled, plugin);
 		scheduledDateText = tTaskCard(plugin, "scheduledLabel", { label: scheduledLabel, display });
+		if (fullDisplay) {
+			setTooltip(
+				element,
+				tTaskCard(plugin, "scheduledLabel", { label: scheduledLabel, display: fullDisplay }),
+				{ placement: "top" }
+			);
+		}
 	}
 
-	element.textContent = scheduledDateText;
+	renderDateValue(element, scheduled, "calendar", scheduledDateText, plugin, scheduledLabel);
 	element.classList.add("task-card__metadata-date", "task-card__metadata-date--scheduled");
 	if (isScheduledPast) {
 		element.classList.add("task-card__metadata-date--past");
@@ -943,6 +1061,10 @@ function renderScheduledDateProperty(
 	}
 	if (!isScheduledToday && !isOverdueTimeAware(scheduled, false, false)) {
 		element.classList.add("task-card__metadata-date--future");
+	}
+	if (isOccurrence) {
+		element.classList.add("task-card__metadata-date--readonly");
+		return;
 	}
 	element.dataset.tnAction = "edit-date";
 	element.dataset.tnDateType = "scheduled";

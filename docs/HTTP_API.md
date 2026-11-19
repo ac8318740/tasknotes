@@ -13,7 +13,7 @@ The TaskNotes HTTP API provides local HTTP access to tasks, time tracking, pomod
   (`chrome-extension://…`, `moz-extension://…`) without paths, credentials, ports, queries, or fragments
 - Not available on mobile
 
-Enable it in `Settings -> TaskNotes -> Integrations -> HTTP API`.
+Enable it in `Settings -> TaskNotes -> Advanced -> HTTP API`.
 
 ## Base URL
 
@@ -26,7 +26,8 @@ Default port is `8080`.
 Authentication is required for both HTTP API and MCP requests.
 
 - Send `Authorization: Bearer <token>` using the token in Integrations settings.
-- If `apiAuthToken` is empty at startup, TaskNotes generates and saves a token before starting the server.
+- If the token is empty at startup, TaskNotes generates and saves a token before starting the server and shows a notice asking you to update your clients.
+- The token is stored in Obsidian Secret Storage on each device, not in TaskNotes' `data.json`. Each device that runs the HTTP API has its own token, and syncing or committing `data.json` does not share it. When upgrading from TaskNotes 4.x, an existing token in `data.json` moves to Secret Storage automatically; a synced device that starts after the token has been removed from `data.json` generates a new one.
 - Clearing the token does not enable unauthenticated access; requests are rejected until a token is configured or generated at the next server start.
 - Existing clients that omitted authentication must be updated to send the token.
 
@@ -40,7 +41,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:8080/api/health
 
 TaskNotes 4.13.0 and later require a **TaskNotes API token**, not a Claude/Anthropic API key. The local MCP endpoint uses bearer authentication, not OAuth registration.
 
-1. In **Settings → TaskNotes → Integrations**, enable **HTTP API** and **MCP server**.
+1. In **Settings → TaskNotes → Advanced → HTTP API**, turn on **Enable HTTP API** and **Enable MCP server**.
 2. To generate a TaskNotes token, leave **API authentication token** empty and restart Obsidian. An existing TaskNotes token can be reused; do not clear it unless you intend to replace it for all clients.
 3. Reopen Integrations and copy the generated token. Keep it private.
 4. In Claude Desktop, open **Settings → Developer → Edit Config** and add the following entry, preserving any other MCP servers:

@@ -2,6 +2,11 @@ import { App, parseYaml } from "obsidian";
 import { getDailyNote } from "obsidian-daily-notes-interface";
 import { setTimeblockPinned, timeblockLinksTask } from "../../../src/utils/helpers";
 import { MockObsidian } from "../../helpers/obsidian-runtime";
+import { serialize, deserialize } from "node:v8";
+
+beforeAll(() => {
+	globalThis.structuredClone = (value) => deserialize(serialize(value));
+});
 
 jest.mock("obsidian-daily-notes-interface", () => ({
 	getAllDailyNotes: jest.fn(() => ({})),

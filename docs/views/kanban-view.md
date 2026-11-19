@@ -92,9 +92,9 @@ Click a card to open the task file for editing. Right-click to access the contex
 
 ### Collapsing Columns
 
-In a standard (non-swimlane) board, use the chevron button in a column header to collapse that column to a narrow label. Click it again, or focus the button and press Enter or Space, to expand it. You can still reorder collapsed columns or drop tasks onto them.
+In a standard (non-swimlane) board, use the chevron button in a column header to collapse that column to a narrow strip. The strip keeps the column's status icon (when **Show status icon in column header only** is on) and shows its title vertically, reading from top to bottom; long titles are cut off with an ellipsis. Click it again, or focus the button and press Enter or Space, to expand it. You can still reorder collapsed columns or drop tasks onto them.
 
-Collapse state belongs to the current Bases session and grouping property. It survives view refreshes and switches within that pane, but is not saved in the `.base` file and resets when Obsidian restarts. Swimlane columns are unchanged.
+Collapsed columns are saved per view and grouping property in the `collapsedColumns` configuration of the `.base` file, so they stay collapsed after Obsidian restarts. Swimlane columns are unchanged.
 
 ### Reordering Columns
 
@@ -176,3 +176,9 @@ This configuration creates a Kanban board with:
 ## Filtering and Sorting
 
 Filtering and sorting are configured through the Bases view settings, not through a separate FilterBar component. Use the Bases filter editor to define conditions based on task properties. Use the Bases sort editor to specify the order of tasks within each column.
+
+## Keyboard Navigation
+
+With the board focused, Left/Right or H/L moves task focus between populated, expanded columns. Up/Down or J/K moves through tasks. Press **?** for the shortcut reference. **Shift+H** opens the scheduled-date picker. See [Keyboard shortcuts](../views.md#keyboard-shortcuts) for the full list. Column collapse buttons also support Enter and Space.
+
+Empty, unpinned columns start as compact drop-target rails unless hidden by **Hide empty columns**. Expand a rail with its chevron to create a task there. Explicit column collapse choices remain saved in the view; automatically compacting an empty column does not change its configuration. Columns adapt to the available width, with horizontal scrolling and a next-column peek on narrow boards.

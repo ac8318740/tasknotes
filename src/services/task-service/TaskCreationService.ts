@@ -32,6 +32,7 @@ import {
 import type { UserMappedField } from "../../types/settings";
 import { createTaskNotesLogger } from "../../utils/tasknotesLogger";
 import { vaultNow } from "../../utils/vaultTime";
+import { generateUuidV4 } from "../../utils/uuid";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Services/TaskService/TaskCreationService" });
 
@@ -120,6 +121,7 @@ export interface TaskCreationServiceDependencies {
 export interface TaskCreationOptions {
 	applyDefaults?: boolean;
 	applyTemplate?: boolean;
+	targetFolder?: string;
 }
 
 export class TaskCreationService {
@@ -152,6 +154,7 @@ export class TaskCreationService {
 				: title;
 			const priority = taskData.priority || runtime.settings.defaultTaskPriority;
 			const status = taskData.status || runtime.settings.defaultTaskStatus;
+			const id = generateUuidV4();
 			const dateCreated = taskData.dateCreated || getCurrentTimestamp();
 			const dateModified = taskData.dateModified || getCurrentTimestamp();
 			const recurrence = taskData.recurrence || undefined;
@@ -198,7 +201,7 @@ export class TaskCreationService {
 							taskData.occurrence_date
 						)
 					: generateTaskFilename(filenameContext, runtime.settings);
-			const folder = await this.resolveTargetFolder(taskData);
+			const folder = options.targetFolder ?? await this.resolveTargetFolder(taskData);
 
 			if (folder) {
 				await ensureFolderExists(runtime.app.vault, folder);
@@ -223,6 +226,7 @@ export class TaskCreationService {
 				isTitleRepresentedByFilename(title, filenameTitle, uniqueFilename, expectedFilename);
 
 			const completeTaskData: Partial<TaskInfo> = {
+				id,
 				title,
 				status,
 				priority,
@@ -357,6 +361,9 @@ export class TaskCreationService {
 					runtime.settings.taskPropertyValue
 				);
 			}
+			// Identity is assigned by the creation boundary. Templates and ordinary
+			// custom frontmatter must never copy or replace another task's ID.
+			finalFrontmatter.id = id;
 			this.deps.applyInheritedValues?.(fullPath, finalFrontmatter);
 			tagsArray = getFrontmatterTags(finalFrontmatter.tags);
 			const mapped = runtime.fieldMapper.mapFromFrontmatter(
@@ -381,6 +388,7 @@ export class TaskCreationService {
 			const taskInfo: TaskInfo = {
 				...completeTaskData,
 				...finalFrontmatter,
+				id,
 				title: stringifyUnknown(finalFrontmatter.title || completeTaskData.title || title),
 				status: stringifyUnknown(
 					finalFrontmatter.status || completeTaskData.status || status
@@ -395,9 +403,6 @@ export class TaskCreationService {
 			};
 
 			try {
-				if (runtime.cacheManager.waitForFreshTaskData) {
-					await runtime.cacheManager.waitForFreshTaskData(file);
-				}
 				runtime.cacheManager.updateTaskInfoInCache(file.path, taskInfo);
 			} catch (cacheError) {
 				tasknotesLogger.error("Error updating cache for new task:", {

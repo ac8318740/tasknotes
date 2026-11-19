@@ -43,6 +43,23 @@ describe("settings persistence helpers", () => {
 		jest.restoreAllMocks();
 	});
 
+	it("keeps recurring statuses in saved setups and resets them in new ones (#2521)", () => {
+		expect(
+			buildSettingsFromLoadedData({ defaultTaskStatus: "inbox" }).settings
+				.resetRecurringStatusAfterOccurrence
+		).toBe(false);
+		expect(buildSettingsFromLoadedData(null).settings.resetRecurringStatusAfterOccurrence).toBe(
+			true
+		);
+	});
+
+	it("stores Pomodoro history in daily notes for new installs and plugin data for saved setups", () => {
+		expect(
+			buildSettingsFromLoadedData({ defaultTaskStatus: "inbox" }).settings.pomodoroStorageLocation
+		).toBe("plugin");
+		expect(buildSettingsFromLoadedData(null).settings.pomodoroStorageLocation).toBe("daily-notes");
+	});
+
 	it("builds the plugin data path from manifest dir first", () => {
 		const host = createHost({
 			dir: ".obsidian/plugins/tasknotes",
@@ -73,7 +90,8 @@ describe("settings persistence helpers", () => {
 			data: null,
 			compromised: true,
 		});
-		expect(host.loadData).toHaveBeenCalledTimes(4);
+		// The first read plus 20 retries, about two seconds at the default delay.
+		expect(host.loadData).toHaveBeenCalledTimes(21);
 	});
 
 	it("does not mark a new install as compromised when data.json is absent", async () => {
@@ -105,7 +123,7 @@ describe("settings persistence helpers", () => {
 		expect(host.loadData).toHaveBeenCalledTimes(2);
 	});
 
-	it("returns false when checking data file existence fails", async () => {
+	it("does not interpret an existence probe error as an absent settings file", async () => {
 		const host = createHost({
 			dir: ".obsidian/plugins/tasknotes",
 			dataFileExists: true,
@@ -113,7 +131,7 @@ describe("settings persistence helpers", () => {
 		host.app.vault.adapter.exists.mockRejectedValueOnce(new Error("adapter failed"));
 		jest.spyOn(console, "warn").mockImplementation(() => undefined);
 
-		await expect(pluginDataFileExists(host)).resolves.toBe(false);
+		await expect(pluginDataFileExists(host)).rejects.toThrow("adapter failed");
 		expect(console.warn).toHaveBeenCalledWith(
 			expect.stringContaining(
 				"[TaskNotes][Settings/SettingsPersistence][configuration][check-settings-data-file-existence] [TaskNotes] Could not check settings data file existence:"
@@ -122,18 +140,51 @@ describe("settings persistence helpers", () => {
 		);
 	});
 
+	it("marks settings as compromised when the existence probe fails after a null read", async () => {
+		const host = createHost({ dir: ".obsidian/plugins/tasknotes", loadResults: [null] });
+		host.app.vault.adapter.exists.mockRejectedValueOnce(new Error("I/O error"));
+		jest.spyOn(console, "warn").mockImplementation(() => undefined);
+		await expect(loadPluginSettingsDataWithRetry(host)).resolves.toEqual({ data: null, compromised: true });
+	});
+
+	it("migrates a legacy custom property before indexing without dropping colliding names", () => {
+		const original = {
+			userField: {
+				enabled: true,
+				key: "legacy",
+				displayName: "Client",
+				type: "text" as const,
+			},
+			userFields: [
+				{ id: "client", key: "other", displayName: "Client", type: "text" as const },
+			],
+		};
+		const { settings, shouldPersistMigratedSettings } = buildSettingsFromLoadedData(original);
+		expect(settings.userFields).toEqual([
+			original.userFields[0],
+			{ id: "client-2", key: "legacy", displayName: "Client", type: "text" },
+		]);
+		expect(settings.userField.enabled).toBe(false);
+		expect(original.userField.enabled).toBe(true);
+		expect(shouldPersistMigratedSettings).toBe(true);
+		expect(buildSettingsFromLoadedData(settings).settings.userFields).toHaveLength(2);
+	});
+
 	it("migrates legacy settings and preserves explicit false/null nested defaults", () => {
 		const { settings, shouldPersistMigratedSettings } = buildSettingsFromLoadedData({
 			statusSuggestionTrigger: "/",
 			useNativeMetadataCache: true,
 			enableBases: false,
 			calendarViewSettings: {
-				defaultShowScheduledToDueSpan: false,
-				eventMaxStack: null,
+				showWeekends: false,
+			},
+			googleCalendarExport: {
+				defaultReminderMinutes: null,
 			},
 		});
 
-		expect(settings.enableBases).toBe(true);
+		expect("enableBases" in settings).toBe(false);
+		expect("statusSuggestionTrigger" in settings).toBe(false);
 		expect(settings.enableAPI).toBe(false);
 		expect(settings.apiPort).toBe(8080);
 		expect(settings.apiAuthToken).toBe("");
@@ -142,8 +193,8 @@ describe("settings persistence helpers", () => {
 		expect(
 			settings.nlpTriggers.triggers.find((trigger) => trigger.propertyId === "status")
 		).toMatchObject({ trigger: "/" });
-		expect(settings.calendarViewSettings.defaultShowScheduledToDueSpan).toBe(false);
-		expect(settings.calendarViewSettings.eventMaxStack).toBeNull();
+		expect(settings.calendarViewSettings.showWeekends).toBe(false);
+		expect(settings.googleCalendarExport.defaultReminderMinutes).toBeNull();
 		expect(settings.modalFieldsConfig?.fields.map((field) => field.id)).toEqual(
 			expect.arrayContaining(["title", "details", "contexts", "tags", "projects"])
 		);
@@ -186,6 +237,12 @@ describe("settings persistence helpers", () => {
 		expect(shouldPersistMigratedSettings).toBe(false);
 	});
 
+	it("starts mdbase type definitions on for new installs only", () => {
+		expect(buildSettingsFromLoadedData(null).settings.enableMdbaseSpec).toBe(true);
+		expect(buildSettingsFromLoadedData({ enableMdbaseSpec: false } as any).settings.enableMdbaseSpec).toBe(false);
+		expect(buildSettingsFromLoadedData({ tasksFolder: "Tasks" } as any).settings.enableMdbaseSpec).toBe(false);
+	});
+
 	it("merges only known settings keys into saved data while preserving other persisted data", () => {
 		const settings = {
 			...DEFAULT_SETTINGS,
@@ -207,6 +264,36 @@ describe("settings persistence helpers", () => {
 				pomodoroState: { isRunning: true },
 				unknownRuntimeKey: "preserve disk value",
 				tasksFolder: "Projects/Tasks",
+			})
+		);
+	});
+
+	it("keeps settings retired in v5 in data.json for devices still on v4", () => {
+		const loaded = {
+			viewsButtonAlignment: "left",
+			disableNoteIndexing: true,
+			savedViews: [{ id: "sv1", name: "My view" }],
+			projectAutosuggest: { ...DEFAULT_SETTINGS.projectAutosuggest, enableFuzzy: true },
+			calendarViewSettings: {
+				...DEFAULT_SETTINGS.calendarViewSettings,
+				defaultShowICSEvents: false,
+				eventMaxStack: 3,
+			},
+		};
+		const { settings } = buildSettingsFromLoadedData(loaded);
+		settings.tasksFolder = "Projects/Tasks";
+
+		expect(buildSettingsDataForSave(loaded, settings)).toEqual(
+			expect.objectContaining({
+				tasksFolder: "Projects/Tasks",
+				viewsButtonAlignment: "left",
+				disableNoteIndexing: true,
+				savedViews: [{ id: "sv1", name: "My view" }],
+				projectAutosuggest: expect.objectContaining({ enableFuzzy: true }),
+				calendarViewSettings: expect.objectContaining({
+					defaultShowICSEvents: false,
+					eventMaxStack: 3,
+				}),
 			})
 		);
 	});

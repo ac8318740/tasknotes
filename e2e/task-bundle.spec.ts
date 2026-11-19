@@ -59,9 +59,11 @@ test("the bundle keyword and the modal toggle write and remove bundle: true", as
 	await instance.page.keyboard.insertText(`${title} bundle`);
 
 	await expect(editor().locator(".tn-nlp-highlight--field")).toHaveText(["bundle"]);
-	await expect(instance.page.locator(".modal .nl-preview-container")).toContainText("Bundle");
 
-	await instance.page.locator(".modal button.mod-cta").filter({ hasText: /^Save/ }).click();
+	await instance.page
+		.locator(".modal button.mod-cta")
+		.filter({ hasText: /^Create task/ })
+		.click();
 	await expect(editor()).toHaveCount(0);
 	await expect.poll(bundleValue).toBe(true);
 
@@ -71,6 +73,10 @@ test("the bundle keyword and the modal toggle write and remove bundle: true", as
 		const file = app.vault.getMarkdownFiles().find((file: any) => file.basename === title);
 		await plugin.openTaskEditModal(await plugin.cacheManager.getTaskInfo(file.path));
 	}, title);
+	await instance.page
+		.locator(".modal")
+		.getByRole("button", { name: "More fields", exact: true })
+		.click();
 	await expect(bundleToggle()).toHaveClass(/is-enabled/);
 	await bundleToggle().click();
 	await expect(bundleToggle()).not.toHaveClass(/is-enabled/);

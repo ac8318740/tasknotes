@@ -11,6 +11,9 @@ import { ContextMenu } from "./ContextMenu";
 import { showCoordinatedMenu, showCoordinatedMenuAtElement } from "./ContextMenuCoordinator";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { showNotice } from "../ui/notifications";
+import { formatDateLabel } from "../utils/dateUtils";
+import { showConfirmationModal } from "../modals/ConfirmationModal";
+import { deleteProviderEvent, getDeletingProvider } from "./providerEventDeletion";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Components/ICSEventContextMenu" });
 
@@ -156,6 +159,26 @@ export class ICSEventContextMenu {
 					}
 				})
 		);
+
+		// Delete event (connected Google/Microsoft calendars the account can edit)
+		if (getDeletingProvider(plugin, icsEvent)) {
+			this.menu.addSeparator();
+			this.menu.addItem((item) => {
+				item
+					.setTitle(this.t(msg({ message: "Delete event", context: "contextMenus.ics.deleteEvent" })))
+					.setIcon("trash")
+					.setWarning(true)
+					.onClick(async () => {
+						const deleted = await deleteProviderEvent({
+							plugin,
+							icsEvent,
+							confirm: (options) => showConfirmationModal(plugin.app, options),
+							notify: (message) => new Notice(message),
+						});
+						if (deleted) this.options.onUpdate?.();
+					});
+			});
+		}
 	}
 
 	private async createTaskFromEvent(): Promise<void> {
@@ -288,9 +311,12 @@ export class ICSEventContextMenu {
 		const timeFormatter = new Intl.DateTimeFormat(locale, {
 			hour: "numeric",
 			minute: "2-digit",
+			hour12: this.options.plugin.settings.calendarViewSettings.timeFormat === "12",
 		});
 
-		let dateText = dateFormatter.format(startDate);
+		let dateText = this.options.plugin.settings.dateDisplayFormat === "iso"
+			? formatDateLabel(startDate, this.options.plugin.settings)
+			: dateFormatter.format(startDate);
 		if (!icsEvent.allDay) {
 			dateText += this.t(msg({ message: " at {time}", context: "contextMenus.ics.markdown.at" }), {
 				time: timeFormatter.format(startDate),
