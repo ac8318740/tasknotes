@@ -2,6 +2,7 @@ import { configLabel } from "../i18n/configLabels";
 import type TaskNotesPlugin from "../main";
 import { StatusConfig, PriorityConfig } from "../types";
 import { NLPTriggersConfig, UserMappedField } from "../types/settings";
+import { shieldMarkdownLiterals } from "../utils/markdownLiterals";
 import {
 	NaturalLanguageParserCore,
 	type NaturalLanguageParserOptions,
@@ -112,7 +113,9 @@ export class NaturalLanguageParser extends NaturalLanguageParserCore {
 
 	parseInput(input: string): ParsedTaskData {
 		// Locale may change after construction (including lazy language-pack load).
-		let coreInput = input;
+		// Links and inline code are markup, so status and priority words in them stay text.
+		const shielded = shieldMarkdownLiterals(input);
+		let coreInput = shielded.text;
 		for (const [configs, trigger] of [[this.taskNotesStatusConfigs, this.getStatusTrigger()], [this.taskNotesPriorityConfigs, this.getPriorityTrigger()]] as const) {
 			if (!trigger) continue;
 			for (const config of [...configs].sort((a, b) => configLabel(b).length - configLabel(a).length)) {
@@ -122,10 +125,19 @@ export class NaturalLanguageParser extends NaturalLanguageParserCore {
 				coreInput = coreInput.replace(pattern, (_match, prefix: string) => prefix + trigger + config.value);
 			}
 		}
-		const parsed = super.parseInput(coreInput);
-		const withStatusShortcutResidueRemoved = this.applyTriggeredStatusMatch(input, parsed);
-		const withPriorityShortcutResidueRemoved = this.removePriorityShortcutResidue(
-			input,
+		const priorityTrigger = this.getPriorityTrigger();
+		const triggeredPriority = priorityTrigger ? this.taskNotesPriorityConfigs.flatMap((config) =>
+			[config.value, config.label, configLabel(config)].map((label) => ({ config, token: `${priorityTrigger}${label}` }))
+		).sort((first, second) => second.token.length - first.token.length)
+			.find(({ token }) => this.containsToken(coreInput, token)) : undefined;
+		if (triggeredPriority) {
+			coreInput = coreInput.replace(new RegExp(`(^|\\s)${this.escapeRegexLiteral(triggeredPriority.token)}(?=\\s|$)`, "iu"), "$1");
+		}
+		const parsed = super.parseInput(shielded.restore(coreInput));
+		if (triggeredPriority) parsed.priority = triggeredPriority.config.value;
+		const withStatusShortcutResidueRemoved = this.applyTriggeredStatusMatch(shielded.text, parsed);
+		const withPriorityShortcutResidueRemoved = triggeredPriority ? withStatusShortcutResidueRemoved : this.removePriorityShortcutResidue(
+			shielded.text,
 			withStatusShortcutResidueRemoved
 		);
 		const withLinkedFields = this.extractLinkedUserFields(input, withPriorityShortcutResidueRemoved);
@@ -250,7 +262,7 @@ export class NaturalLanguageParser extends NaturalLanguageParserCore {
 		const priorityTrigger = this.taskNotesNlpTriggers?.triggers.find(
 			(trigger) => trigger.propertyId === "priority"
 		);
-		return priorityTrigger?.trigger || "";
+		return priorityTrigger?.trigger || "!";
 	}
 
 	private getStatusTrigger(): string {

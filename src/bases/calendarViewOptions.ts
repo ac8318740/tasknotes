@@ -7,6 +7,7 @@ import type TaskNotesPlugin from "../main";
 import { DEFAULT_MINI_CALENDAR_HEAT_MAP_MAX_COUNT } from "./MiniCalendarView";
 import { isNoteFileOrFormulaProperty } from "./propertyFilters";
 import { readBasesViewConfigValue } from "./basesViewConfig";
+import { CALENDAR_SLOT_HEIGHT_MAX, CALENDAR_SLOT_HEIGHT_MIN } from "../utils/calendarTime";
 
 type CalendarOptionGroup = BasesOptionGroup<BasesOptions>;
 type CalendarOptionsConfig = Pick<BasesViewConfig, "get">;
@@ -174,7 +175,7 @@ function buildCalendarEventOptions(
 				type: "toggle",
 				key: "showScheduledToDueSpan",
 				displayName: t("layout.spanScheduledToDue"),
-				default: calendarSettings.defaultShowScheduledToDueSpan,
+				default: false,
 				shouldHide: () =>
 					!readBooleanOption(
 						config,
@@ -287,6 +288,20 @@ function buildCalendarViewModeOptions(
 			shouldHide: () => getCalendarView(config, defaultView) !== "listWeek",
 		},
 		{
+			type: "toggle",
+			key: "showAgendaStrip",
+			displayName: uiText(msg({ message: "Show agenda date strip", context: "calendar composition option" })),
+			default: true,
+			shouldHide: () => getCalendarView(config, defaultView) !== "listWeek",
+		},
+		{
+			type: "toggle",
+			key: "showMonthDayPanel",
+			displayName: uiText(msg({ message: "Show selected day panel", context: "calendar composition option" })),
+			default: false,
+			shouldHide: () => getCalendarView(config, defaultView) !== "dayGridMonth",
+		},
+		{
 			type: "dropdown",
 			key: "heightMode",
 			displayName: t("layout.heightMode"),
@@ -385,6 +400,21 @@ function buildCalendarTimeGridOptions(plugin: TaskNotesPlugin, t: Translate): Ba
 			placeholder: t("layout.timeSlotDurationPlaceholder"),
 		},
 		{
+			type: "slider",
+			key: "slotHeight",
+			displayName: t("layout.slotHeight"),
+			default: calendarSettings.slotHeight,
+			min: CALENDAR_SLOT_HEIGHT_MIN,
+			max: CALENDAR_SLOT_HEIGHT_MAX,
+			step: 1,
+		},
+		{
+			type: "toggle",
+			key: "pinchZoom",
+			displayName: t("layout.pinchZoom"),
+			default: true,
+		},
+		{
 			type: "text",
 			key: "scrollTime",
 			displayName: t("layout.initialScrollTime"),
@@ -425,10 +455,7 @@ function buildCalendarDayCellOptions(
 			type: "slider",
 			key: "dayMaxEvents",
 			displayName: t("layout.dayMaxEvents"),
-			default:
-				typeof calendarSettings.dayMaxEvents === "number"
-					? calendarSettings.dayMaxEvents
-					: 0,
+			default: 0,
 			min: 0,
 			max: 20,
 			step: 1,
@@ -545,7 +572,7 @@ function buildCalendarAdvancedOptions(
 				type: "toggle",
 				key: "slotEventOverlap",
 				displayName: t("layout.slotEventOverlap"),
-				default: calendarSettings.slotEventOverlap,
+				default: true,
 				shouldHide: shouldHideTimeGridOption,
 			},
 			{
@@ -562,7 +589,7 @@ function buildCalendarAdvancedOptions(
 				type: "slider",
 				key: "eventMaxStack",
 				displayName: t("layout.eventMaxStack"),
-				default: calendarSettings.eventMaxStack ?? 0,
+				default: 0,
 				min: 0,
 				max: 10,
 				step: 1,
@@ -572,10 +599,7 @@ function buildCalendarAdvancedOptions(
 				type: "slider",
 				key: "dayMaxEventRows",
 				displayName: t("layout.dayMaxEventRows"),
-				default:
-					typeof calendarSettings.dayMaxEventRows === "number"
-						? calendarSettings.dayMaxEventRows
-						: 0,
+				default: 0,
 				min: 0,
 				max: 10,
 				step: 1,

@@ -6,7 +6,7 @@ const root = `Recurring next status ${Date.now()}`;
 let folder = root;
 let instance: ObsidianApp;
 let page: Page;
-let original: { customStatuses: unknown; defaultTaskStatus: string };
+let original: Record<string, unknown>;
 
 function localDate(offsetDays = 0): string {
 	const date = new Date();
@@ -19,7 +19,7 @@ const today = localDate();
 const nextWeek = localDate(7);
 const rule = `DTSTART:${today.replaceAll("-", "")};FREQ=WEEKLY`;
 const taskPath = (name: string) => `${folder}/${name}.md`;
-const notice = (name: string): Locator => page.locator(".notice").filter({ hasText: name });
+const notice = (name: string): Locator => page.locator(".tn-toast").filter({ hasText: name });
 
 async function yaml(name: string): Promise<Record<string, any>> {
 	const text = await page.evaluate(async (path) => {
@@ -45,6 +45,7 @@ async function setStatuses(statuses: Record<string, unknown>[], defaultTaskStatu
 			}));
 			plugin.statusManager.updateStatuses(plugin.settings.customStatuses);
 			plugin.settings.defaultTaskStatus = defaultTaskStatus;
+			plugin.settings.resetRecurringStatusAfterOccurrence = true;
 		},
 		{ statuses, defaultTaskStatus }
 	);
@@ -77,8 +78,9 @@ test.beforeAll(async () => {
 	original = await page.evaluate(async (root) => {
 		const app = (window as any).app;
 		await app.vault.createFolder(root);
-		const { customStatuses, defaultTaskStatus } = app.plugins.plugins.tasknotes.settings;
-		return { customStatuses, defaultTaskStatus };
+		const { customStatuses, defaultTaskStatus, resetRecurringStatusAfterOccurrence } =
+			app.plugins.plugins.tasknotes.settings;
+		return { customStatuses, defaultTaskStatus, resetRecurringStatusAfterOccurrence };
 	}, root);
 });
 
@@ -86,7 +88,7 @@ test.beforeEach(async () => {
 	folder = `${root}/${Date.now()}`;
 	await page.evaluate(async (folder) => {
 		await (window as any).app.vault.createFolder(folder);
-		document.querySelectorAll(".notice").forEach((notice) => notice.remove());
+		document.querySelectorAll(".notice, .tn-toast").forEach((notice) => notice.remove());
 	}, folder);
 });
 

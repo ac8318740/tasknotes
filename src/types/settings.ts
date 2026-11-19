@@ -1,4 +1,4 @@
-import { FieldMapping, StatusConfig, PriorityConfig, SavedView, WebhookConfig } from "../types";
+import { FieldMapping, StatusConfig, PriorityConfig, WebhookConfig } from "../types";
 import type { FileFilterConfig } from "../suggest/FileSuggestHelper";
 
 export interface UserFieldMapping {
@@ -82,9 +82,7 @@ export interface NLPTriggersConfig {
 export type HideIdentifyingTagsMode = "all" | "exact-only";
 
 export interface ProjectAutosuggestSettings {
-	enableFuzzy: boolean;
 	rows: string[]; // up to 3 rows; each uses {property|flags} format
-	showAdvanced?: boolean; // Show advanced configuration options
 	requiredTags?: string[]; // Show notes that have ANY of these tags
 	includeFolders?: string[]; // Only show notes in these folders (empty = all folders)
 	propertyKey?: string; // Frontmatter property name to match
@@ -99,6 +97,7 @@ export interface VaultTimeZoneRewrite {
 }
 
 export interface TaskNotesSettings {
+	dateDisplayFormat: "default" | "iso";
 	tasksFolder: string; // Now just a default location for new tasks
 	moveArchivedTasks: boolean; // Whether to move tasks to archive folder when archived
 	archiveFolder: string; // Folder to move archived tasks to, supports template variables
@@ -111,7 +110,6 @@ export interface TaskNotesSettings {
 	excludedFolders: string; // Comma-separated list of folders to exclude from Notes tab
 	defaultTaskPriority: string; // Changed to string to support custom priorities
 	defaultTaskStatus: string; // Changed to string to support custom statuses
-	taskOrgFiltersCollapsed: boolean; // Save collapse state of task organization filters
 	// Task filename settings
 	taskFilenameFormat: "title" | "zettel" | "timestamp" | "uuid" | "custom";
 	storeTitleInFilename: boolean;
@@ -133,7 +131,7 @@ export interface TaskNotesSettings {
 	pomodoroNotifications: boolean;
 	pomodoroSoundEnabled: boolean;
 	pomodoroSoundVolume: number; // 0-100
-	pomodoroStorageLocation: "plugin" | "daily-notes"; // where to store pomodoro history data
+	pomodoroStorageLocation: "plugin" | "daily-notes"; // where to store pomodoro history data; daily notes fall back to plugin data when unavailable
 	pomodoroMobileSidebar: "tab" | "left" | "right"; // where to open pomodoro view on mobile
 	showPomodoroInStatusBar: boolean;
 	// Editor settings
@@ -151,9 +149,6 @@ export interface TaskNotesSettings {
 	vaultTimeZone: string; // IANA zone TaskNotes reads times in; empty means the device zone
 	vaultTimeZoneRewrite?: VaultTimeZoneRewrite; // Files still to rewrite after a vault zone change
 
-	// NLP status suggestion trigger (empty to disable) - DEPRECATED: Use nlpTriggers instead
-	statusSuggestionTrigger: string;
-
 	// NLP triggers configuration
 	nlpTriggers: NLPTriggersConfig;
 
@@ -164,23 +159,17 @@ export interface TaskNotesSettings {
 	doubleClickAction: "edit" | "openNote" | "none";
 	// Inline task conversion settings
 	inlineTaskConvertFolder: string; // Folder for inline task conversion, supports {{currentNotePath}} and {{currentNoteTitle}}
-	// Performance settings
-	disableNoteIndexing: boolean;
 	/** Optional debounce in milliseconds for inline file suggestions (0 = disabled) */
 	suggestionDebounceMs?: number;
 	// Customization settings
 	fieldMapping: FieldMapping;
 	customStatuses: StatusConfig[];
 	customPriorities: PriorityConfig[];
-	// Migration tracking
-	recurrenceMigrated?: boolean;
 	// Release notes tracking
 	lastSeenVersion?: string;
 	showReleaseNotesOnUpdate?: boolean;
 	checkForUpdatesOnStartup?: boolean;
 	lastNotifiedReleaseVersion?: string;
-	// Starter note onboarding
-	starterNoteCreated?: boolean;
 	// Status bar settings
 	showTrackedTasksInStatusBar: boolean;
 	// Time tracking settings
@@ -200,14 +189,14 @@ export interface TaskNotesSettings {
 	subtaskChevronPosition: "left" | "right";
 	// Nest the complete/skip context-menu actions under a submenu (vs. flat menu items)
 	completionMenuAsSubmenu: boolean;
-	// Filter toolbar layout
-	viewsButtonAlignment: "left" | "right";
+	/** Wrap task card properties onto extra lines instead of hiding overflow behind "+N". */
+	wrapTaskCardProperties: boolean;
+	/** Wrap properties of task links in notes onto extra lines instead of collapsing them into +N. */
+	wrapInlineTaskProperties: boolean;
 	// Overdue behavior settings
 	hideCompletedFromOverdue: boolean;
 	// ICS integration settings
 	icsIntegration: ICSIntegrationSettings;
-	// Saved filter views
-	savedViews: SavedView[];
 	// Notification settings
 	enableNotifications: boolean;
 	notificationType: "in-app" | "system";
@@ -233,8 +222,8 @@ export interface TaskNotesSettings {
 	// Default visible properties for inline task cards (task link widgets in editor)
 	inlineVisibleProperties?: string[];
 	// Bases integration settings
-	enableBases: boolean;
 	enableMdbaseSpec: boolean;
+	hideMdbaseFolders: boolean;
 	autoCreateDefaultBasesFiles: boolean; // Auto-create missing default Base files on startup
 	// Command-to-file mappings for view commands (v4)
 	commandFileMapping: {
@@ -243,19 +232,18 @@ export interface TaskNotesSettings {
 		"open-tasks-view": string;
 		"open-advanced-calendar-view": string;
 		"open-agenda-view": string;
-		"pomodoro-stats-base": string;
 		relationships: string; // Bases file for unified relationships widget
+		"pomodoro-stats-base": string; // Pomodoro statistics from daily notes
 		[key: string]: string; // Allow string indexing
 	};
 	// Recurring task behavior
 	maintainDueDateOffsetInRecurring: boolean;
 	resetCheckboxesOnRecurrence: boolean; // Reset markdown checkboxes in task body when recurring task completes
+	resetRecurringStatusAfterOccurrence: boolean; // Move a series to the first completed status's Next status after each occurrence
 	// Frontmatter link format settings
 	useFrontmatterMarkdownLinks: boolean; // Use markdown links in frontmatter (requires obsidian-frontmatter-markdown-links plugin)
 	// OAuth Calendar Integration settings
 	// OAuth client credentials and account tokens are stored in Obsidian SecretStorage.
-	enableGoogleCalendar: boolean;
-	enableMicrosoftCalendar: boolean;
 	disableCalendarOnMobile: boolean;
 	// Google Calendar selection
 	enabledGoogleCalendars: string[]; // Array of calendar IDs that should be displayed
@@ -292,6 +280,7 @@ export interface TaskCreationDefaults {
 	defaultContexts: string; // Comma-separated list
 	defaultTags: string; // Comma-separated list
 	defaultProjects: string; // Comma-separated list of project links
+	defaultProjectsOnlyWhenEmpty: boolean; // Explicit projects replace creation defaults
 	useParentNoteForTaskCreation: boolean; // Use the active note as a project for normal task creation
 	useParentNoteAsProject: boolean; // Use the parent note as a project during inline creation and instant conversion
 	useParentHeaderAsProject: boolean; // Use the closest markdown heading as a project during instant conversion
@@ -346,7 +335,6 @@ export interface GoogleCalendarExportSettings {
 	syncOnTaskDelete: boolean; // Delete event when task is deleted
 	eventTitleTemplate: string; // Template for event title (e.g., "{{title}}" or "[TaskNotes] {{title}}")
 	includeDescription: boolean; // Include task details in event description
-	eventColorId: string | null; // Optional: Google Calendar color ID for TaskNotes events (null = calendar default)
 	syncTrigger: "scheduled" | "due" | "both"; // Which date triggers event creation
 	createAsAllDay: boolean; // Create as all-day events vs timed
 	showAllDayAsFree: boolean; // All-day task exports do not block Google Calendar availability
@@ -380,6 +368,7 @@ export interface CalendarViewSettings {
 	customDayCount: number; // Number of days to show in custom view (2-10)
 	// Time settings
 	slotDuration: "00:15:00" | "00:30:00" | "01:00:00"; // 15, 30, or 60 minutes
+	slotHeight: number; // Height of one time slot in pixels (time grid)
 	slotMinTime: string; // Start time (HH:MM:SS format)
 	slotMaxTime: string; // End time (HH:MM:SS format)
 	scrollTime: string; // Initial scroll position (HH:MM:SS format)
@@ -393,11 +382,8 @@ export interface CalendarViewSettings {
 	// Default event type visibility
 	defaultShowScheduled: boolean;
 	defaultShowDue: boolean;
-	defaultShowDueWhenScheduled: boolean;
-	defaultShowScheduledToDueSpan: boolean; // Show multi-day span from scheduled to due
 	defaultShowTimeEntries: boolean;
 	defaultShowRecurring: boolean;
-	defaultShowICSEvents: boolean;
 	// Timeblocking settings
 	enableTimeblocking: boolean;
 	defaultShowTimeblocks: boolean;
@@ -411,9 +397,4 @@ export interface CalendarViewSettings {
 	showTodayHighlight: boolean;
 	// Event display
 	eventMinHeight: number; // Minimum height for events (FullCalendar eventMinHeight)
-	// Event overlap and stacking behavior
-	slotEventOverlap: boolean; // Whether timed events should visually overlap (false = side-by-side)
-	eventMaxStack: number | null; // Max events stacked in timeGrid view (null = unlimited)
-	dayMaxEvents: number | boolean; // Max events per day in dayGrid view (true = auto, number = limit, false = unlimited)
-	dayMaxEventRows: number | boolean; // Max event rows per day in dayGrid view (true = auto, number = limit, false = unlimited)
 }

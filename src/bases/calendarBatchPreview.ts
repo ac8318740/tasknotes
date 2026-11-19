@@ -6,6 +6,7 @@ interface CalendarBatchPreviewOptions {
 	getItems(): readonly CalendarEventItem[];
 	/** Stable identity of the current canonical item set; invalidates the proposal cache. */
 	getRevision(): unknown;
+	isValidTarget(clientX: number, clientY: number): boolean;
 	build(proposal: CalendarBatchProposal): CalendarEventItem[] | null;
 	upsert(items: CalendarEventItem[]): void;
 	remove(ids: string[]): void;
@@ -15,6 +16,8 @@ interface CalendarBatchPreviewOptions {
 /** Paint peers through the engine's public API; never replace the canonical item set. */
 export class CalendarBatchPreview {
 	private pointerId: number | null = null;
+	private pendingPointerUp: PointerEvent | null = null;
+	private cancelRelease: (() => void) | null = null;
 	private previewIds = new Set<string>();
 	private denied = false;
 	private lastKey: string | null = null;
@@ -47,19 +50,43 @@ export class CalendarBatchPreview {
 		const win = doc.defaultView;
 		const end = (event: PointerEvent) => {
 			if (event.pointerId !== this.pointerId) return;
-			const invalid = this.denied && event.type === "pointerup";
-			this.clear();
-			if (invalid) this.options.onInvalidDrop();
+			if (event.type !== "pointerup") {
+				this.clear();
+				return;
+			}
+			// The engine rechecks canDrop in its bubbling pointerup handler.
+			// Keep this gesture alive until that final position is validated.
+			this.pendingPointerUp = event;
+			this.cancelRelease?.();
+			const releaseWindow = win ?? window;
+			// A microtask can run between listeners for trusted browser input;
+			// use the next task so capture cannot clear state before bubbling.
+			const timer = releaseWindow.setTimeout(() => {
+				if (this.pendingPointerUp !== event) return;
+				this.cancelRelease = null;
+				const invalid = this.denied;
+				this.clear();
+				if (invalid) this.options.onInvalidDrop();
+			}, 0);
+			this.cancelRelease = () => releaseWindow.clearTimeout(timer);
 		};
 		const key = (event: KeyboardEvent) => { if (event.key === "Escape") this.clear(); };
 		const blur = () => this.clear();
 		const visibility = () => { if (doc.hidden) this.clear(); };
+		const move = (event: PointerEvent) => {
+			if (event.pointerId !== this.pointerId || this.options.isValidTarget(event.clientX, event.clientY)) return;
+			this.restore();
+			this.lastKey = null;
+			this.lastRevision = undefined;
+		};
+		doc.addEventListener("pointermove", move, true);
 		doc.addEventListener("pointerup", end, true);
 		doc.addEventListener("pointercancel", end, true);
 		doc.addEventListener("keydown", key, true);
 		doc.addEventListener("visibilitychange", visibility);
 		win?.addEventListener("blur", blur);
 		this.unbindDocument = () => {
+			doc.removeEventListener("pointermove", move, true);
 			doc.removeEventListener("pointerup", end, true);
 			doc.removeEventListener("pointercancel", end, true);
 			doc.removeEventListener("keydown", key, true);
@@ -93,9 +120,12 @@ export class CalendarBatchPreview {
 
 	/** A full source refresh supersedes preview items, so need not repaint the old set. */
 	clear(restore = true): void {
+		this.cancelRelease?.();
+		this.cancelRelease = null;
 		if (restore) this.restore();
 		else this.previewIds.clear();
 		this.pointerId = null;
+		this.pendingPointerUp = null;
 		this.denied = false;
 		this.lastKey = null;
 		this.lastRevision = undefined;

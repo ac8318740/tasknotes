@@ -7,7 +7,7 @@ import { DEFAULT_FIELD_MAPPING } from "../../../src/core/defaultFieldMapping";
 import {
 	buildRecurrenceOptions,
 	type BuildRecurrenceOptionsInput,
-} from "../../../src/components/RecurrenceContextMenu";
+} from "../../../src/components/CustomRecurrenceModal";
 import {
 	buildRecurringTaskCompletePlan,
 	buildRecurringTaskSkippedPlan,

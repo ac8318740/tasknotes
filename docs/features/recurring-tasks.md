@@ -46,11 +46,13 @@ Materialized occurrence notes add two system fields to the occurrence note:
 - **Date-only**: `DTSTART:20250804;FREQ=DAILY`
 - **Date and time**: `DTSTART:20250804T090000Z;FREQ=DAILY`
 
+Standard multiline rules are also supported, with `DTSTART` and `RRULE` on separate lines. Updating a completion anchor changes the date without discarding the existing clock, timezone parameters, or `RRULE`, `RDATE` and `EXDATE` lines. Date-only anchors remain date-only.
+
 ## Recurring Task Due Date
 
 When a recurring task is completed, `scheduled` advances to the next occurrence. By default, `due` does not change.
 
-Enable `Maintain due date offset in recurring tasks` in **Settings → TaskNotes → Features → Recurring Tasks** to preserve due/scheduled spacing.
+Enable `Maintain due date offset in recurring tasks` in **Settings → TaskNotes → Time & reminders → Recurring tasks** to preserve due/scheduled spacing.
 
 Example:
 
@@ -165,13 +167,13 @@ timeEstimate: 45
 
 When TaskNotes creates an occurrence note, it copies the parent fields that describe how that instance should be planned: title, priority, scheduled time, due offset, contexts, projects, tags, reminders, dependencies, details, custom properties, and time estimate. Date-like fields are rebased onto the occurrence date, so a parent scheduled at `09:30` creates an occurrence scheduled at `09:30` on the selected date, and a due date one day after the parent scheduled date stays one day after the occurrence scheduled date.
 
-Occurrence notes can use a separate template from regular new tasks. Set `occurrence_template` on the recurring parent to point at a template note, or configure **Settings → Features → Body template → Occurrence note template file** as a global fallback. Parent-level `occurrence_template` wins over the global fallback. If neither occurrence-specific template is configured, occurrence note creation keeps the normal body template behavior.
+Occurrence notes can use a separate template from regular new tasks. Set `occurrence_template` on the recurring parent to point at a template note, or configure **Settings → TaskNotes → Task creation → Templates → Occurrence note template file** as a global fallback. Parent-level `occurrence_template` wins over the global fallback. If neither occurrence-specific template is configured, occurrence note creation keeps the normal body template behavior.
 
 The parent task remains the source of the recurrence rule and series history. Occurrence notes do not copy the parent's `recurrence`, `complete_instances`, `skipped_instances`, `completedDate`, calendar provider IDs, or `timeEntries`. New time entries belong to the occurrence note once you track time there.
 
 ### Occurrence Filenames
 
-By default, materialized occurrence notes use the existing filename behavior: the parent title followed by a numeric suffix. To opt in to custom filenames, set **Occurrence filename template** under **Settings → Task Properties → Title**. For example, `{{title}} — {{occurrenceDate}}` produces `Weekly review — 2026-08-01.md`.
+By default, materialized occurrence notes use the existing filename behavior: the parent title followed by a numeric suffix. To opt in to custom filenames, set **Occurrence filename template** under **Settings → TaskNotes → Task files → Filenames**. For example, `{{title}} — {{occurrenceDate}}` produces `Weekly review — 2026-08-01.md`.
 
 Occurrence filename templates support all regular filename variables plus these occurrence-specific variables:
 
@@ -191,7 +193,7 @@ Leaving the global template empty preserves the existing filename behavior. Task
 
 ### Occurrence Note Policies
 
-Each recurring parent has an **Occurrence notes** submenu under its recurrence menu:
+Right-click a recurring parent and open **Occurrence notes** to choose its policy:
 
 - **Create manually**: occurrence notes are only created by explicit action.
 - **Create next after completion**: after you complete a materialized occurrence note, TaskNotes creates the next occurrence note.
@@ -267,6 +269,8 @@ Recurring tasks can show:
 - **Pattern instances** (dashed border): dragging updates `DTSTART` and future pattern instances
 - **Materialized occurrence notes**: dragging updates the occurrence note's own `scheduled` or `due` date like a normal task, without changing the parent's recurrence rule
 
+In list mode and the Agenda, the card for a pattern instance shows that instance's scheduled date as read-only text and leaves out the task's due date. To give one instance its own dates, create an occurrence note for it.
+
 ![Recurring tasks in calendar week view](../assets/views-calendar-week.png)
 
 Materialized occurrence notes keep `occurrence_date` as their identity. If you drag the note for the June 1 occurrence to June 2, it is still the June 1 recurrence instance, now scheduled for June 2. TaskNotes suppresses the June 1 virtual parent event and leaves the June 2 virtual occurrence alone unless that date also has its own materialized note.
@@ -281,7 +285,9 @@ Dropping a recurring task on a status marked **Completed** in a Kanban or Task L
 
 When you complete an occurrence from the context menu, you can choose which date it is recorded against — today, the occurrence's scheduled date, its due date, or a date you pick (see [Completing Tasks](task-management.md#completing-tasks)). Completion-anchored recurrences resolve *on schedule* to the newly scheduled date, an explicit re-anchor.
 
-A series keeps its status when an occurrence is completed or skipped, so one moved to In Progress stays there for its next occurrence. To have each occurrence start from the same status, set **Next status** on the first status marked **Completed** under [Settings → Task Properties](../settings/task-properties.md). Completing or skipping the current occurrence then moves the series to that status, and **Undo** restores the previous one. A task already in a completed status keeps it.
+With **Reset status after each occurrence** turned on under [Settings → Time & reminders → Recurring tasks](../settings/features.md#recurring-tasks), completing or skipping an occurrence moves the series to the **Next status** of the first status marked **Completed** under [Settings → Task Properties](../settings/task-properties.md), so a status reached during one occurrence does not carry into the next. The setting is on in new setups, where TaskNotes' built-in Done status moves on to Open, and off in setups saved before it existed. **Undo** restores the previous status. With the setting off, or without a Next status on that completed status, the series keeps its status, and a task already in a completed status keeps it.
+
+With the reset on and a Next status set, clicking a recurring task's status indicator follows the status cycle, as it does for other tasks: it moves the series to the next status, and when that status is marked **Completed** it completes the occurrence shown on the card instead. Otherwise, the click completes the occurrence directly and keeps the series' status. On a completed occurrence, the click reopens it.
 
 Completed instances are stored in:
 

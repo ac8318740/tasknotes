@@ -3,7 +3,7 @@ import {
   launchObsidian,
   closeObsidian,
   closeObsidianSettings,
-  openTaskNotesSettings,
+  revealTaskNotesSetting, nativeSettingRow,
   ObsidianApp,
 } from './obsidian';
 
@@ -40,7 +40,7 @@ test.describe('Reminder editing and settings card headers', () => {
 
     const taskModal = page.locator('.modal').filter({ has: page.locator('[data-type="reminders"]') });
     await taskModal.locator('[data-type="reminders"]').click();
-    await page.locator('.menu-item').filter({ hasText: 'Manage all reminders' }).click();
+    await page.locator('[role="option"][data-picker-id="manage"]').filter({ hasText: 'Manage all reminders' }).click();
 
     const reminderModal = page.locator('.tasknotes-reminder-modal');
     await expect(reminderModal.locator('.reminder-modal__reminder-card')).toHaveCount(1);
@@ -85,13 +85,13 @@ test.describe('Reminder editing and settings card headers', () => {
       await plugin.saveSettings();
     }, fieldId);
 
-    const settingsPage = await openTaskNotesSettings(page, 'Task properties');
+    const settingsPage = await revealTaskNotesSetting(page, `userFields.${fieldId}.key`);
     try {
-      const card = settingsPage.locator(`[data-card-id="${fieldId}"]`);
-      await card.scrollIntoViewIfNeeded();
-      await card.locator('.tasknotes-settings__card-header').click();
-      await card.locator('input[placeholder="property-name"]').fill('header_after');
-      await expect(card.locator('.tasknotes-settings__card-secondary-text')).toHaveText('header_after');
+      const input = nativeSettingRow(settingsPage, 'Property key:').locator('input');
+      await input.fill('header_after');
+      await input.press('Tab');
+      await expect.poll(() => page.evaluate(id => (window as any).app.plugins.plugins.tasknotes.settings.userFields.find((field: any) => field.id === id)?.key, fieldId)).toBe('header_after');
+      await expect(settingsPage.locator('.setting-page-title:visible').last()).toHaveText('Header before');
     } finally {
       await closeObsidianSettings(page, settingsPage);
       await page.evaluate(async (id) => {

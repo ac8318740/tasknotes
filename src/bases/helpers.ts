@@ -92,13 +92,9 @@ function toOptionalNumber(value: unknown): number | undefined {
 	return undefined;
 }
 
-function toOccurrenceMaterializationMode(
-	value: unknown
-): Optional<OccurrenceMaterializationMode> {
+function toOccurrenceMaterializationMode(value: unknown): Optional<OccurrenceMaterializationMode> {
 	const mode = toOptionalString(value);
-	return mode === "manual" || mode === "on_completion" || mode === "rolling"
-		? mode
-		: undefined;
+	return mode === "manual" || mode === "on_completion" || mode === "rolling" ? mode : undefined;
 }
 
 function toOccurrenceNextTrigger(value: unknown): Optional<OccurrenceNextTrigger> {
@@ -140,7 +136,7 @@ export function mapBasesPropertyToTaskCardProperty(
 ): string {
 	// Delegate to PropertyMappingService if available (preferred path)
 	if (plugin) {
-		const mapper = new PropertyMappingService(plugin, plugin.fieldMapper);
+		const mapper = new PropertyMappingService(plugin.fieldMapper);
 		return mapper.basesToTaskCardProperty(propId);
 	}
 
@@ -249,7 +245,7 @@ function createTaskInfoFromProperties(
 			basesItem.path?.split("/").pop()?.replace(".md", "") ||
 			uiText(msg({ message: "Untitled", context: "bases/helpers: createTaskInfoFromProperties title" })),
 		status: toOptionalString(props.status) || plugin?.settings?.defaultTaskStatus || "open",
-		priority: toOptionalString(props.priority) || "normal",
+		priority: toOptionalString(props.priority) || "",
 		path: basesItem.path || "",
 		archived: props.archived === true,
 		due: toOptionalString(props.due),
@@ -362,7 +358,10 @@ export function createTaskInfoFromBasesData(
 			plugin
 		);
 	} else {
-		return enrichTaskInfoFromCache(createTaskInfoFromProperties(props, basesItem, plugin), plugin);
+		return enrichTaskInfoFromCache(
+			createTaskInfoFromProperties(props, basesItem, plugin),
+			plugin
+		);
 	}
 }
 

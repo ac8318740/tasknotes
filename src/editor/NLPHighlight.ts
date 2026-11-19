@@ -158,6 +158,7 @@ export function createNLPHighlight(
 				span.end,
 				Decoration.mark({
 					class: `tn-nlp-highlight tn-nlp-highlight--${span.kind}`,
+					attributes: { spellcheck: "false" },
 				})
 			);
 			lastEnd = span.end;

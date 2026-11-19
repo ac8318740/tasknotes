@@ -2,6 +2,8 @@ import type TaskNotesPlugin from "../main";
 import type { TaskInfo } from "../types";
 import type { CalendarEventChange } from "./calendarEngine";
 import { format } from "date-fns";
+import { formatUIDate } from "../i18n/formatters";
+import { formatTime } from "../utils/dateUtils";
 import { TFile } from "obsidian";
 import {
 	handleTimeblockDrop,
@@ -17,13 +19,17 @@ import {
 import { processVaultFrontMatter } from "../services/VaultMutationService";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { getVaultTimeZone, toVaultDate } from "../utils/vaultTime";
+import { captureTaskUndo } from "../ui/taskMutationUndo";
+import { showTaskUndo } from "../ui/taskPropertyPickers";
+import { calendarResizeFeedback } from "./calendarResizeFeedback";
 
 const tasknotesLogger = createTaskNotesLogger({ tag: "Bases/CalendarMutations" });
 export interface CalendarMutationContext {
 	plugin: TaskNotesPlugin;
-	options: { startDateProperty: string | null; endDateProperty: string | null };
+	options: { startDateProperty: string | null; endDateProperty: string | null; timeFormat?: string };
 	timezone: string;
 	refreshTask(task: TaskInfo): Promise<void>;
+	refreshEvent(event: CalendarEventChange["event"]): void;
 }
 
 export async function handleCalendarEventDrop(
@@ -47,13 +53,14 @@ export async function handleCalendarEventDrop(
 			return;
 		}
 		const originalDate = format(toVaultDate(info.oldEvent.start), "yyyy-MM-dd");
-		await handleTimeblockDrop(
+		const updated = await handleTimeblockDrop(
 			info,
 			timeblock,
 			originalDate,
 			context.plugin,
 			info.isPointer && isTimeblockCopyModifierPressed(info.jsEvent ?? undefined)
 		);
+		if (updated) context.refreshEvent(info.event);
 		return;
 	}
 
@@ -131,7 +138,8 @@ export async function handleCalendarEventDrop(
 					return;
 				}
 
-				await provider.updateEvent(calendarId, eventId, providerUpdate.updates);
+				info.event.extendedProps.icsEvent = await provider.updateEvent(calendarId, eventId, providerUpdate.updates);
+				context.refreshEvent(info.event);
 			} catch (error) {
 				tasknotesLogger.error(
 					`[TaskNotes][CalendarView] Error updating ${provider.providerName} event:`,
@@ -171,7 +179,9 @@ export async function handleCalendarEventResize(
 			return;
 		}
 		const originalDate = format(toVaultDate(info.event.start), "yyyy-MM-dd");
-		await handleTimeblockResize(info, timeblock, originalDate, context.plugin);
+		if (await handleTimeblockResize(info, timeblock, originalDate, context.plugin)) {
+			context.refreshEvent(info.event);
+		}
 		return;
 	}
 
@@ -237,7 +247,8 @@ export async function handleCalendarEventResize(
 					return;
 				}
 
-				await provider.updateEvent(calendarId, eventId, providerUpdate.updates);
+				info.event.extendedProps.icsEvent = await provider.updateEvent(calendarId, eventId, providerUpdate.updates);
+				context.refreshEvent(info.event);
 			} catch (error) {
 				tasknotesLogger.error(
 					`[TaskNotes][CalendarView] Error resizing ${provider.providerName} event:`,
@@ -263,18 +274,27 @@ async function applyTaskCalendarGesture(
 		return;
 	}
 	try {
-		const updated = await context.plugin.taskService.applyCalendarEdit(
-			taskInfo,
+		const start = info.event.start.toISOString();
+		const current = await context.plugin.cacheManager.getTaskInfo(taskInfo.path);
+		if (!current) throw new Error(`Missing task: ${taskInfo.path}`);
+		const result = await captureTaskUndo(context.plugin, current, () => context.plugin.taskService.applyCalendarEdit(
+			current,
 			modelEntry,
 			{
 				kind,
-				start: info.event.start.toISOString(),
+				start,
 				end: info.event.end?.toISOString(),
 				allDay: info.event.allDay,
 			},
 			context.timezone
-		);
-		if (updated) await context.refreshTask(updated);
+		));
+		if (result.task) {
+			await context.refreshTask(result.task);
+			const feedback = kind === "resize" && info.event.end
+				? calendarResizeFeedback(result.task.title, info.event.start, info.event.end)
+				: `${result.task.title} · ${formatUIDate(info.event.start, "PP")}${info.event.allDay ? "" : ` ${formatTime(info.event.start, (context.options.timeFormat ?? context.plugin.settings.calendarViewSettings?.timeFormat) === "12" ? "12" : "24")}`}`;
+			showTaskUndo(result.undo ? [result.undo] : [], false, 1, context.plugin.app.vault, feedback);
+		}
 		else info.revert();
 	} catch (error) {
 		tasknotesLogger.error("Cannot apply calendar edit", {
@@ -282,6 +302,7 @@ async function applyTaskCalendarGesture(
 			operation: "calendar-edit",
 			error,
 		});
+		showTaskUndo([], true, 0, context.plugin.app.vault, taskInfo.title);
 		info.revert();
 	}
 }

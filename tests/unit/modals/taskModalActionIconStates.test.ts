@@ -9,6 +9,7 @@ jest.mock("obsidian", () => ({
 }));
 
 import type { PriorityConfig, StatusConfig } from "../../../src/types";
+import { getTodayString } from "../../../src/utils/dateUtils";
 import {
 	updateTaskModalActionIconStates,
 	type TaskModalActionIconState,
@@ -27,6 +28,7 @@ function createActionBar(): HTMLElement {
 		const icon = actionBar.createDiv({ cls: "action-icon" });
 		icon.dataset.type = dataType;
 		icon.createSpan({ cls: "icon" });
+		icon.createSpan({ cls: "action-icon__label" });
 	}
 	return actionBar;
 }
@@ -80,6 +82,7 @@ function createState(overrides: Partial<TaskModalActionIconState> = {}): TaskMod
 				weight: 10,
 			},
 		] satisfies PriorityConfig[],
+		timeFormat: "24",
 		...overrides,
 	};
 }
@@ -93,7 +96,7 @@ describe("taskModalActionIconStates", () => {
 		mockSetIcon.mockClear();
 	});
 
-	it("shows the status as a circle, check circle, or configured icon like task cards (#2401)", () => {
+	it("shares workflow glyphs with task cards and preserves configured icons (#2401)", () => {
 		const actionBar = createActionBar();
 		const statusIconElement = actionBar.querySelector('[data-type="status"] .icon');
 		const base = createState();
@@ -103,18 +106,41 @@ describe("taskModalActionIconStates", () => {
 
 		updateTaskModalActionIconStates(actionBar, { translate }, base);
 		updateTaskModalActionIconStates(actionBar, { translate }, base);
+		expect(statusIconElement?.getAttribute("data-tn-glyph")).toBe("open");
 		updateTaskModalActionIconStates(actionBar, { translate }, createState({ status: "done" }));
+		expect(statusIconElement?.getAttribute("data-tn-glyph")).toBe("complete");
 		updateTaskModalActionIconStates(
 			actionBar,
 			{ translate },
 			createState({ statusConfigs: withIcon })
 		);
 
-		expect(mockSetIcon.mock.calls).toEqual([
-			[statusIconElement, "circle"],
-			[statusIconElement, "circle-check"],
-			[statusIconElement, "clock"],
-		]);
+		expect(mockSetIcon.mock.calls).toEqual([[statusIconElement, "clock"]]);
+	});
+
+	it("labels chips with the current value, not only when hovered (#2048)", () => {
+		const actionBar = createActionBar();
+		const label = (type: string) =>
+			actionBar.querySelector(`[data-type="${type}"] .action-icon__label`)?.textContent;
+
+		updateTaskModalActionIconStates(actionBar, { translate }, createState());
+		expect(label("due-date")).toBe("Due date");
+		expect(label("status")).toBe("Open");
+
+		updateTaskModalActionIconStates(
+			actionBar,
+			{ translate },
+			createState({
+				dueDate: `${getTodayString()}T14:30`,
+				scheduledDate: "2020-05-19",
+				status: "done",
+				reminderCount: 2,
+			})
+		);
+		expect(label("due-date")).toBe("Today 14:30");
+		expect(label("scheduled-date")).toBe("May 19, 2020");
+		expect(label("status")).toBe("Done");
+		expect(label("reminders")).toBe("2 reminders set");
 	});
 
 	it("marks date icons active and updates translated tooltips when values exist", () => {
@@ -135,14 +161,37 @@ describe("taskModalActionIconStates", () => {
 		);
 		expect(mockSetTooltip).toHaveBeenCalledWith(
 			actionBar.querySelector('[data-type="due-date"]'),
-			mockEnglishText(mockConceptDescriptor("modals.task.tooltips.dueValue"), {"value":"2026-05-20"}),
+			mockEnglishText(mockConceptDescriptor("modals.task.tooltips.dueValue"), {"value":"May 20, 2026"}),
 			{ placement: "top" }
 		);
 		expect(mockSetTooltip).toHaveBeenCalledWith(
 			actionBar.querySelector('[data-type="scheduled-date"]'),
-			mockEnglishText(mockConceptDescriptor("modals.task.tooltips.scheduledValue"), {"value":"2026-05-19T09:30"}),
+			mockEnglishText(mockConceptDescriptor("modals.task.tooltips.scheduledValue"), {"value":"May 19, 2026 09:30"}),
 			{ placement: "top" }
 		);
+	});
+
+	it("shows ISO dates on chips and tooltips when the ISO preference is set (#2354)", () => {
+		const actionBar = createActionBar();
+		const label = (type: string) =>
+			actionBar.querySelector(`[data-type="${type}"] .action-icon__label`)?.textContent;
+
+		updateTaskModalActionIconStates(
+			actionBar,
+			{ translate },
+			createState({
+				dueDate: getTodayString(),
+				scheduledDate: "2026-05-19T09:30",
+				dateDisplayFormat: "iso",
+			})
+		);
+
+		expect(label("due-date")).toContain(getTodayString());
+		expect(label("scheduled-date")).toContain("2026-05-19 09:30");
+		const scheduledIcon = actionBar.querySelector('[data-type="scheduled-date"]');
+		const tooltip = mockSetTooltip.mock.calls.find(([element]) => element === scheduledIcon)?.[1];
+		expect(tooltip).toContain("2026-05-19");
+		expect(tooltip).not.toContain("May");
 	});
 
 	it("marks non-default status and priority active and applies configured colors", () => {
@@ -196,12 +245,12 @@ describe("taskModalActionIconStates", () => {
 		);
 		expect(mockSetTooltip).toHaveBeenCalledWith(
 			statusIcon,
-			mockEnglishText(msg({ message: "Set status", context: "modals.task.actions.status" })),
+			mockEnglishText(mockConceptDescriptor("modals.task.tooltips.statusValue"), { value: "Open" }),
 			{ placement: "top" }
 		);
 		expect(mockSetTooltip).toHaveBeenCalledWith(
 			priorityIcon,
-			mockEnglishText(msg({ message: "Set priority", context: "modals.task.actions.priority" })),
+			mockEnglishText(mockConceptDescriptor("modals.task.tooltips.priorityValue"), { value: "Normal" }),
 			{ placement: "top" }
 		);
 	});

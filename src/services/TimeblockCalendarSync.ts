@@ -12,6 +12,7 @@ import type {
 } from "../types";
 import { validateTimeBlock } from "../utils/helpers";
 import { parseDateToLocal } from "../utils/dateUtils";
+import { calendarDescriptionWithObsidianLink } from "../utils/calendarDescription";
 import { createTaskNotesLogger } from "../utils/tasknotesLogger";
 import { withPluginDataWriteLock } from "../utils/pluginDataWriteLock";
 import { getVaultTimeZone } from "../utils/vaultTime";
@@ -101,7 +102,6 @@ type TimeblockEventPayload = {
 	description?: string;
 	start: { dateTime: string; timeZone: string };
 	end: { dateTime: string; timeZone: string };
-	colorId?: string;
 };
 
 function getErrorStatus(error: unknown): number | undefined {
@@ -305,6 +305,7 @@ export class TimeblockCalendarSync {
 	private baselinePaths: Set<string> = new Set();
 	private createdPaths: Set<string> = new Set();
 	private initialized = false;
+	private baselineCaptured = false;
 	private startupRecoveryStartedAt: number | null = null;
 	private destroyed = false;
 
@@ -351,11 +352,26 @@ export class TimeblockCalendarSync {
 	}
 
 	/**
-	 * Record the current timeblocks of every daily note. Only timeblocks added
-	 * or edited after this point are created in Google Calendar, so enabling
-	 * sync does not flood the calendar with historical timeblocks.
+	 * Start tracking daily notes. The baseline is taken now only when timeblock
+	 * sync is on; otherwise it waits until sync is turned on, since listing
+	 * daily notes parses the name of every file in the daily notes folder.
 	 */
 	initialize(): void {
+		this.initialized = true;
+		if (this.plugin.settings.googleCalendarExport?.syncTimeblocks) {
+			this.ensureBaseline();
+		}
+	}
+
+	/**
+	 * Record the current timeblocks of every daily note, once. Only timeblocks
+	 * added or edited after this point are created in Google Calendar, so
+	 * enabling sync does not flood the calendar with historical timeblocks.
+	 */
+	ensureBaseline(): void {
+		if (this.baselineCaptured || this.destroyed) return;
+		this.baselineCaptured = true;
+		this.initialized = true;
 		for (const notePath of this.source.listNotePaths()) {
 			const state = this.source.read(notePath);
 			if (!state) continue;
@@ -369,7 +385,6 @@ export class TimeblockCalendarSync {
 				this.snapshots.set(notePath, fingerprints);
 			}
 		}
-		this.initialized = true;
 	}
 
 	/** Subscribe to vault and metadata events for daily notes. */
@@ -437,6 +452,14 @@ export class TimeblockCalendarSync {
 			!this.plugin.settings.googleCalendarExport?.syncTimeblocks
 		) {
 			return;
+		}
+		if (!this.baselineCaptured) {
+			// Sync was turned on outside the settings tab (e.g. settings synced from
+			// another device). Take the baseline now, but keep this note's state from
+			// before this change so the change itself is still synced.
+			this.ensureBaseline();
+			if (previous) this.snapshots.set(notePath, previous);
+			else this.snapshots.delete(notePath);
 		}
 
 		// Any other note seen for the first time (e.g. an old project note sharing
@@ -549,6 +572,7 @@ export class TimeblockCalendarSync {
 		if (!this.isEnabled()) {
 			return;
 		}
+		this.ensureBaseline();
 		if (includeIndexedNotes) {
 			this.startupRecoveryStartedAt = Date.now();
 		}
@@ -1100,7 +1124,6 @@ export class TimeblockCalendarSync {
 		date: string,
 		timeblock: TimeBlock
 	): TimeblockEventPayload {
-		const settings = this.plugin.settings.googleCalendarExport;
 		const timeZone = getVaultTimeZone();
 		const startsAfterMidnight = timeblock.startTime !== "00:00";
 		const endsAtNextMidnight =
@@ -1117,9 +1140,6 @@ export class TimeblockCalendarSync {
 		const description = this.buildEventDescription(notePath, timeblock);
 		if (description) {
 			payload.description = description;
-		}
-		if (settings.eventColorId) {
-			payload.colorId = settings.eventColorId;
 		}
 		return payload;
 	}
@@ -1152,7 +1172,10 @@ export class TimeblockCalendarSync {
 			}
 			const vaultName = this.plugin.app.vault.getName();
 			const obsidianUri = `obsidian://open?vault=${encodeURIComponent(vaultName)}&file=${encodeURIComponent(notePath)}`;
-			parts.push(`Open in Obsidian: ${obsidianUri}`);
+			return uiData(
+				calendarDescriptionWithObsidianLink(parts, obsidianUri, "Open in Obsidian"),
+				"Persisted Google Calendar description: user timeblock data and English link label, matching task events"
+			);
 		}
 		return uiData(
 			parts.join("\n"),

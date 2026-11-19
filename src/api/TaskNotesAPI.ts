@@ -43,6 +43,7 @@ import {
 	resolveUserFieldProperty,
 } from "../services/filter-service/userFieldValues";
 import { TaskContextMenu } from "../components/TaskContextMenu";
+import { TaskNotesInteropPublisher } from "./tasknotes-interop";
 import {
 	TASKNOTES_RUNTIME_API_CAPABILITIES,
 	TASKNOTES_RUNTIME_EVENT_DEFINITIONS,
@@ -145,6 +146,7 @@ const RESERVED_RUNTIME_EXTENSION_NAMESPACES = new Set([
 	"pomodoro",
 	"relationships",
 	"recurring",
+	"runtime",
 	"settings",
 	"tasks",
 	"time",
@@ -312,7 +314,8 @@ const CORE_FIELD_DEFINITIONS: ReadonlyArray<
 	},
 	{ id: "details", label: "Details", valueType: "string", source: "model", writable: true },
 	{ id: "sortOrder", label: "Sort order", valueType: "string", source: "model", writable: true },
-	{ id: "path", label: "Path", valueType: "string", source: "model", writable: false },
+	{ id: "id", label: "ID", valueType: "string", source: "model", writable: false },
+	{ id: "path", label: "Path", valueType: "string", source: "file", writable: false },
 	{
 		id: "totalTrackedTime",
 		label: "Total tracked time",
@@ -751,6 +754,8 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 
 	readonly tasks = {
 		get: (path: string) => this.getTask(path),
+		getByPath: (path: string) => this.getTask(path),
+		getById: (id: string) => this.getTaskById(id),
 		list: (query?: TaskNotesRuntimeTaskQuery) => this.listTasks(query),
 		create: (taskData: TaskCreationData, context?: TaskNotesMutationContext) =>
 			this.createTask(taskData, context),
@@ -952,8 +957,21 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 	private readonly mutationContextByPath = new Map<string, TaskNotesMutationContext[]>();
 	private readonly mutationContextStack: TaskNotesMutationContext[] = [];
 	private readonly extensionRegistry = new Map<string, RegisteredRuntimeExtension>();
+	private readonly interopPublisher: TaskNotesInteropPublisher;
 
-	constructor(private plugin: TaskNotesPlugin) {}
+	constructor(private plugin: TaskNotesPlugin) {
+		this.interopPublisher = new TaskNotesInteropPublisher(plugin, this);
+		this.interopPublisher.connect();
+		if (typeof window !== "undefined" && typeof plugin.registerInterval === "function") {
+			plugin.registerInterval(window.setInterval(() => {
+				this.interopPublisher.connect();
+			}, 5000));
+		}
+	}
+
+	async dispose(): Promise<void> {
+		await this.interopPublisher.dispose();
+	}
 
 	get capabilities(): readonly string[] {
 		return [...TASKNOTES_RUNTIME_API_CAPABILITIES, ...this.getExtensionCapabilities()];
@@ -1053,7 +1071,8 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 			const queryField = runtimeFilterPropertyForInternal(field.id);
 			return {
 				...field,
-				frontmatterKey: mappingKey ? mapping[mappingKey] : undefined,
+				frontmatterKey:
+					field.id === "id" ? "id" : mappingKey ? mapping[mappingKey] : undefined,
 				queryable: !!queryField,
 				sortable: queryField?.sortable ?? false,
 				groupable: queryField?.groupable ?? false,
@@ -1847,6 +1866,28 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 		return task ? copyTaskInfo(task) : null;
 	}
 
+	async getTaskById(id: string): Promise<TaskInfo | null> {
+		const normalizedId = id.trim();
+		if (!normalizedId) return null;
+
+		const matches = await this.plugin.cacheManager.getTasksById(normalizedId);
+		if (matches.length > 1) {
+			throw new TaskNotesApiError(
+				"duplicate_task_id",
+				`Task ID "${normalizedId}" belongs to multiple task notes`,
+				{
+					status: 409,
+					details: {
+						id: normalizedId,
+						paths: matches.map((task) => task.path).sort(),
+					},
+				}
+			);
+		}
+
+		return matches[0] ? copyTaskInfo(matches[0]) : null;
+	}
+
 	async listTasks(query?: TaskNotesRuntimeTaskQuery): Promise<TaskInfo[]> {
 		if (!query) {
 			const tasks = await this.plugin.cacheManager.getAllTasks();
@@ -2055,7 +2096,6 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 
 			const updatedTask = copyTaskInfo({
 				...task,
-				id: task.id && task.id !== task.path ? task.id : newPath,
 				path: newPath,
 			});
 
@@ -2896,6 +2936,12 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 		return {
 			event: payload.event ?? "task.updated",
 			timestamp: new Date().toISOString(),
+			taskId:
+				payload.taskId ??
+				payload.task?.id ??
+				payload.after?.id ??
+				payload.before?.id ??
+				payload.deletedTask?.id,
 			taskPath: payload.taskPath,
 			task: payload.task,
 			before: payload.before,
@@ -2966,7 +3012,7 @@ export class TaskNotesAPI implements TaskNotesRuntimeApiV1 {
 				taskPath,
 				task,
 				changes: {},
-				data: payload,
+				data: task ? { ...data, task } : payload,
 				context,
 				rawEvent,
 			}),
@@ -3472,7 +3518,9 @@ function getRawEventForRuntimeEvent(event: TaskNotesRuntimeEventName): string {
 }
 
 function copyTaskInfo(task: TaskInfo): TaskInfo {
-	const copy = { ...task };
+	// `basesData` is the Bases entry a view attached to the cached task. It holds
+	// the Obsidian app, so it is circular and must not reach API consumers.
+	const { basesData: _basesData, ...copy }: TaskInfo = task;
 
 	if (task.tags) {
 		copy.tags = [...task.tags];

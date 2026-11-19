@@ -1,6 +1,6 @@
 import { observeTranslation as mockObserveTranslation } from "../../helpers/real-i18n";
-import { App } from "obsidian";
-import { TimeblockInfoModal, TimeBlock } from "../../../src/modals/TimeblockInfoModal";
+import { App, parseYaml } from "obsidian";
+import { deleteTimeblockFromDailyNote, TimeblockInfoModal, TimeBlock } from "../../../src/modals/TimeblockInfoModal";
 import { MockObsidian } from "../../helpers/obsidian-runtime";
 import { getDailyNote } from "obsidian-daily-notes-interface";
 
@@ -90,22 +90,66 @@ describe("TimeblockInfoModal frontmatter fence detection", () => {
 		const dailyNote = await app.vault.create("Daily/2026-05-16.md", dailyNoteContent());
 		(getDailyNote as jest.Mock).mockReturnValue(dailyNote);
 
-		const plugin = createMockPlugin();
-		const modal = new TimeblockInfoModal(
-			app,
-			plugin,
-			{ ...existingTimeblock },
-			new Date("2026-05-16"),
-			"2026-05-16"
-		);
-
-		await (modal as any).deleteTimeblockFromDailyNote();
+		await deleteTimeblockFromDailyNote(app, "2026-05-16", { ...existingTimeblock });
 
 		const finalContent = await app.vault.read(dailyNote);
 		expect(finalContent).toContain("description: Section A --- Section B");
 		expect(finalContent).toContain("# Daily Note Content");
 		expect(finalContent).not.toContain("Standup");
 	});
+
+	it.each([
+		["[[Tasks/Write report]]"],
+		["[[Tasks/Write report.md]]"],
+		["[[Tasks/Write report|Report]]"],
+		["[[Tasks/Write report#Summary|Report]]"],
+		["[[Tasks/Write report]]", "[[Tasks/Write report.md|Report]]"],
+	])("keeps the original attachment link %s when the modal saves", async (...attachments) => {
+		const task = await app.vault.create("Tasks/Write report.md", "---\ntitle: Write report\n---\n");
+		const dailyNote = await app.vault.create(
+			"Daily/2026-05-16.md",
+			`---
+timeblocks:
+  - id: tb-1
+    title: Write report
+    startTime: "09:00"
+    endTime: "10:00"
+    attachments:
+${attachments.map((link) => `      - ${JSON.stringify(link)}`).join("\n")}
+---
+`
+		);
+		(getDailyNote as jest.Mock).mockReturnValue(dailyNote);
+		app.metadataCache.getFirstLinkpathDest = jest.fn((link: string) =>
+			link === "Tasks/Write report" || link === task.path ? task : null
+		);
+
+		const plugin = createMockPlugin();
+		plugin.app = app;
+		plugin.cacheManager.getCachedTaskInfoSync = (path: string) =>
+			path === task.path ? { path } : null;
+		const modal = new TimeblockInfoModal(
+			app,
+			plugin,
+			{
+				id: "tb-1",
+				title: "Write report",
+				startTime: "09:00",
+				endTime: "10:00",
+				attachments,
+			},
+			new Date("2026-05-16"),
+			"2026-05-16"
+		);
+		await modal.onOpen();
+		expect(modal.contentEl.querySelectorAll(".timeblock-attachment-item")).toHaveLength(1);
+		await (modal as any).handleSave();
+
+		const finalContent = await app.vault.read(dailyNote);
+		const frontmatter = parseYaml(finalContent.split("---")[1]);
+		expect(frontmatter.timeblocks[0].attachments).toEqual([attachments[0]]);
+	});
+
 	it("keeps a task link written without .md when the modal saves", async () => {
 		const task = await app.vault.create("Tasks/Write report.md", "---\ntitle: Write report\n---\n");
 		const dailyNote = await app.vault.create(

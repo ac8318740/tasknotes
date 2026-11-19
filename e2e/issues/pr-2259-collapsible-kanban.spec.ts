@@ -4,6 +4,7 @@ import { launchObsidian, closeObsidian, setObsidianViewport, type ObsidianApp } 
 
 let instance: ObsidianApp;
 let page: Page;
+let originalSettings: { uiLanguage: string; customStatuses: unknown[] };
 const folder = `Collapse2259-${Date.now()}`;
 const basePath = `${folder}/Board.base`;
 const column = (key: string) => page.locator(`.kanban-view__column[data-group="${key}"]`);
@@ -36,9 +37,10 @@ test.beforeAll(async () => {
   test.setTimeout(120_000);
   instance = await launchObsidian();
   page = instance.page;
-  await page.evaluate(async folder => {
+  originalSettings = await page.evaluate(async folder => {
     const app = (window as any).app;
     const plugin = app.plugins.plugins.tasknotes;
+    const original = { uiLanguage: plugin.settings.uiLanguage, customStatuses: plugin.settings.customStatuses };
     plugin.settings.customStatuses = ['open', 'waiting'].map((value, order) => ({
       id: value, value, label: value, color: '#808080', isCompleted: false, order,
     }));
@@ -47,6 +49,7 @@ test.beforeAll(async () => {
     for (const [name, status] of [['Alpha', 'open'], ['Beta', 'open'], ['Gamma', 'waiting']]) {
       await app.vault.create(`${folder}/${name}.md`, `---\ntags: [task]\nstatus: ${status}\npriority: normal\n---\n`);
     }
+    return original;
   }, folder);
   const content = stringify({
     filters: { and: [`file.inFolder("${folder}")`, 'file.hasTag("task")'] },
@@ -61,15 +64,21 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => {
   try {
-    if (page && !page.isClosed()) await page.evaluate(async folder => {
+    if (page && !page.isClosed()) await page.evaluate(async ({ folder, originalSettings }) => {
       const app = (window as any).app;
+      const plugin = app.plugins.plugins.tasknotes;
+      if (originalSettings) {
+        Object.assign(plugin.settings, originalSettings);
+        plugin.statusManager.updateStatuses(plugin.settings.customStatuses);
+        await plugin.setUILanguage(originalSettings.uiLanguage);
+      }
       const fixture = app.vault.getAbstractFileByPath(folder);
       if (fixture) await app.vault.delete(fixture, true);
-    }, folder);
+    }, { folder, originalSettings });
   } finally { if (instance) await closeObsidian(instance); }
 });
 
-test('keyboard/touch collapse, late restore, locale stability, drag/drop and restart lifetime', async () => {
+test('keyboard/touch collapse, locale stability, drag/drop and restart persistence', async () => {
   test.setTimeout(180_000);
   for (const theme of ['theme-light', 'theme-dark']) {
     await page.evaluate(theme => {
@@ -89,11 +98,7 @@ test('keyboard/touch collapse, late restore, locale stability, drag/drop and res
   }
   await page.evaluate(() => document.body.classList.remove('is-mobile'));
   await setObsidianViewport(page, { width: 1400, height: 900 });
-  const key = await column('waiting').getAttribute('data-collapse-key');
-  await page.evaluate(key => {
-    const view = (window as any).app.workspace.activeLeaf.view.controller.view;
-    view.setEphemeralState({ collapsedColumns: [key] });
-  }, key);
+  await toggle('waiting').click();
   await expect(toggle('waiting')).toHaveAttribute('aria-expanded', 'false');
 
   await expect(column('waiting')).toHaveCSS('width', '48px');
@@ -110,7 +115,8 @@ test('keyboard/touch collapse, late restore, locale stability, drag/drop and res
   await toggle('waiting').click();
   await page.evaluate(async () => {
     const plugin = (window as any).app.plugins.plugins.tasknotes;
-    plugin.i18n.setLocale('de');
+    plugin.settings.uiLanguage = 'de';
+    await plugin.setUILanguage('de');
     await (window as any).app.workspace.activeLeaf.view.controller.view.render();
   });
   await expect(toggle('waiting')).toHaveAttribute('aria-expanded', 'false');
@@ -119,24 +125,20 @@ test('keyboard/touch collapse, late restore, locale stability, drag/drop and res
   const alpha = page.locator(`.kanban-view__card-wrapper[data-task-path="${folder}/Alpha.md"]`);
   await drag(alpha, column('waiting').locator('.kanban-view__column-header'));
   await expect.poll(async () => (await readYaml(`${folder}/Alpha.md`)).status).toBe('waiting');
+  await expect(column('waiting').locator(`.kanban-view__card-wrapper[data-task-path="${folder}/Alpha.md"]`)).toHaveCount(1);
   await expect(toggle('waiting')).toHaveAttribute('aria-expanded', 'false');
   await drag(column('waiting').locator('[data-column-key]'), column('open').locator('[data-column-key]'));
   await expect.poll(async () => (await readYaml(basePath)).views[0].columnOrder).toContain('waiting');
 
-  // Ephemeral state is intentionally not a saved .base option or workspace setting.
+  // Collapse state is saved in the .base view config (#2484).
+  await expect.poll(async () => (await readYaml(basePath)).views[0].collapsedColumns).toContain('waiting');
   await closeObsidian(instance);
-  const port = process.env.TASKNOTES_E2E_REMOTE_DEBUGGING_PORT;
-  process.env.TASKNOTES_E2E_REMOTE_DEBUGGING_PORT = String(Number(port ?? 9223) + 10);
-  try { instance = await launchObsidian(); }
-  finally {
-    if (port === undefined) delete process.env.TASKNOTES_E2E_REMOTE_DEBUGGING_PORT;
-    else process.env.TASKNOTES_E2E_REMOTE_DEBUGGING_PORT = port;
-  }
+  instance = await launchObsidian();
   page = instance.page;
   await page.evaluate(async path => {
     const app = (window as any).app;
     await app.workspace.getLeaf(false).openFile(app.vault.getAbstractFileByPath(path));
   }, basePath);
-  await expect(toggle('waiting')).toHaveAttribute('aria-expanded', 'true');
-  expect((await readYaml(basePath)).views[0].collapsedColumns).toBeUndefined();
+  await expect(toggle('waiting')).toHaveAttribute('aria-expanded', 'false');
+  await expect(toggle('open')).toHaveAttribute('aria-expanded', 'true');
 });

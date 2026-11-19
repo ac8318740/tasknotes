@@ -1,9 +1,7 @@
 # Task Properties Settings
 
-This tab configures all task properties. Each property is displayed as a card containing its configuration options.
+Open **Settings → TaskNotes → Properties** to configure property mappings and definitions. Open a property to edit its settings and NLP trigger in inline groups. Advanced filters have a separate detail page. Built-in default values are under **Task creation → Defaults**.
 
-
-![Task Properties Settings](../assets/settings-task-properties.png)
 
 !!! tip "Looking for property type documentation?"
     See the [Property Types Reference](property-types-reference.md) for detailed documentation on the expected data types (text, list, date, etc.) for each frontmatter property.
@@ -16,7 +14,7 @@ Each property card contains:
 - **Default**: The default value applied to new tasks (where applicable)
 - **NLP trigger**: Toggle and character configuration for natural language parsing (where applicable)
 - **Property-specific settings**: Additional configuration options specific to that property
-This tab defines the task schema used by creation flows, NLP parsing, views, and API payloads.
+These settings define the task schema used by creation flows, NLP parsing, views, and API payloads.
 
 Property keys are YAML/frontmatter keys. TaskNotes can read and write keys that contain spaces or punctuation, but hand-written Bases filters and formulas must reference those keys with bracket syntax, for example `note["TN-status"]`, rather than dot syntax such as `note.TN-status`.
 
@@ -53,7 +51,7 @@ Each status value has:
 - **Icon**: Optional icon identifier
 - **Completed**: Whether this status represents a finished task
 - **Skip when cycling**: Exclude this status from the click-to-cycle order on task cards while keeping it available in menus, suggestions, and direct edits
-- **Next status**: Optional override for the status used when cycling forward from this status; leave it set to the status order to use the normal sequence. On the first status marked **Completed**, it is also the status a recurring series moves to once an occurrence is finished. See [Recurring Tasks](../features/recurring-tasks.md#completion-tracking)
+- **Next status**: Optional override for the status used when cycling forward from this status; leave it set to the status order to use the normal sequence. On the first status marked **Completed**, it is also the status a recurring series moves to once an occurrence is finished, and it lets recurring tasks follow the click cycle, when **Reset status after each occurrence** is on under [Features](features.md#recurring-tasks). In new setups, TaskNotes' built-in Done status moves on to Open. See [Recurring Tasks](../features/recurring-tasks.md#completion-tracking)
 - **Auto-archive**: Automatically archive tasks after a delay (1-1440 minutes)
 
 Status cards support drag-and-drop reordering.
@@ -133,6 +131,7 @@ Projects the task belongs to. Configuration options:
 
 - **Property key**: Frontmatter field name (default: `projects`)
 - **Default projects**: Select project notes to automatically link to new tasks
+- **Use default projects only when no project is specified**: Off by default. When on, a project you pick in the task creation form, or type in the natural language field, replaces the default projects. If you delete the typed project, the defaults come back. Instant conversion also leaves out the defaults when the converted text names a project. Projects filled in by a Bases view or a parent task are kept as they are.
 - **Use active note for new tasks**: Automatically link the active note as a project when opening task creation from the command palette or ribbon
 - **Use parent note for inline/instant conversion**: Automatically link the source note as a project when using inline task creation or instant task conversion
 - **NLP trigger**: Character that triggers project parsing (default: `+`)
@@ -159,10 +158,11 @@ A "Filters On" badge appears when any filters are configured.
 
 Configure project suggestion appearance:
 
-- **Enable fuzzy matching**: Allow typos and partial matches in project search
 - **Row 1, 2, 3**: Configure up to 3 lines of information for each project suggestion
 
 ### Pass values to subtasks
+
+Location: **Settings → TaskNotes → Task creation → Defaults**
 
 When on, subtasks without their own priority, contexts or bundle setting get their parent's and follow its changes. TaskNotes copies the values and lists them in the `inherited` property. **Create subtask** also adds the parent's projects and tags to the new subtask. Turning it off removes all copied values. To fill in subtasks that existed before, run **Apply inherited values to all tasks** from the command palette. See [Values passed to subtasks](../features/task-management.md#values-passed-to-subtasks).
 

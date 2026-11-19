@@ -9,6 +9,7 @@ import { dateAddRuntimeValue } from "../../../src/api/TaskNotesAPI";
 import { setVaultTimeZone } from "../../../src/utils/vaultTime";
 import { ICSEvent, TaskInfo } from "../../../src/types";
 import { PluginFactory } from "../../helpers/mock-factories";
+import { relativeDay } from "../../../src/ui/kit/dateLabel";
 
 describe("vault time zone boundaries", () => {
 	beforeEach(() => setVaultTimeZone("Australia/Sydney"));
@@ -44,6 +45,16 @@ describe("vault time zone boundaries", () => {
 		const ics = CalendarExportService.generateICSContent(task);
 
 		expect(ics).toContain("DTSTART:20300625T230000Z");
+	});
+
+	it("labels today by the vault day", () => {
+		jest.useFakeTimers().setSystemTime(new Date("2030-06-25T23:00:00.000Z"));
+		try {
+			expect(relativeDay("2030-06-26")).toBe("today");
+			expect(relativeDay("2030-06-25")).toBe("yesterday");
+		} finally {
+			jest.useRealTimers();
+		}
 	});
 
 	it("adds days to an API date in the vault calendar", () => {
